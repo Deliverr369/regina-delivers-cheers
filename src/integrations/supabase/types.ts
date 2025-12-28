@@ -129,8 +129,10 @@ export type Database = {
           id: string
           image_url: string | null
           in_stock: boolean | null
+          is_hidden: boolean | null
           name: string
           price: number
+          size: string | null
           store_id: string
         }
         Insert: {
@@ -140,8 +142,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          is_hidden?: boolean | null
           name: string
           price: number
+          size?: string | null
           store_id: string
         }
         Update: {
@@ -151,8 +155,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          is_hidden?: boolean | null
           name?: string
           price?: number
+          size?: string | null
           store_id?: string
         }
         Relationships: [

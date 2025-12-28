@@ -25,12 +25,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ProductManagement from "@/components/admin/ProductManagement";
 
 interface PromoBanner {
   id: string;
@@ -277,90 +279,103 @@ const Admin = () => {
             </Button>
             <div>
               <h1 className="text-3xl font-display font-bold text-foreground">Admin Panel</h1>
-              <p className="text-muted-foreground">Manage promotional banners</p>
+              <p className="text-muted-foreground">Manage products and promotional banners</p>
             </div>
           </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Promo Banners</CardTitle>
-              <Button onClick={handleOpenCreate}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Banner
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading banners...</div>
-              ) : banners.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No banners found. Create your first banner!
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {banners.map((banner) => (
-                    <div
-                      key={banner.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">{banner.title}</h3>
-                          {banner.subtitle && (
-                            <span className="text-muted-foreground">- {banner.subtitle}</span>
-                          )}
-                          {banner.is_active ? (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                              Inactive
-                            </span>
-                          )}
-                        </div>
-                        {banner.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{banner.description}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Order: {banner.display_order} | Link: {banner.button_link}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleToggleActive(banner)}
-                          title={banner.is_active ? "Deactivate" : "Activate"}
-                        >
-                          {banner.is_active ? (
-                            <Eye className="h-4 w-4" />
-                          ) : (
-                            <EyeOff className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEdit(banner)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDelete(banner)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+          <Tabs defaultValue="products" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="banners">Promo Banners</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="products">
+              <ProductManagement />
+            </TabsContent>
+
+            <TabsContent value="banners">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Promo Banners</CardTitle>
+                  <Button onClick={handleOpenCreate}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Banner
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading banners...</div>
+                  ) : banners.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No banners found. Create your first banner!
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {banners.map((banner) => (
+                        <div
+                          key={banner.id}
+                          className="flex items-center justify-between p-4 border rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-foreground">{banner.title}</h3>
+                              {banner.subtitle && (
+                                <span className="text-muted-foreground">- {banner.subtitle}</span>
+                              )}
+                              {banner.is_active ? (
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                                  Active
+                                </span>
+                              ) : (
+                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                                  Inactive
+                                </span>
+                              )}
+                            </div>
+                            {banner.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{banner.description}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Order: {banner.display_order} | Link: {banner.button_link}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleToggleActive(banner)}
+                              title={banner.is_active ? "Deactivate" : "Activate"}
+                            >
+                              {banner.is_active ? (
+                                <Eye className="h-4 w-4" />
+                              ) : (
+                                <EyeOff className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenEdit(banner)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenDelete(banner)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />
