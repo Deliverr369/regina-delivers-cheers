@@ -61,16 +61,18 @@ const FeaturedStoresSection = () => {
                 className="group bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {/* Image */}
-                <div className="relative aspect-video overflow-hidden">
+                {/* Image/Logo */}
+                <div className="relative h-40 overflow-hidden bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center p-6">
                   <img
                     src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
                     alt={store.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className={`max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500 ${
+                      store.image_url?.includes('.png') ? 'drop-shadow-lg' : 'w-full h-full object-cover rounded-lg'
+                    }`}
                   />
                   {store.is_open && (
-                    <Badge className="absolute top-4 left-4 bg-success text-white">
-                      Open Now
+                    <Badge className="absolute top-3 left-3 bg-success text-white text-xs">
+                      Open
                     </Badge>
                   )}
                 </div>
