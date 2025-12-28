@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, User, MapPin } from "lucide-react";
+import { ShoppingCart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/hooks/useCart";
+import logo from "@/assets/deliverr-logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,13 +21,8 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-display font-bold text-xl">R</span>
-            </div>
-            <span className={`font-display font-bold text-xl ${isHomePage ? "text-white" : "text-foreground"}`}>
-              ReginaSpirits
-            </span>
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="Deliverr" className="h-8 md:h-10" />
           </Link>
 
           {/* Desktop Navigation */}

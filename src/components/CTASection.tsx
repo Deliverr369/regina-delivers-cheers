@@ -24,7 +24,7 @@ const CTASection = () => {
           </h2>
           
           <p className="text-primary-foreground/80 text-lg mb-10 max-w-2xl mx-auto">
-            Join thousands of satisfied customers in Regina who trust ReginaSpirits for their liquor and smoke delivery needs
+            Join thousands of satisfied customers in Regina who trust Deliverr for their liquor and smoke delivery needs
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -7,24 +7,24 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 220 20% 10%;
+    --foreground: 220 20% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 220 20% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 220 20% 15%;
 
-    --primary: 350 85% 55%;
+    --primary: 354 75% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 95%;
-    --secondary-foreground: 220 20% 10%;
+    --secondary: 220 15% 96%;
+    --secondary-foreground: 220 20% 15%;
 
-    --muted: 220 15% 95%;
+    --muted: 220 15% 96%;
     --muted-foreground: 220 10% 45%;
 
-    --accent: 35 100% 50%;
+    --accent: 354 75% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -32,17 +32,17 @@
 
     --border: 220 15% 90%;
     --input: 220 15% 90%;
-    --ring: 350 85% 55%;
+    --ring: 354 75% 60%;
 
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --hero-overlay: 220 20% 5%;
+    --hero-overlay: 220 20% 10%;
     --gold: 45 100% 50%;
     --success: 142 70% 45%;
-    --wine: 350 50% 35%;
+    --wine: 350 50% 45%;
     --beer: 35 80% 50%;
-    --spirits: 220 30% 25%;
+    --spirits: 220 30% 35%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -64,7 +64,7 @@
     --popover: 220 20% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 350 85% 55%;
+    --primary: 354 75% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 15% 18%;
@@ -73,7 +73,7 @@
     --muted: 220 15% 18%;
     --muted-foreground: 220 10% 60%;
 
-    --accent: 35 100% 50%;
+    --accent: 354 75% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 30%;
@@ -81,7 +81,7 @@
 
     --border: 220 15% 20%;
     --input: 220 15% 20%;
-    --ring: 350 85% 55%;
+    --ring: 354 75% 60%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -116,17 +116,17 @@
   .hero-overlay {
     background: linear-gradient(
       to bottom,
-      hsl(var(--hero-overlay) / 0.7) 0%,
-      hsl(var(--hero-overlay) / 0.5) 50%,
-      hsl(var(--hero-overlay) / 0.8) 100%
+      hsl(var(--hero-overlay) / 0.6) 0%,
+      hsl(var(--hero-overlay) / 0.4) 50%,
+      hsl(var(--hero-overlay) / 0.7) 100%
     );
   }
 
   .glass {
-    @apply bg-background/80 backdrop-blur-lg border border-border/50;
+    @apply bg-background/90 backdrop-blur-lg border border-border/50 shadow-lg;
   }
 
   .glass-dark {
-    @apply bg-foreground/10 backdrop-blur-lg border border-foreground/10;
+    @apply bg-background/95 backdrop-blur-lg border border-border shadow-lg;
   }
 }

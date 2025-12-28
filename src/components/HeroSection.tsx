@@ -52,11 +52,11 @@ const HeroSection = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 mb-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            Delivered at liquor store prices under 60 minutes
+            Deliverr'd at liquor store prices under 60 minutes
           </p>
           
           <p className="text-white/70 mb-8 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            Serving Regina, SK | 10:00 AM - 10:00 PM
+            Serving in Regina & Saskatoon | 10:00 AM - 10:00 PM
           </p>
 
           {/* Address Input */}
@@ -65,7 +65,7 @@ const HeroSection = () => {
             className="max-w-2xl mx-auto mb-12 animate-fade-in"
             style={{ animationDelay: "0.3s" }}
           >
-            <div className="flex flex-col sm:flex-row gap-3 p-2 bg-white rounded-xl shadow-2xl">
+            <div className="flex flex-col sm:flex-row gap-3 p-2 bg-background rounded-xl shadow-2xl">
               <div className="flex-1 flex items-center gap-3 px-4">
                 <MapPin className="h-5 w-5 text-primary shrink-0" />
                 <Input
@@ -103,15 +103,15 @@ const HeroSection = () => {
             {testimonials.map((testimonial, index) => (
               <div 
                 key={index}
-                className="glass-dark rounded-xl p-6 text-left"
+                className="glass rounded-xl p-6 text-left"
               >
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-gold text-gold" />
                   ))}
                 </div>
-                <p className="text-white/80 text-sm mb-4">{testimonial.text}</p>
-                <p className="text-white font-medium">- {testimonial.author}</p>
+                <p className="text-foreground/80 text-sm mb-4">{testimonial.text}</p>
+                <p className="text-foreground font-medium">- {testimonial.author}</p>
               </div>
             ))}
           </div>
