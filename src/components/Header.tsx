@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +18,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartItems } = useCart();
   const { user, signOut } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
-  const isHomePage = location.pathname === "/";
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -30,9 +28,7 @@ const Header = () => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isHomePage ? "bg-transparent" : "bg-background/95 backdrop-blur-lg border-b border-border"
-    }`}>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-foreground/90 backdrop-blur-lg border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
@@ -44,9 +40,7 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-6">
             <Link 
               to="/how-it-works" 
-              className={`font-medium transition-colors hover:text-primary flex items-center gap-2 ${
-                isHomePage ? "text-white/90" : "text-foreground"
-              }`}
+              className="font-medium transition-colors hover:text-primary text-white/90 flex items-center gap-2"
             >
               Earn Rewards
               <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">
@@ -59,9 +53,9 @@ const Header = () => {
           <div className="flex items-center gap-3">
             <Link to="/cart" className="relative">
               <Button 
-                variant={isHomePage ? "ghost" : "outline"} 
+                variant="ghost" 
                 size="icon"
-                className={isHomePage ? "text-white hover:bg-white/10" : ""}
+                className="text-white hover:bg-white/10"
               >
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
@@ -76,9 +70,9 @@ const Header = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
-                    variant={isHomePage ? "outline" : "ghost"} 
+                    variant="ghost" 
                     size="icon"
-                    className={isHomePage ? "border-white/30 text-white hover:bg-white/10" : ""}
+                    className="text-white hover:bg-white/10"
                   >
                     <User className="h-5 w-5" />
                   </Button>
@@ -103,11 +97,7 @@ const Header = () => {
                 <Link to="/login" className="hidden md:block">
                   <Button 
                     variant="outline" 
-                    className={`rounded-full px-6 ${
-                      isHomePage 
-                        ? "border-foreground text-foreground bg-background hover:bg-background/90" 
-                        : "border-border"
-                    }`}
+                    className="rounded-full px-6 border-white/80 text-foreground bg-background hover:bg-background/90"
                   >
                     Login
                   </Button>
@@ -116,11 +106,7 @@ const Header = () => {
                 <Link to="/signup" className="hidden md:block">
                   <Button 
                     variant="outline" 
-                    className={`rounded-full px-6 ${
-                      isHomePage 
-                        ? "border-foreground text-foreground bg-background hover:bg-background/90" 
-                        : "border-border"
-                    }`}
+                    className="rounded-full px-6 border-white/80 text-foreground bg-background hover:bg-background/90"
                   >
                     Sign Up
                   </Button>
@@ -132,7 +118,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              className={`md:hidden ${isHomePage ? "text-white" : ""}`}
+              className="md:hidden text-white hover:bg-white/10"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
