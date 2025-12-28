@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const subtotal = getCartTotal();
   const deliveryFee = subtotal > 50 ? 0 : 4.99;
@@ -25,7 +30,7 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
+    email: user?.email || "",
     phone: "",
     address: "",
     city: "Regina",
@@ -43,19 +48,97 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
 
-    // Simulate order submission
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Get store ID from first cart item
+      const storeId = cartItems[0]?.storeId;
 
-    clearCart();
-    toast({
-      title: "Order placed successfully!",
-      description: "Your order will arrive in 25-35 minutes.",
-    });
-    navigate("/order-confirmation");
-    setIsSubmitting(false);
+      // Create order
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          store_id: storeId || null,
+          subtotal,
+          delivery_fee: deliveryFee,
+          tax,
+          total,
+          delivery_address: formData.address,
+          delivery_city: formData.city,
+          delivery_postal_code: formData.postalCode,
+          delivery_instructions: formData.deliveryInstructions,
+          payment_method: formData.paymentMethod,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = cartItems.map((item) => ({
+        order_id: order.id,
+        product_id: item.id,
+        product_name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Update user profile
+      await supabase
+        .from("profiles")
+        .update({
+          full_name: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          postal_code: formData.postalCode,
+        })
+        .eq("id", user.id);
+
+      clearCart();
+      toast({
+        title: "Order placed successfully!",
+        description: "Your order will arrive in 25-35 minutes.",
+      });
+      navigate("/order-confirmation");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="font-display text-2xl font-bold mb-4">Please log in to checkout</h1>
+            <Link to="/login">
+              <Button>Log In</Button>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     navigate("/cart");
@@ -76,6 +159,13 @@ const Checkout = () => {
               Checkout
             </h1>
           </div>
+
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="grid lg:grid-cols-3 gap-8">
@@ -230,7 +320,7 @@ const Checkout = () => {
                     {cartItems.map((item) => (
                       <div key={item.id} className="flex gap-3">
                         <img
-                          src={item.image}
+                          src={item.image || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=100"}
                           alt={item.name}
                           className="w-12 h-12 object-cover rounded"
                         />
