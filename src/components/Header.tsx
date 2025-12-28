@@ -40,31 +40,18 @@ const Header = () => {
             <img src={logo} alt="Deliverr" className="h-8 md:h-10" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link 
-              to="/stores" 
-              className={`font-medium transition-colors hover:text-primary ${
-                isHomePage ? "text-white/90" : "text-foreground"
-              }`}
-            >
-              Browse Stores
-            </Link>
-            <Link 
-              to="/products" 
-              className={`font-medium transition-colors hover:text-primary ${
-                isHomePage ? "text-white/90" : "text-foreground"
-              }`}
-            >
-              Products
-            </Link>
+          {/* Desktop Navigation - Earn Rewards */}
+          <nav className="hidden md:flex items-center gap-6">
             <Link 
               to="/how-it-works" 
-              className={`font-medium transition-colors hover:text-primary ${
+              className={`font-medium transition-colors hover:text-primary flex items-center gap-2 ${
                 isHomePage ? "text-white/90" : "text-foreground"
               }`}
             >
-              How It Works
+              Earn Rewards
+              <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">
+                New
+              </Badge>
             </Link>
           </nav>
 
@@ -114,13 +101,27 @@ const Header = () => {
             ) : (
               <>
                 <Link to="/login" className="hidden md:block">
-                  <Button variant={isHomePage ? "outline" : "ghost"} className={isHomePage ? "border-white/30 text-white hover:bg-white/10" : ""}>
+                  <Button 
+                    variant="outline" 
+                    className={`rounded-full px-6 ${
+                      isHomePage 
+                        ? "border-foreground text-foreground bg-background hover:bg-background/90" 
+                        : "border-border"
+                    }`}
+                  >
                     Login
                   </Button>
                 </Link>
                 
                 <Link to="/signup" className="hidden md:block">
-                  <Button className="bg-primary hover:bg-primary/90">
+                  <Button 
+                    variant="outline" 
+                    className={`rounded-full px-6 ${
+                      isHomePage 
+                        ? "border-foreground text-foreground bg-background hover:bg-background/90" 
+                        : "border-border"
+                    }`}
+                  >
                     Sign Up
                   </Button>
                 </Link>
