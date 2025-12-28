@@ -28,7 +28,7 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-400 backdrop-blur-lg border-b border-zinc-500">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white backdrop-blur-lg border-b border-gray-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
@@ -40,7 +40,7 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-6">
             <Link 
               to="/how-it-works" 
-              className="font-medium transition-colors hover:text-primary text-white/90 flex items-center gap-2"
+              className="font-medium transition-colors hover:text-primary text-foreground flex items-center gap-2"
             >
               Earn Rewards
               <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">
@@ -55,7 +55,7 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="text-white hover:bg-white/10"
+                className="text-foreground hover:bg-gray-100"
               >
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
@@ -72,7 +72,7 @@ const Header = () => {
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    className="text-white hover:bg-white/10"
+                    className="text-foreground hover:bg-gray-100"
                   >
                     <User className="h-5 w-5" />
                   </Button>
@@ -97,7 +97,7 @@ const Header = () => {
                 <Link to="/login" className="hidden md:block">
                   <Button 
                     variant="outline" 
-                    className="rounded-full px-6 border-white bg-white text-foreground hover:bg-white/90"
+                    className="rounded-full px-6 border-black bg-black text-white hover:bg-gray-800"
                   >
                     Login
                   </Button>
@@ -106,7 +106,7 @@ const Header = () => {
                 <Link to="/signup" className="hidden md:block">
                   <Button 
                     variant="outline" 
-                    className="rounded-full px-6 border-white bg-white text-foreground hover:bg-white/90"
+                    className="rounded-full px-6 border-black bg-black text-white hover:bg-gray-800"
                   >
                     Sign Up
                   </Button>
@@ -118,7 +118,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-white hover:bg-white/10"
+              className="md:hidden text-foreground hover:bg-gray-100"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
