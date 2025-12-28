@@ -97,7 +97,7 @@ const Header = () => {
                 <Link to="/login" className="hidden md:block">
                   <Button 
                     variant="outline" 
-                    className="rounded-full px-6 border-black bg-black text-white hover:bg-gray-800"
+                    className="rounded-full px-6 border-primary bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     Login
                   </Button>
@@ -106,7 +106,7 @@ const Header = () => {
                 <Link to="/signup" className="hidden md:block">
                   <Button 
                     variant="outline" 
-                    className="rounded-full px-6 border-black bg-black text-white hover:bg-gray-800"
+                    className="rounded-full px-6 border-primary bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     Sign Up
                   </Button>
