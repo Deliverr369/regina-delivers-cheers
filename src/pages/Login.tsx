@@ -1,30 +1,44 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulate login
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const { error } = await signIn(formData.email, formData.password);
     
-    toast({
-      title: "Welcome back!",
-      description: "You've been logged in successfully.",
-    });
-    navigate("/stores");
-    setIsLoading(false);
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    } else {
+      navigate("/stores");
+    }
   };
 
   return (
@@ -39,9 +53,16 @@ const Login = () => {
                 Welcome Back
               </h1>
               <p className="text-muted-foreground">
-                Log in to your ReginaSpirits account
+                Log in to your Deliverr account
               </p>
             </div>
+
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
@@ -51,9 +72,12 @@ const Login = () => {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       placeholder="john@example.com"
                       className="pl-10"
+                      value={formData.email}
+                      onChange={handleChange}
                       required
                     />
                   </div>
@@ -62,17 +86,17 @@ const Login = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <Label htmlFor="password">Password</Label>
-                    <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                      Forgot password?
-                    </Link>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="password"
+                      name="password"
                       type="password"
                       placeholder="Enter your password"
                       className="pl-10"
+                      value={formData.password}
+                      onChange={handleChange}
                       required
                     />
                   </div>

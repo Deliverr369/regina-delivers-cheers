@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, Star, Clock, Search, Filter, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,96 +10,37 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-const allStores = [
-  {
-    id: "1",
-    name: "Regina Liquor World",
-    address: "2341 Victoria Ave E, Regina",
-    rating: 4.8,
-    reviews: 234,
-    deliveryTime: "25-35 min",
-    deliveryFee: "Free",
-    isOpen: true,
-    categories: ["Beer", "Wine", "Spirits", "Smokes"],
-    image: "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format",
-  },
-  {
-    id: "2",
-    name: "Warehouse Spirits",
-    address: "1955 11th Ave, Regina",
-    rating: 4.6,
-    reviews: 189,
-    deliveryTime: "30-40 min",
-    deliveryFee: "$2.99",
-    isOpen: true,
-    categories: ["Beer", "Wine", "Spirits"],
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&auto=format",
-  },
-  {
-    id: "3",
-    name: "Crown & Cork",
-    address: "4501 Gordon Rd, Regina",
-    rating: 4.9,
-    reviews: 312,
-    deliveryTime: "35-45 min",
-    deliveryFee: "Free",
-    isOpen: true,
-    categories: ["Wine", "Spirits"],
-    image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=500&auto=format",
-  },
-  {
-    id: "4",
-    name: "The Liquor Barn",
-    address: "789 Albert St, Regina",
-    rating: 4.5,
-    reviews: 156,
-    deliveryTime: "20-30 min",
-    deliveryFee: "$1.99",
-    isOpen: true,
-    categories: ["Beer", "Smokes"],
-    image: "https://images.unsplash.com/photo-1574015974293-817f0ebebb74?w=500&auto=format",
-  },
-  {
-    id: "5",
-    name: "Prairie Wines & Spirits",
-    address: "1234 Broad St, Regina",
-    rating: 4.7,
-    reviews: 203,
-    deliveryTime: "30-40 min",
-    deliveryFee: "Free",
-    isOpen: false,
-    categories: ["Wine", "Spirits"],
-    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500&auto=format",
-  },
-  {
-    id: "6",
-    name: "Capital City Liquor",
-    address: "567 Rochdale Blvd, Regina",
-    rating: 4.4,
-    reviews: 98,
-    deliveryTime: "25-35 min",
-    deliveryFee: "$2.49",
-    isOpen: true,
-    categories: ["Beer", "Wine", "Spirits", "Smokes"],
-    image: "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=500&auto=format",
-  },
-];
-
 const Stores = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
 
-  const filteredStores = allStores
+  const { data: stores = [], isLoading } = useQuery({
+    queryKey: ["stores"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stores")
+        .select("*")
+        .order("rating", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredStores = stores
     .filter((store) =>
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.address.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
-      if (sortBy === "rating") return b.rating - a.rating;
-      if (sortBy === "delivery") return a.deliveryTime.localeCompare(b.deliveryTime);
+      if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
+      if (sortBy === "delivery") return (a.delivery_time || "").localeCompare(b.delivery_time || "");
       return 0;
     });
 
@@ -115,7 +56,7 @@ const Stores = () => {
               Liquor Stores in Regina
             </h1>
             <p className="text-muted-foreground">
-              Browse and order from {allStores.length} local stores
+              Browse and order from {stores.length} local stores
             </p>
           </div>
 
@@ -150,73 +91,83 @@ const Stores = () => {
             </DropdownMenu>
           </div>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse">
+                  <div className="aspect-video bg-muted" />
+                  <div className="p-6 space-y-4">
+                    <div className="h-6 bg-muted rounded w-3/4" />
+                    <div className="h-4 bg-muted rounded w-1/2" />
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Stores Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredStores.map((store, index) => (
-              <Link
-                key={store.id}
-                to={`/stores/${store.id}`}
-                className="group bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                {/* Image */}
-                <div className="relative aspect-video overflow-hidden">
-                  <img
-                    src={store.image}
-                    alt={store.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    {store.isOpen ? (
-                      <Badge className="bg-success text-white">Open Now</Badge>
-                    ) : (
-                      <Badge variant="secondary">Closed</Badge>
-                    )}
-                    {store.deliveryFee === "Free" && (
-                      <Badge className="bg-primary text-primary-foreground">Free Delivery</Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="font-display text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {store.name}
-                  </h3>
-                  
-                  <div className="flex items-center gap-2 text-muted-foreground mb-3">
-                    <MapPin className="h-4 w-4" />
-                    <span className="text-sm">{store.address}</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {store.categories.map((cat) => (
-                      <Badge key={cat} variant="secondary" className="text-xs">
-                        {cat}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-gold text-gold" />
-                        <span className="font-medium text-foreground">{store.rating}</span>
-                      </div>
-                      <span className="text-muted-foreground text-sm">({store.reviews})</span>
+          {!isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStores.map((store, index) => (
+                <Link
+                  key={store.id}
+                  to={`/stores/${store.id}`}
+                  className="group bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border animate-fade-in"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  {/* Image */}
+                  <div className="relative aspect-video overflow-hidden">
+                    <img
+                      src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
+                      alt={store.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-4 left-4 flex gap-2">
+                      {store.is_open ? (
+                        <Badge className="bg-success text-white">Open Now</Badge>
+                      ) : (
+                        <Badge variant="secondary">Closed</Badge>
+                      )}
+                      {Number(store.delivery_fee) === 0 && (
+                        <Badge className="bg-primary text-primary-foreground">Free Delivery</Badge>
+                      )}
                     </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="font-display text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                      {store.name}
+                    </h3>
                     
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span className="text-sm">{store.deliveryTime}</span>
+                    <div className="flex items-center gap-2 text-muted-foreground mb-3">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm">{store.address}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-gold text-gold" />
+                          <span className="font-medium text-foreground">{store.rating}</span>
+                        </div>
+                        <span className="text-muted-foreground text-sm">({store.reviews_count})</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-sm">{store.delivery_time}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
 
-          {filteredStores.length === 0 && (
+          {!isLoading && filteredStores.length === 0 && (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg">No stores found matching your search.</p>
             </div>

@@ -1,18 +1,33 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ShoppingCart, Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/deliverr-logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartItems } = useCart();
+  const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -70,17 +85,47 @@ const Header = () => {
               </Button>
             </Link>
             
-            <Link to="/login" className="hidden md:block">
-              <Button variant={isHomePage ? "outline" : "ghost"} className={isHomePage ? "border-white/30 text-white hover:bg-white/10" : ""}>
-                Login
-              </Button>
-            </Link>
-            
-            <Link to="/signup" className="hidden md:block">
-              <Button className="bg-primary hover:bg-primary/90">
-                Sign Up
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant={isHomePage ? "outline" : "ghost"} 
+                    size="icon"
+                    className={isHomePage ? "border-white/30 text-white hover:bg-white/10" : ""}
+                  >
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem className="text-muted-foreground text-sm">
+                    {user.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders">My Orders</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/login" className="hidden md:block">
+                  <Button variant={isHomePage ? "outline" : "ghost"} className={isHomePage ? "border-white/30 text-white hover:bg-white/10" : ""}>
+                    Login
+                  </Button>
+                </Link>
+                
+                <Link to="/signup" className="hidden md:block">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
 
             {/* Mobile Menu Button */}
             <Button
@@ -108,15 +153,27 @@ const Header = () => {
             <Link to="/how-it-works" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
               How It Works
             </Link>
+            {user && (
+              <Link to="/orders" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
+                My Orders
+              </Link>
+            )}
             <hr className="border-border" />
-            <div className="flex gap-3">
-              <Link to="/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full">Login</Button>
-              </Link>
-              <Link to="/signup" className="flex-1" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full">Sign Up</Button>
-              </Link>
-            </div>
+            {user ? (
+              <Button variant="outline" className="w-full" onClick={() => { handleSignOut(); setIsMenuOpen(false); }}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            ) : (
+              <div className="flex gap-3">
+                <Link to="/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">Login</Button>
+                </Link>
+                <Link to="/signup" className="flex-1" onClick={() => setIsMenuOpen(false)}>
+                  <Button className="w-full">Sign Up</Button>
+                </Link>
+              </div>
+            )}
           </nav>
         </div>
       )}
