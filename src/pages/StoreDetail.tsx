@@ -82,12 +82,17 @@ const StoreDetail = () => {
 
   const ProductCard = ({ product }: { product: typeof products[0] }) => (
     <div className="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300">
-      <div className="aspect-square overflow-hidden bg-muted/30">
+      <div className="aspect-square overflow-hidden bg-muted/30 relative">
         <img 
           src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"} 
           alt={product.name} 
           className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" 
         />
+        {product.size && (
+          <span className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm text-foreground text-xs font-semibold px-2 py-1 rounded-full border border-border shadow-sm">
+            {product.size}
+          </span>
+        )}
       </div>
       <div className="p-4">
         <h4 className="font-medium text-foreground mb-1 line-clamp-2">{product.name}</h4>
