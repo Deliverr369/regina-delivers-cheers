@@ -102,6 +102,14 @@ const StoreDetail = () => {
     smokes: products.filter((p) => p.category === "smokes"),
   };
 
+  // Get categories that have products
+  const availableCategories = Object.entries(productsByCategory)
+    .filter(([_, items]) => items.length > 0)
+    .map(([category]) => category);
+  
+  // Get default tab (first category with products)
+  const defaultCategory = availableCategories.length > 0 ? availableCategories[0] : "beer";
+
   const getQuantity = (productId: string) => quantities[productId] || 0;
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -351,15 +359,25 @@ const StoreDetail = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Tabs defaultValue="beer" className="w-full">
+            <Tabs defaultValue={defaultCategory} className="w-full">
               <TabsList className="mb-8 w-full justify-start overflow-x-auto">
-                <TabsTrigger value="beer">Beer ({productsByCategory.beer.length})</TabsTrigger>
-                <TabsTrigger value="wine">Wine ({productsByCategory.wine.length})</TabsTrigger>
-                <TabsTrigger value="spirits">Spirits ({productsByCategory.spirits.length})</TabsTrigger>
-                <TabsTrigger value="smokes">Smokes ({productsByCategory.smokes.length})</TabsTrigger>
+                {availableCategories.includes("beer") && (
+                  <TabsTrigger value="beer">Beer ({productsByCategory.beer.length})</TabsTrigger>
+                )}
+                {availableCategories.includes("wine") && (
+                  <TabsTrigger value="wine">Wine ({productsByCategory.wine.length})</TabsTrigger>
+                )}
+                {availableCategories.includes("spirits") && (
+                  <TabsTrigger value="spirits">Spirits ({productsByCategory.spirits.length})</TabsTrigger>
+                )}
+                {availableCategories.includes("smokes") && (
+                  <TabsTrigger value="smokes">Smokes ({productsByCategory.smokes.length})</TabsTrigger>
+                )}
               </TabsList>
 
-              {Object.entries(productsByCategory).map(([category, items]) => (
+              {Object.entries(productsByCategory)
+                .filter(([category]) => availableCategories.includes(category))
+                .map(([category, items]) => (
                 <TabsContent key={category} value={category}>
                   {items.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
