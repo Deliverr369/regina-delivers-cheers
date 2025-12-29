@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -133,6 +133,9 @@ const ProductManagement = () => {
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchStores();
@@ -183,6 +186,7 @@ const ProductManagement = () => {
       store_id: selectedStore !== "all" ? selectedStore : "",
       packPrices: getInitialPackPrices(category),
     });
+    setImagePreview(null);
     setDialogOpen(true);
   };
 
@@ -217,7 +221,85 @@ const ProductManagement = () => {
       is_hidden: product.is_hidden ?? false,
       packPrices,
     });
+    setImagePreview(product.image_url || null);
     setDialogOpen(true);
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('store-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('store-images')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      setImagePreview(publicUrl);
+      
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully",
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({ ...prev, image_url: '' }));
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleOpenDelete = (product: Product) => {
@@ -667,14 +749,84 @@ const ProductManagement = () => {
                 placeholder="Product description..."
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="image_url">Image URL</Label>
-              <Input
-                id="image_url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
-              />
+            {/* Image Upload Section */}
+            <div className="space-y-3 border border-border rounded-lg p-4 bg-muted/30">
+              <Label className="text-base font-semibold">Product Image</Label>
+              
+              {/* Image Preview */}
+              {imagePreview ? (
+                <div className="relative w-full">
+                  <div className="relative aspect-square w-32 rounded-lg overflow-hidden border border-border bg-background">
+                    <img
+                      src={imagePreview}
+                      alt="Product preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/placeholder.svg';
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1 h-6 w-6"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center w-32 h-32 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-background">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+              )}
+
+              {/* Upload Button */}
+              <div className="flex items-center gap-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <>Uploading...</>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Image
+                    </>
+                  )}
+                </Button>
+                <span className="text-xs text-muted-foreground">Max 5MB</span>
+              </div>
+
+              {/* Manual URL Input */}
+              <div className="space-y-1">
+                <Label htmlFor="image_url" className="text-xs text-muted-foreground">
+                  Or enter image URL manually
+                </Label>
+                <Input
+                  id="image_url"
+                  value={formData.image_url}
+                  onChange={(e) => {
+                    setFormData({ ...formData, image_url: e.target.value });
+                    setImagePreview(e.target.value || null);
+                  }}
+                  placeholder="https://..."
+                  className="h-9"
+                />
+              </div>
             </div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
