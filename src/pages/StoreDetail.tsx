@@ -4,6 +4,7 @@ import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2 } fr
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
 import { useQuery } from "@tanstack/react-query";
@@ -11,11 +12,22 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+const BEER_PACK_SIZES = [
+  { value: "1-tall", label: "1 Tall Can", multiplier: 1 },
+  { value: "6-pack", label: "6 Pack", multiplier: 6 },
+  { value: "8-pack", label: "8 Pack", multiplier: 8 },
+  { value: "15-pack", label: "15 Pack", multiplier: 15 },
+  { value: "24-pack", label: "24 Pack", multiplier: 24 },
+  { value: "36-pack", label: "36 Pack", multiplier: 36 },
+  { value: "48-pack", label: "48 Pack", multiplier: 48 },
+];
+
 const StoreDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
@@ -66,18 +78,40 @@ const StoreDetail = () => {
     if (qty === 0) {
       updateQuantity(product.id, 1);
     }
+    const packSize = product.category === "beer" 
+      ? BEER_PACK_SIZES.find(p => p.value === (selectedPackSizes[product.id] || "1-tall"))
+      : null;
+    const displayPrice = packSize 
+      ? Number(product.price) * packSize.multiplier 
+      : Number(product.price);
+    const displayName = packSize && packSize.value !== "1-tall"
+      ? `${product.name} (${packSize.label})`
+      : product.name;
+
     addToCart({
-      id: product.id,
-      name: product.name,
-      price: Number(product.price),
+      id: `${product.id}-${packSize?.value || "single"}`,
+      name: displayName,
+      price: displayPrice,
       image: product.image_url || "",
       storeId: store?.id || "",
       storeName: store?.name || "",
     });
     toast({
       title: "Added to cart",
-      description: `${product.name} has been added to your cart`,
+      description: `${displayName} has been added to your cart`,
     });
+  };
+
+  const getSelectedPackSize = (productId: string) => selectedPackSizes[productId] || "1-tall";
+
+  const setPackSize = (productId: string, value: string) => {
+    setSelectedPackSizes(prev => ({ ...prev, [productId]: value }));
+  };
+
+  const getDisplayPrice = (product: typeof products[0]) => {
+    if (product.category !== "beer") return Number(product.price);
+    const packSize = BEER_PACK_SIZES.find(p => p.value === getSelectedPackSize(product.id));
+    return Number(product.price) * (packSize?.multiplier || 1);
   };
 
   const ProductCard = ({ product }: { product: typeof products[0] }) => (
@@ -96,7 +130,29 @@ const StoreDetail = () => {
       </div>
       <div className="p-4">
         <h4 className="font-medium text-foreground mb-1 line-clamp-2">{product.name}</h4>
-        <p className="text-xl font-bold text-primary mb-4">${Number(product.price).toFixed(2)}</p>
+        
+        {/* Beer pack size selector */}
+        {product.category === "beer" && (
+          <div className="mb-3">
+            <Select
+              value={getSelectedPackSize(product.id)}
+              onValueChange={(value) => setPackSize(product.id, value)}
+            >
+              <SelectTrigger className="h-8 text-xs bg-background">
+                <SelectValue placeholder="Select size" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                {BEER_PACK_SIZES.map((size) => (
+                  <SelectItem key={size.value} value={size.value} className="text-xs">
+                    {size.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        <p className="text-xl font-bold text-primary mb-4">${getDisplayPrice(product).toFixed(2)}</p>
         
         <div className="flex items-center gap-2">
           {getQuantity(product.id) > 0 ? (
