@@ -563,6 +563,26 @@ const ProductManagement = () => {
                     product.is_hidden ? "opacity-60 bg-muted/50" : ""
                   }`}
                 >
+                  {/* Product Image */}
+                  <div className="flex-shrink-0 mr-4">
+                    {product.image_url ? (
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border bg-background">
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder.svg';
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center">
+                        <ImageIcon className="h-5 w-5 text-muted-foreground/50" />
+                      </div>
+                    )}
+                  </div>
+                  
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-foreground truncate">{product.name}</h3>
