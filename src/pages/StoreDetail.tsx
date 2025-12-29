@@ -12,15 +12,35 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-const BEER_PACK_SIZES = [
-  { value: "1-tall", label: "1 Tall Can", multiplier: 1 },
-  { value: "6-pack", label: "6 Pack", multiplier: 6 },
-  { value: "8-pack", label: "8 Pack", multiplier: 8 },
-  { value: "15-pack", label: "15 Pack", multiplier: 15 },
-  { value: "24-pack", label: "24 Pack", multiplier: 24 },
-  { value: "36-pack", label: "36 Pack", multiplier: 36 },
-  { value: "48-pack", label: "48 Pack", multiplier: 48 },
-];
+const PACK_SIZES_BY_CATEGORY = {
+  beer: [
+    { value: "1-tall", label: "1 Tall Can", multiplier: 1 },
+    { value: "6-pack", label: "6 Pack", multiplier: 6 },
+    { value: "8-pack", label: "8 Pack", multiplier: 8 },
+    { value: "15-pack", label: "15 Pack", multiplier: 15 },
+    { value: "24-pack", label: "24 Pack", multiplier: 24 },
+    { value: "36-pack", label: "36 Pack", multiplier: 36 },
+    { value: "48-pack", label: "48 Pack", multiplier: 48 },
+  ],
+  wine: [
+    { value: "single-bottle", label: "Single Bottle", multiplier: 1 },
+    { value: "2-pack", label: "2-Pack", multiplier: 2 },
+    { value: "case-6", label: "Case of 6", multiplier: 6 },
+    { value: "case-12", label: "Case of 12", multiplier: 12 },
+  ],
+  spirits: [
+    { value: "single-bottle", label: "Single Bottle", multiplier: 1 },
+    { value: "2-pack", label: "2-Pack", multiplier: 2 },
+    { value: "case-6", label: "Case of 6", multiplier: 6 },
+  ],
+  smokes: [] as { value: string; label: string; multiplier: number }[],
+};
+
+interface PackPrice {
+  product_id: string;
+  pack_size: string;
+  price: number;
+}
 
 const StoreDetail = () => {
   const { id } = useParams();
@@ -57,21 +77,22 @@ const StoreDetail = () => {
     },
   });
 
-  // Fetch beer pack prices for all beer products
-  const beerProductIds = products.filter(p => p.category === "beer").map(p => p.id);
-  const { data: beerPackPrices = [] } = useQuery({
-    queryKey: ["beer_pack_prices", beerProductIds],
+  // Fetch pack prices for products with pack options
+  const productsWithPacks = products.filter(p => PACK_SIZES_BY_CATEGORY[p.category].length > 0);
+  const productIdsWithPacks = productsWithPacks.map(p => p.id);
+  const { data: packPrices = [] } = useQuery<PackPrice[]>({
+    queryKey: ["product_pack_prices", productIdsWithPacks],
     queryFn: async () => {
-      if (beerProductIds.length === 0) return [];
+      if (productIdsWithPacks.length === 0) return [];
       const { data, error } = await supabase
-        .from("beer_pack_prices")
-        .select("*")
-        .in("product_id", beerProductIds);
+        .from("product_pack_prices")
+        .select("product_id, pack_size, price")
+        .in("product_id", productIdsWithPacks);
       
       if (error) throw error;
-      return data;
+      return (data || []) as PackPrice[];
     },
-    enabled: beerProductIds.length > 0,
+    enabled: productIdsWithPacks.length > 0,
   });
 
   const productsByCategory = {
@@ -95,13 +116,14 @@ const StoreDetail = () => {
     if (qty === 0) {
       updateQuantity(product.id, 1);
     }
-    const selectedSize = selectedPackSizes[product.id] || "1-tall";
-    const packSize = product.category === "beer" 
-      ? BEER_PACK_SIZES.find(p => p.value === selectedSize)
-      : null;
+    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
+    const packSizes = PACK_SIZES_BY_CATEGORY[category];
+    const defaultSize = packSizes.length > 0 ? packSizes[0].value : "single";
+    const selectedSize = selectedPackSizes[product.id] || defaultSize;
+    const packSize = packSizes.find(p => p.value === selectedSize);
     
     // Check for stored price first, then fall back to multiplier calculation
-    const storedPrice = beerPackPrices.find(
+    const storedPrice = packPrices.find(
       bp => bp.product_id === product.id && bp.pack_size === selectedSize
     );
     
@@ -111,7 +133,7 @@ const StoreDetail = () => {
         ? Number(product.price) * packSize.multiplier 
         : Number(product.price);
     
-    const displayName = packSize && packSize.value !== "1-tall"
+    const displayName = packSize && packSize.multiplier !== 1
       ? `${product.name} (${packSize.label})`
       : product.name;
 
@@ -129,19 +151,27 @@ const StoreDetail = () => {
     });
   };
 
-  const getSelectedPackSize = (productId: string) => selectedPackSizes[productId] || "1-tall";
+  const getSelectedPackSize = (product: typeof products[0]) => {
+    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
+    const packSizes = PACK_SIZES_BY_CATEGORY[category];
+    const defaultSize = packSizes.length > 0 ? packSizes[0].value : "single";
+    return selectedPackSizes[product.id] || defaultSize;
+  };
 
   const setPackSize = (productId: string, value: string) => {
     setSelectedPackSizes(prev => ({ ...prev, [productId]: value }));
   };
 
   const getDisplayPrice = (product: typeof products[0]) => {
-    if (product.category !== "beer") return Number(product.price);
+    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
+    const packSizes = PACK_SIZES_BY_CATEGORY[category];
     
-    const selectedSize = getSelectedPackSize(product.id);
+    if (packSizes.length === 0) return Number(product.price);
+    
+    const selectedSize = getSelectedPackSize(product);
     
     // Check for stored price first
-    const storedPrice = beerPackPrices.find(
+    const storedPrice = packPrices.find(
       bp => bp.product_id === product.id && bp.pack_size === selectedSize
     );
     
@@ -150,8 +180,13 @@ const StoreDetail = () => {
     }
     
     // Fall back to multiplier calculation
-    const packSize = BEER_PACK_SIZES.find(p => p.value === selectedSize);
+    const packSize = packSizes.find(p => p.value === selectedSize);
     return Number(product.price) * (packSize?.multiplier || 1);
+  };
+
+  const getPackSizesForProduct = (product: typeof products[0]) => {
+    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
+    return PACK_SIZES_BY_CATEGORY[category];
   };
 
   const ProductCard = ({ product }: { product: typeof products[0] }) => (
@@ -171,18 +206,18 @@ const StoreDetail = () => {
       <div className="p-4">
         <h4 className="font-medium text-foreground mb-1 line-clamp-2">{product.name}</h4>
         
-        {/* Beer pack size selector */}
-        {product.category === "beer" && (
+        {/* Pack size selector - shows for beer, wine, spirits */}
+        {getPackSizesForProduct(product).length > 0 && (
           <div className="mb-3">
             <Select
-              value={getSelectedPackSize(product.id)}
+              value={getSelectedPackSize(product)}
               onValueChange={(value) => setPackSize(product.id, value)}
             >
               <SelectTrigger className="h-8 text-xs bg-background">
                 <SelectValue placeholder="Select size" />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border z-50">
-                {BEER_PACK_SIZES.map((size) => (
+                {getPackSizesForProduct(product).map((size) => (
                   <SelectItem key={size.value} value={size.value} className="text-xs">
                     {size.label}
                   </SelectItem>
