@@ -84,6 +84,12 @@ interface PackPrice {
   price: string;
 }
 
+interface CustomSizePrice {
+  id: string;
+  size: string;
+  price: string;
+}
+
 interface ProductFormData {
   name: string;
   description: string;
@@ -95,6 +101,7 @@ interface ProductFormData {
   in_stock: boolean;
   is_hidden: boolean;
   packPrices: PackPrice[];
+  customSizes: CustomSizePrice[];
 }
 
 const getInitialPackPrices = (category: ProductCategory): PackPrice[] => {
@@ -115,6 +122,7 @@ const initialFormData: ProductFormData = {
   in_stock: true,
   is_hidden: false,
   packPrices: getInitialPackPrices("beer"),
+  customSizes: [],
 };
 
 const categories: ProductCategory[] = ["beer", "wine", "spirits", "smokes"];
@@ -195,20 +203,32 @@ const ProductManagement = () => {
   const handleOpenEdit = async (product: Product) => {
     setEditingProduct(product);
     
-    // Fetch existing pack prices if category has pack sizes
+    // Fetch existing pack prices
     let packPrices = getInitialPackPrices(product.category);
-    if (PACK_SIZES_BY_CATEGORY[product.category].length > 0) {
-      const { data: existingPrices } = await supabase
-        .from("product_pack_prices")
-        .select("pack_size, price")
-        .eq("product_id", product.id);
+    let customSizes: CustomSizePrice[] = [];
+    
+    const { data: existingPrices } = await supabase
+      .from("product_pack_prices")
+      .select("pack_size, price")
+      .eq("product_id", product.id);
+    
+    if (existingPrices) {
+      // Separate predefined pack sizes from custom sizes
+      const predefinedSizes = PACK_SIZES_BY_CATEGORY[product.category].map(s => s.value);
       
-      if (existingPrices) {
-        packPrices = packPrices.map(p => {
-          const existing = existingPrices.find(ep => ep.pack_size === p.pack_size);
-          return existing ? { ...p, price: existing.price.toString() } : p;
-        });
-      }
+      packPrices = packPrices.map(p => {
+        const existing = existingPrices.find(ep => ep.pack_size === p.pack_size);
+        return existing ? { ...p, price: existing.price.toString() } : p;
+      });
+      
+      // Get custom sizes (those not in predefined list)
+      customSizes = existingPrices
+        .filter(ep => !predefinedSizes.includes(ep.pack_size))
+        .map(ep => ({
+          id: crypto.randomUUID(),
+          size: ep.pack_size,
+          price: ep.price.toString(),
+        }));
     }
     
     setFormData({
@@ -222,6 +242,7 @@ const ProductManagement = () => {
       in_stock: product.in_stock ?? true,
       is_hidden: product.is_hidden ?? false,
       packPrices,
+      customSizes,
     });
     setImagePreview(product.image_url || null);
     setDialogOpen(true);
@@ -451,10 +472,8 @@ const ProductManagement = () => {
           variant: "destructive",
         });
       } else {
-        // Save pack prices if category supports them
-        if (PACK_SIZES_BY_CATEGORY[formData.category].length > 0) {
-          await savePackPrices(editingProduct.id);
-        }
+        // Save pack prices and custom sizes
+        await savePackPrices(editingProduct.id);
         toast({
           title: "Success",
           description: "Product updated successfully",
@@ -476,8 +495,8 @@ const ProductManagement = () => {
           variant: "destructive",
         });
       } else {
-        // Save pack prices if category supports them
-        if (PACK_SIZES_BY_CATEGORY[formData.category].length > 0 && newProduct) {
+        // Save pack prices and custom sizes
+        if (newProduct) {
           await savePackPrices(newProduct.id);
         }
         toast({
@@ -499,8 +518,8 @@ const ProductManagement = () => {
       .delete()
       .eq("product_id", productId);
     
-    // Insert new prices (only for non-empty values)
-    const pricesToInsert = formData.packPrices
+    // Combine predefined pack prices and custom sizes
+    const predefinedPrices = formData.packPrices
       .filter(p => p.price && !isNaN(parseFloat(p.price)))
       .map(p => ({
         product_id: productId,
@@ -508,10 +527,20 @@ const ProductManagement = () => {
         price: parseFloat(p.price),
       }));
     
-    if (pricesToInsert.length > 0) {
+    const customPrices = formData.customSizes
+      .filter(cs => cs.size.trim() && cs.price && !isNaN(parseFloat(cs.price)))
+      .map(cs => ({
+        product_id: productId,
+        pack_size: cs.size.trim(),
+        price: parseFloat(cs.price),
+      }));
+    
+    const allPrices = [...predefinedPrices, ...customPrices];
+    
+    if (allPrices.length > 0) {
       await supabase
         .from("product_pack_prices")
-        .insert(pricesToInsert);
+        .insert(allPrices);
     }
   };
 
@@ -529,6 +558,32 @@ const ProductManagement = () => {
       ...prev,
       category,
       packPrices: getInitialPackPrices(category),
+    }));
+  };
+
+  const addCustomSize = () => {
+    setFormData(prev => ({
+      ...prev,
+      customSizes: [
+        ...prev.customSizes,
+        { id: crypto.randomUUID(), size: "", price: "" }
+      ],
+    }));
+  };
+
+  const updateCustomSize = (id: string, field: "size" | "price", value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      customSizes: prev.customSizes.map(cs =>
+        cs.id === id ? { ...cs, [field]: value } : cs
+      ),
+    }));
+  };
+
+  const removeCustomSize = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      customSizes: prev.customSizes.filter(cs => cs.id !== id),
     }));
   };
 
@@ -876,6 +931,65 @@ const ProductManagement = () => {
                 </div>
               </div>
             )}
+            
+            {/* Custom Size/Price Section */}
+            <div className="space-y-3 border border-border rounded-lg p-4 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-semibold">Additional Sizes & Prices</Label>
+                  <p className="text-sm text-muted-foreground mt-1">Add custom size variants with different prices</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCustomSize}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Size
+                </Button>
+              </div>
+              
+              {formData.customSizes.length > 0 && (
+                <div className="space-y-3">
+                  {formData.customSizes.map((cs) => (
+                    <div key={cs.id} className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Input
+                          placeholder="Size (e.g., 1L, 375ml)"
+                          value={cs.size}
+                          onChange={(e) => updateCustomSize(cs.id, "size", e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Price"
+                          value={cs.price}
+                          onChange={(e) => updateCustomSize(cs.id, "price", e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-destructive hover:text-destructive"
+                        onClick={() => removeCustomSize(cs.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {formData.customSizes.length === 0 && (
+                <p className="text-xs text-muted-foreground italic">No additional sizes added yet</p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
