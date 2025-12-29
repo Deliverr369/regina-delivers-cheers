@@ -134,8 +134,10 @@ const ProductManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [uploading, setUploading] = useState(false);
+  const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const quickUploadRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchStores();
@@ -299,6 +301,93 @@ const ProductManagement = () => {
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleQuickUploadClick = (productId: string) => {
+    setUploadingProductId(productId);
+    quickUploadRef.current?.click();
+  };
+
+  const handleQuickImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !uploadingProductId) {
+      setUploadingProductId(null);
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      setUploadingProductId(null);
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB",
+        variant: "destructive",
+      });
+      setUploadingProductId(null);
+      return;
+    }
+
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('store-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('store-images')
+        .getPublicUrl(filePath);
+
+      // Update product in database
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ image_url: publicUrl })
+        .eq('id', uploadingProductId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Refresh products list
+      fetchProducts();
+      
+      toast({
+        title: "Success",
+        description: "Product image updated",
+      });
+    } catch (error: any) {
+      console.error('Quick upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingProductId(null);
+      // Reset file input
+      if (quickUploadRef.current) {
+        quickUploadRef.current.value = '';
+      }
     }
   };
 
@@ -500,6 +589,15 @@ const ProductManagement = () => {
 
   return (
     <>
+      {/* Hidden file input for quick uploads */}
+      <input
+        ref={quickUploadRef}
+        type="file"
+        accept="image/*"
+        onChange={handleQuickImageUpload}
+        className="hidden"
+      />
+      
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Products</CardTitle>
@@ -563,10 +661,10 @@ const ProductManagement = () => {
                     product.is_hidden ? "opacity-60 bg-muted/50" : ""
                   }`}
                 >
-                  {/* Product Image */}
-                  <div className="flex-shrink-0 mr-4">
+                  {/* Product Image with Quick Upload */}
+                  <div className="flex-shrink-0 mr-4 relative group">
                     {product.image_url ? (
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border bg-background">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border bg-background relative">
                         <img
                           src={product.image_url}
                           alt={product.name}
@@ -575,10 +673,28 @@ const ProductManagement = () => {
                             (e.target as HTMLImageElement).src = '/placeholder.svg';
                           }}
                         />
+                        {/* Quick upload overlay */}
+                        <div 
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                          onClick={() => handleQuickUploadClick(product.id)}
+                        >
+                          {uploadingProductId === product.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4 text-white" />
+                          )}
+                        </div>
                       </div>
                     ) : (
-                      <div className="w-14 h-14 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center">
-                        <ImageIcon className="h-5 w-5 text-muted-foreground/50" />
+                      <div 
+                        className="w-14 h-14 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                        onClick={() => handleQuickUploadClick(product.id)}
+                      >
+                        {uploadingProductId === product.id ? (
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Upload className="h-5 w-5 text-muted-foreground/50 hover:text-primary" />
+                        )}
                       </div>
                     )}
                   </div>
