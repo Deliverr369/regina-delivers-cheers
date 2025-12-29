@@ -14,41 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      beer_pack_prices: {
-        Row: {
-          created_at: string
-          id: string
-          pack_size: string
-          price: number
-          product_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          pack_size: string
-          price: number
-          product_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          pack_size?: string
-          price?: number
-          product_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "beer_pack_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       order_items: {
         Row: {
           created_at: string
@@ -152,6 +117,41 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_pack_prices: {
+        Row: {
+          created_at: string
+          id: string
+          pack_size: string
+          price: number
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pack_size: string
+          price: number
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pack_size?: string
+          price?: number
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beer_pack_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

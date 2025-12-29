@@ -37,15 +37,29 @@ import { Database } from "@/integrations/supabase/types";
 
 type ProductCategory = Database["public"]["Enums"]["product_category"];
 
-const BEER_PACK_SIZES = [
-  { value: "1-tall", label: "1 Tall Can" },
-  { value: "6-pack", label: "6 Pack" },
-  { value: "8-pack", label: "8 Pack" },
-  { value: "15-pack", label: "15 Pack" },
-  { value: "24-pack", label: "24 Pack" },
-  { value: "36-pack", label: "36 Pack" },
-  { value: "48-pack", label: "48 Pack" },
-];
+const PACK_SIZES_BY_CATEGORY = {
+  beer: [
+    { value: "1-tall", label: "1 Tall Can" },
+    { value: "6-pack", label: "6 Pack" },
+    { value: "8-pack", label: "8 Pack" },
+    { value: "15-pack", label: "15 Pack" },
+    { value: "24-pack", label: "24 Pack" },
+    { value: "36-pack", label: "36 Pack" },
+    { value: "48-pack", label: "48 Pack" },
+  ],
+  wine: [
+    { value: "single-bottle", label: "Single Bottle" },
+    { value: "2-pack", label: "2-Pack" },
+    { value: "case-6", label: "Case of 6" },
+    { value: "case-12", label: "Case of 12" },
+  ],
+  spirits: [
+    { value: "single-bottle", label: "Single Bottle" },
+    { value: "2-pack", label: "2-Pack" },
+    { value: "case-6", label: "Case of 6" },
+  ],
+  smokes: [] as { value: string; label: string }[],
+};
 
 interface Store {
   id: string;
@@ -65,7 +79,7 @@ interface Product {
   is_hidden: boolean;
 }
 
-interface BeerPackPrice {
+interface PackPrice {
   pack_size: string;
   price: string;
 }
@@ -80,13 +94,15 @@ interface ProductFormData {
   image_url: string;
   in_stock: boolean;
   is_hidden: boolean;
-  beerPackPrices: BeerPackPrice[];
+  packPrices: PackPrice[];
 }
 
-const initialBeerPackPrices: BeerPackPrice[] = BEER_PACK_SIZES.map((size) => ({
-  pack_size: size.value,
-  price: "",
-}));
+const getInitialPackPrices = (category: ProductCategory): PackPrice[] => {
+  return PACK_SIZES_BY_CATEGORY[category].map((size) => ({
+    pack_size: size.value,
+    price: "",
+  }));
+};
 
 const initialFormData: ProductFormData = {
   name: "",
@@ -98,7 +114,7 @@ const initialFormData: ProductFormData = {
   image_url: "",
   in_stock: true,
   is_hidden: false,
-  beerPackPrices: initialBeerPackPrices,
+  packPrices: getInitialPackPrices("beer"),
 };
 
 const categories: ProductCategory[] = ["beer", "wine", "spirits", "smokes"];
@@ -161,10 +177,11 @@ const ProductManagement = () => {
 
   const handleOpenCreate = () => {
     setEditingProduct(null);
+    const category = "beer" as ProductCategory;
     setFormData({
       ...initialFormData,
       store_id: selectedStore !== "all" ? selectedStore : "",
-      beerPackPrices: initialBeerPackPrices.map(p => ({ ...p })),
+      packPrices: getInitialPackPrices(category),
     });
     setDialogOpen(true);
   };
@@ -172,16 +189,16 @@ const ProductManagement = () => {
   const handleOpenEdit = async (product: Product) => {
     setEditingProduct(product);
     
-    // Fetch existing beer pack prices if it's a beer product
-    let beerPackPrices = initialBeerPackPrices.map(p => ({ ...p }));
-    if (product.category === "beer") {
+    // Fetch existing pack prices if category has pack sizes
+    let packPrices = getInitialPackPrices(product.category);
+    if (PACK_SIZES_BY_CATEGORY[product.category].length > 0) {
       const { data: existingPrices } = await supabase
-        .from("beer_pack_prices")
+        .from("product_pack_prices")
         .select("pack_size, price")
         .eq("product_id", product.id);
       
       if (existingPrices) {
-        beerPackPrices = beerPackPrices.map(p => {
+        packPrices = packPrices.map(p => {
           const existing = existingPrices.find(ep => ep.pack_size === p.pack_size);
           return existing ? { ...p, price: existing.price.toString() } : p;
         });
@@ -198,7 +215,7 @@ const ProductManagement = () => {
       image_url: product.image_url || "",
       in_stock: product.in_stock ?? true,
       is_hidden: product.is_hidden ?? false,
-      beerPackPrices,
+      packPrices,
     });
     setDialogOpen(true);
   };
@@ -263,9 +280,9 @@ const ProductManagement = () => {
           variant: "destructive",
         });
       } else {
-        // Save beer pack prices if category is beer
-        if (formData.category === "beer") {
-          await saveBeerPackPrices(editingProduct.id);
+        // Save pack prices if category supports them
+        if (PACK_SIZES_BY_CATEGORY[formData.category].length > 0) {
+          await savePackPrices(editingProduct.id);
         }
         toast({
           title: "Success",
@@ -288,9 +305,9 @@ const ProductManagement = () => {
           variant: "destructive",
         });
       } else {
-        // Save beer pack prices if category is beer
-        if (formData.category === "beer" && newProduct) {
-          await saveBeerPackPrices(newProduct.id);
+        // Save pack prices if category supports them
+        if (PACK_SIZES_BY_CATEGORY[formData.category].length > 0 && newProduct) {
+          await savePackPrices(newProduct.id);
         }
         toast({
           title: "Success",
@@ -304,15 +321,15 @@ const ProductManagement = () => {
     setSaving(false);
   };
 
-  const saveBeerPackPrices = async (productId: string) => {
+  const savePackPrices = async (productId: string) => {
     // Delete existing prices for this product
     await supabase
-      .from("beer_pack_prices")
+      .from("product_pack_prices")
       .delete()
       .eq("product_id", productId);
     
     // Insert new prices (only for non-empty values)
-    const pricesToInsert = formData.beerPackPrices
+    const pricesToInsert = formData.packPrices
       .filter(p => p.price && !isNaN(parseFloat(p.price)))
       .map(p => ({
         product_id: productId,
@@ -322,17 +339,25 @@ const ProductManagement = () => {
     
     if (pricesToInsert.length > 0) {
       await supabase
-        .from("beer_pack_prices")
+        .from("product_pack_prices")
         .insert(pricesToInsert);
     }
   };
 
-  const updateBeerPackPrice = (packSize: string, price: string) => {
+  const updatePackPrice = (packSize: string, price: string) => {
     setFormData(prev => ({
       ...prev,
-      beerPackPrices: prev.beerPackPrices.map(p =>
+      packPrices: prev.packPrices.map(p =>
         p.pack_size === packSize ? { ...p, price } : p
       ),
+    }));
+  };
+
+  const handleCategoryChange = (category: ProductCategory) => {
+    setFormData(prev => ({
+      ...prev,
+      category,
+      packPrices: getInitialPackPrices(category),
     }));
   };
 
@@ -588,7 +613,7 @@ const ProductManagement = () => {
               <Label htmlFor="category">Category *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value: ProductCategory) => setFormData({ ...formData, category: value })}
+                onValueChange={(value: ProductCategory) => handleCategoryChange(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
@@ -603,14 +628,16 @@ const ProductManagement = () => {
               </Select>
             </div>
             
-            {/* Beer Pack Pricing Section */}
-            {formData.category === "beer" && (
+            {/* Pack Pricing Section - shows for beer, wine, spirits */}
+            {PACK_SIZES_BY_CATEGORY[formData.category].length > 0 && (
               <div className="space-y-3 border border-border rounded-lg p-4 bg-muted/30">
-                <Label className="text-base font-semibold">Beer Pack Prices</Label>
+                <Label className="text-base font-semibold">
+                  {formData.category.charAt(0).toUpperCase() + formData.category.slice(1)} Pack Prices
+                </Label>
                 <p className="text-sm text-muted-foreground">Set prices for different pack sizes. Leave empty to use base price with multiplier.</p>
                 <div className="grid grid-cols-2 gap-3">
-                  {BEER_PACK_SIZES.map((size) => {
-                    const packPrice = formData.beerPackPrices.find(p => p.pack_size === size.value);
+                  {PACK_SIZES_BY_CATEGORY[formData.category].map((size) => {
+                    const packPrice = formData.packPrices.find(p => p.pack_size === size.value);
                     return (
                       <div key={size.value} className="space-y-1">
                         <Label htmlFor={`pack-${size.value}`} className="text-xs text-muted-foreground">
@@ -622,7 +649,7 @@ const ProductManagement = () => {
                           step="0.01"
                           placeholder="0.00"
                           value={packPrice?.price || ""}
-                          onChange={(e) => updateBeerPackPrice(size.value, e.target.value)}
+                          onChange={(e) => updatePackPrice(size.value, e.target.value)}
                           className="h-9"
                         />
                       </div>
