@@ -57,6 +57,23 @@ const StoreDetail = () => {
     },
   });
 
+  // Fetch beer pack prices for all beer products
+  const beerProductIds = products.filter(p => p.category === "beer").map(p => p.id);
+  const { data: beerPackPrices = [] } = useQuery({
+    queryKey: ["beer_pack_prices", beerProductIds],
+    queryFn: async () => {
+      if (beerProductIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("beer_pack_prices")
+        .select("*")
+        .in("product_id", beerProductIds);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: beerProductIds.length > 0,
+  });
+
   const productsByCategory = {
     beer: products.filter((p) => p.category === "beer"),
     wine: products.filter((p) => p.category === "wine"),
@@ -78,12 +95,22 @@ const StoreDetail = () => {
     if (qty === 0) {
       updateQuantity(product.id, 1);
     }
+    const selectedSize = selectedPackSizes[product.id] || "1-tall";
     const packSize = product.category === "beer" 
-      ? BEER_PACK_SIZES.find(p => p.value === (selectedPackSizes[product.id] || "1-tall"))
+      ? BEER_PACK_SIZES.find(p => p.value === selectedSize)
       : null;
-    const displayPrice = packSize 
-      ? Number(product.price) * packSize.multiplier 
-      : Number(product.price);
+    
+    // Check for stored price first, then fall back to multiplier calculation
+    const storedPrice = beerPackPrices.find(
+      bp => bp.product_id === product.id && bp.pack_size === selectedSize
+    );
+    
+    const displayPrice = storedPrice 
+      ? Number(storedPrice.price)
+      : packSize 
+        ? Number(product.price) * packSize.multiplier 
+        : Number(product.price);
+    
     const displayName = packSize && packSize.value !== "1-tall"
       ? `${product.name} (${packSize.label})`
       : product.name;
@@ -110,7 +137,20 @@ const StoreDetail = () => {
 
   const getDisplayPrice = (product: typeof products[0]) => {
     if (product.category !== "beer") return Number(product.price);
-    const packSize = BEER_PACK_SIZES.find(p => p.value === getSelectedPackSize(product.id));
+    
+    const selectedSize = getSelectedPackSize(product.id);
+    
+    // Check for stored price first
+    const storedPrice = beerPackPrices.find(
+      bp => bp.product_id === product.id && bp.pack_size === selectedSize
+    );
+    
+    if (storedPrice) {
+      return Number(storedPrice.price);
+    }
+    
+    // Fall back to multiplier calculation
+    const packSize = BEER_PACK_SIZES.find(p => p.value === selectedSize);
     return Number(product.price) * (packSize?.multiplier || 1);
   };
 
