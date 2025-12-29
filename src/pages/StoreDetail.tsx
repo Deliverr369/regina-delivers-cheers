@@ -42,12 +42,36 @@ interface PackPrice {
   price: number;
 }
 
+// Smokes subcategories for filtering
+const SMOKES_SUBCATEGORIES = [
+  { value: "all", label: "All" },
+  { value: "cigarettes", label: "Cigarettes" },
+  { value: "cigars", label: "Cigars" },
+  { value: "vapes", label: "Vapes" },
+  { value: "rolling", label: "Rolling Tobacco" },
+  { value: "pouches", label: "Nicotine Pouches" },
+  { value: "accessories", label: "Accessories" },
+];
+
+// Helper to detect subcategory from product name
+const getSmokesSubcategory = (productName: string): string => {
+  const name = productName.toLowerCase();
+  if (name.includes("cigarette") || name.includes("marlboro") || name.includes("camel") || name.includes("newport") || name.includes("american spirit") || name.includes("pall mall") || name.includes("winston") || name.includes("l&m") || name.includes("lucky strike")) return "cigarettes";
+  if (name.includes("cigar") || name.includes("backwood") || name.includes("swisher") || name.includes("black & mild") || name.includes("phillies") || name.includes("dutch") || name.includes("garcia vega") || name.includes("white owl")) return "cigars";
+  if (name.includes("vape") || name.includes("juul") || name.includes("stlth") || name.includes("vuse") || name.includes("elf bar") || name.includes("lost mary") || name.includes("hyde") || name.includes("pod") || name.includes("e-liquid") || name.includes("disposable")) return "vapes";
+  if (name.includes("rolling") || name.includes("drum") || name.includes("top ") || name.includes("bugler") || name.includes("zig-zag") || name.includes("raw ") || name.includes("papers") || name.includes("filter") || name.includes("rizla") || name.includes("elements")) return "rolling";
+  if (name.includes("pouch") || name.includes("zyn") || name.includes("velo") || name.includes("on!") || name.includes("nicotine pouch") || name.includes("snus")) return "pouches";
+  if (name.includes("lighter") || name.includes("case") || name.includes("grinder") || name.includes("ashtray") || name.includes("holder") || name.includes("cutter") || name.includes("humidor")) return "accessories";
+  return "cigarettes"; // default
+};
+
 const StoreDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
+  const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
@@ -379,9 +403,33 @@ const StoreDetail = () => {
                 .filter(([category]) => availableCategories.includes(category))
                 .map(([category, items]) => (
                 <TabsContent key={category} value={category}>
+                  {category === "smokes" && items.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {SMOKES_SUBCATEGORIES.map((sub) => {
+                        const count = sub.value === "all" 
+                          ? items.length 
+                          : items.filter(p => getSmokesSubcategory(p.name) === sub.value).length;
+                        if (sub.value !== "all" && count === 0) return null;
+                        return (
+                          <Button
+                            key={sub.value}
+                            variant={smokesSubcategory === sub.value ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setSmokesSubcategory(sub.value)}
+                            className="rounded-full"
+                          >
+                            {sub.label} ({count})
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
                   {items.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {items.map((product) => (
+                      {(category === "smokes" && smokesSubcategory !== "all"
+                        ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
+                        : items
+                      ).map((product) => (
                         <ProductCard key={product.id} product={product} />
                       ))}
                     </div>
