@@ -81,12 +81,12 @@ const StoreDetail = () => {
   };
 
   const ProductCard = ({ product }: { product: typeof products[0] }) => (
-    <div className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-square overflow-hidden">
+    <div className="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300">
+      <div className="aspect-square overflow-hidden bg-muted/30">
         <img 
           src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"} 
           alt={product.name} 
-          className="w-full h-full object-cover" 
+          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" 
         />
       </div>
       <div className="p-4">
