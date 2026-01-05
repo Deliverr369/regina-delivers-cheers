@@ -83,12 +83,14 @@ interface Product {
 interface PackPrice {
   pack_size: string;
   price: string;
+  is_hidden: boolean;
 }
 
 interface CustomSizePrice {
   id: string;
   size: string;
   price: string;
+  is_hidden: boolean;
 }
 
 interface ProductFormData {
@@ -109,6 +111,7 @@ const getInitialPackPrices = (category: ProductCategory): PackPrice[] => {
   return PACK_SIZES_BY_CATEGORY[category].map((size) => ({
     pack_size: size.value,
     price: "",
+    is_hidden: false,
   }));
 };
 
@@ -211,7 +214,7 @@ const ProductManagement = () => {
     
     const { data: existingPrices } = await supabase
       .from("product_pack_prices")
-      .select("pack_size, price")
+      .select("pack_size, price, is_hidden")
       .eq("product_id", product.id);
     
     if (existingPrices) {
@@ -220,7 +223,9 @@ const ProductManagement = () => {
       
       packPrices = packPrices.map(p => {
         const existing = existingPrices.find(ep => ep.pack_size === p.pack_size);
-        return existing ? { ...p, price: existing.price.toString() } : p;
+        return existing 
+          ? { ...p, price: existing.price.toString(), is_hidden: existing.is_hidden ?? false } 
+          : p;
       });
       
       // Get custom sizes (those not in predefined list)
@@ -230,6 +235,7 @@ const ProductManagement = () => {
           id: crypto.randomUUID(),
           size: ep.pack_size,
           price: ep.price.toString(),
+          is_hidden: ep.is_hidden ?? false,
         }));
     }
     
@@ -542,20 +548,23 @@ const ProductManagement = () => {
       .eq("product_id", productId);
     
     // Combine predefined pack prices and custom sizes
+    // Include entries with price OR that are hidden (to track hidden state)
     const predefinedPrices = formData.packPrices
-      .filter(p => p.price && !isNaN(parseFloat(p.price)))
+      .filter(p => (p.price && !isNaN(parseFloat(p.price))) || p.is_hidden)
       .map(p => ({
         product_id: productId,
         pack_size: p.pack_size,
-        price: parseFloat(p.price),
+        price: p.price ? parseFloat(p.price) : 0,
+        is_hidden: p.is_hidden,
       }));
     
     const customPrices = formData.customSizes
-      .filter(cs => cs.size.trim() && cs.price && !isNaN(parseFloat(cs.price)))
+      .filter(cs => cs.size.trim() && ((cs.price && !isNaN(parseFloat(cs.price))) || cs.is_hidden))
       .map(cs => ({
         product_id: productId,
         pack_size: cs.size.trim(),
-        price: parseFloat(cs.price),
+        price: cs.price ? parseFloat(cs.price) : 0,
+        is_hidden: cs.is_hidden,
       }));
     
     const allPrices = [...predefinedPrices, ...customPrices];
@@ -567,11 +576,11 @@ const ProductManagement = () => {
     }
   };
 
-  const updatePackPrice = (packSize: string, price: string) => {
+  const updatePackPrice = (packSize: string, field: "price" | "is_hidden", value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       packPrices: prev.packPrices.map(p =>
-        p.pack_size === packSize ? { ...p, price } : p
+        p.pack_size === packSize ? { ...p, [field]: value } : p
       ),
     }));
   };
@@ -589,12 +598,12 @@ const ProductManagement = () => {
       ...prev,
       customSizes: [
         ...prev.customSizes,
-        { id: crypto.randomUUID(), size: "", price: "" }
+        { id: crypto.randomUUID(), size: "", price: "", is_hidden: false }
       ],
     }));
   };
 
-  const updateCustomSize = (id: string, field: "size" | "price", value: string) => {
+  const updateCustomSize = (id: string, field: "size" | "price" | "is_hidden", value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       customSizes: prev.customSizes.map(cs =>
@@ -928,25 +937,37 @@ const ProductManagement = () => {
             {PACK_SIZES_BY_CATEGORY[formData.category].length > 0 && (
               <div className="space-y-3 border border-border rounded-lg p-4 bg-muted/30">
                 <Label className="text-base font-semibold">
-                  {formData.category.charAt(0).toUpperCase() + formData.category.slice(1)} Pack Prices
+                  {formData.category.charAt(0).toUpperCase() + formData.category.slice(1)} Pack Sizes
                 </Label>
-                <p className="text-sm text-muted-foreground">Set prices for different pack sizes. Leave empty to use base price with multiplier.</p>
-                <div className="grid grid-cols-2 gap-3">
+                <p className="text-sm text-muted-foreground">Set prices and visibility for each pack size. Toggle off to hide from customers.</p>
+                <div className="space-y-3">
                   {PACK_SIZES_BY_CATEGORY[formData.category].map((size) => {
                     const packPrice = formData.packPrices.find(p => p.pack_size === size.value);
+                    const isHidden = packPrice?.is_hidden ?? false;
                     return (
-                      <div key={size.value} className="space-y-1">
-                        <Label htmlFor={`pack-${size.value}`} className="text-xs text-muted-foreground">
-                          {size.label}
-                        </Label>
+                      <div key={size.value} className={`flex items-center gap-3 p-2 rounded-lg ${isHidden ? 'bg-destructive/10' : ''}`}>
+                        <div className="flex items-center gap-2 min-w-[100px]">
+                          <Switch
+                            id={`hide-${size.value}`}
+                            checked={!isHidden}
+                            onCheckedChange={(checked) => updatePackPrice(size.value, "is_hidden", !checked)}
+                          />
+                          <Label 
+                            htmlFor={`hide-${size.value}`} 
+                            className={`text-sm font-medium ${isHidden ? 'text-muted-foreground line-through' : ''}`}
+                          >
+                            {size.label}
+                          </Label>
+                        </div>
                         <Input
                           id={`pack-${size.value}`}
                           type="number"
                           step="0.01"
-                          placeholder="0.00"
+                          placeholder="Price"
                           value={packPrice?.price || ""}
-                          onChange={(e) => updatePackPrice(size.value, e.target.value)}
-                          className="h-9"
+                          onChange={(e) => updatePackPrice(size.value, "price", e.target.value)}
+                          className="h-9 flex-1"
+                          disabled={isHidden}
                         />
                       </div>
                     );
@@ -976,13 +997,18 @@ const ProductManagement = () => {
               {formData.customSizes.length > 0 && (
                 <div className="space-y-3">
                   {formData.customSizes.map((cs) => (
-                    <div key={cs.id} className="flex items-center gap-2">
+                    <div key={cs.id} className={`flex items-center gap-2 p-2 rounded-lg ${cs.is_hidden ? 'bg-destructive/10' : ''}`}>
+                      <Switch
+                        checked={!cs.is_hidden}
+                        onCheckedChange={(checked) => updateCustomSize(cs.id, "is_hidden", !checked)}
+                      />
                       <div className="flex-1">
                         <Input
                           placeholder="Size (e.g., 1L, 375ml)"
                           value={cs.size}
                           onChange={(e) => updateCustomSize(cs.id, "size", e.target.value)}
-                          className="h-9"
+                          className={`h-9 ${cs.is_hidden ? 'opacity-50' : ''}`}
+                          disabled={cs.is_hidden}
                         />
                       </div>
                       <div className="flex-1">
@@ -992,7 +1018,8 @@ const ProductManagement = () => {
                           placeholder="Price"
                           value={cs.price}
                           onChange={(e) => updateCustomSize(cs.id, "price", e.target.value)}
-                          className="h-9"
+                          className={`h-9 ${cs.is_hidden ? 'opacity-50' : ''}`}
+                          disabled={cs.is_hidden}
                         />
                       </div>
                       <Button

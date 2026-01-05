@@ -40,6 +40,7 @@ interface PackPrice {
   product_id: string;
   pack_size: string;
   price: number;
+  is_hidden: boolean;
 }
 
 // Smokes subcategories for filtering
@@ -110,7 +111,7 @@ const StoreDetail = () => {
       if (productIdsWithPacks.length === 0) return [];
       const { data, error } = await supabase
         .from("product_pack_prices")
-        .select("product_id, pack_size, price")
+        .select("product_id, pack_size, price, is_hidden")
         .in("product_id", productIdsWithPacks);
       
       if (error) throw error;
@@ -118,6 +119,20 @@ const StoreDetail = () => {
     },
     enabled: productIdsWithPacks.length > 0,
   });
+
+  // Helper to get available (non-hidden) pack sizes for a product
+  const getAvailablePackSizes = (productId: string, category: keyof typeof PACK_SIZES_BY_CATEGORY) => {
+    const baseSizes = PACK_SIZES_BY_CATEGORY[category];
+    const productPackPrices = packPrices.filter(pp => pp.product_id === productId);
+    
+    // Filter out sizes that are explicitly hidden
+    return baseSizes.filter(size => {
+      const packPrice = productPackPrices.find(pp => pp.pack_size === size.value);
+      // If there's no entry for this size, it's visible by default
+      // If there's an entry, check if it's hidden
+      return !packPrice?.is_hidden;
+    });
+  };
 
   const productsByCategory = {
     beer: products.filter((p) => p.category === "beer"),
@@ -183,11 +198,21 @@ const StoreDetail = () => {
     });
   };
 
-  const getSelectedPackSize = (product: typeof products[0]) => {
+  const getPackSizesForProduct = (product: typeof products[0]) => {
     const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
-    const packSizes = PACK_SIZES_BY_CATEGORY[category];
-    const defaultSize = packSizes.length > 0 ? packSizes[0].value : "single";
-    return selectedPackSizes[product.id] || defaultSize;
+    return getAvailablePackSizes(product.id, category);
+  };
+
+  const getSelectedPackSize = (product: typeof products[0]) => {
+    const availableSizes = getPackSizesForProduct(product);
+    const defaultSize = availableSizes.length > 0 ? availableSizes[0].value : "single";
+    const currentSelection = selectedPackSizes[product.id];
+    
+    // Ensure selected size is still available
+    if (currentSelection && availableSizes.some(s => s.value === currentSelection)) {
+      return currentSelection;
+    }
+    return defaultSize;
   };
 
   const setPackSize = (productId: string, value: string) => {
@@ -196,15 +221,15 @@ const StoreDetail = () => {
 
   const getDisplayPrice = (product: typeof products[0]) => {
     const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
-    const packSizes = PACK_SIZES_BY_CATEGORY[category];
+    const availableSizes = getPackSizesForProduct(product);
     
-    if (packSizes.length === 0) return Number(product.price);
+    if (availableSizes.length === 0) return Number(product.price);
     
     const selectedSize = getSelectedPackSize(product);
     
     // Check for stored price first
     const storedPrice = packPrices.find(
-      bp => bp.product_id === product.id && bp.pack_size === selectedSize
+      bp => bp.product_id === product.id && bp.pack_size === selectedSize && !bp.is_hidden
     );
     
     if (storedPrice) {
@@ -212,13 +237,8 @@ const StoreDetail = () => {
     }
     
     // Fall back to multiplier calculation
-    const packSize = packSizes.find(p => p.value === selectedSize);
+    const packSize = availableSizes.find(p => p.value === selectedSize);
     return Number(product.price) * (packSize?.multiplier || 1);
-  };
-
-  const getPackSizesForProduct = (product: typeof products[0]) => {
-    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
-    return PACK_SIZES_BY_CATEGORY[category];
   };
 
   const ProductCard = ({ product }: { product: typeof products[0] }) => (

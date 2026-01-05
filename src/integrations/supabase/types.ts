@@ -125,6 +125,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_hidden: boolean
           pack_size: string
           price: number
           product_id: string
@@ -133,6 +134,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_hidden?: boolean
           pack_size: string
           price: number
           product_id: string
@@ -141,6 +143,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_hidden?: boolean
           pack_size?: string
           price?: number
           product_id?: string
