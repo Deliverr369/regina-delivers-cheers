@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,6 +34,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { processProductImage } from "@/utils/imageProcessor";
 
 type ProductCategory = Database["public"]["Enums"]["product_category"];
 
@@ -144,6 +145,7 @@ const ProductManagement = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quickUploadRef = useRef<HTMLInputElement>(null);
 
@@ -262,28 +264,37 @@ const ProductManagement = () => {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 10MB for processing)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image under 5MB",
+        description: "Please select an image under 10MB",
         variant: "destructive",
       });
       return;
     }
 
     setUploading(true);
+    setProcessingStatus("Initializing...");
 
     try {
+      // Process image: remove background and add white background
+      const processedBlob = await processProductImage(file, (status) => {
+        setProcessingStatus(status);
+      });
+
       // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
       const filePath = `products/${fileName}`;
+
+      setProcessingStatus("Uploading...");
 
       // Upload to Supabase storage
       const { error: uploadError } = await supabase.storage
         .from('store-images')
-        .upload(filePath, file);
+        .upload(filePath, processedBlob, {
+          contentType: 'image/jpeg',
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -299,17 +310,18 @@ const ProductManagement = () => {
       
       toast({
         title: "Success",
-        description: "Image uploaded successfully",
+        description: "Image processed and uploaded successfully",
       });
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload image",
+        description: error.message || "Failed to process and upload image",
         variant: "destructive",
       });
     } finally {
       setUploading(false);
+      setProcessingStatus("");
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -348,27 +360,38 @@ const ProductManagement = () => {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image under 5MB",
+        description: "Please select an image under 10MB",
         variant: "destructive",
       });
       setUploadingProductId(null);
       return;
     }
 
+    toast({
+      title: "Processing image",
+      description: "Removing background and optimizing...",
+    });
+
     try {
+      // Process image: remove background and add white background
+      const processedBlob = await processProductImage(file, (status) => {
+        console.log('Processing:', status);
+      });
+
       // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
       const filePath = `products/${fileName}`;
 
       // Upload to Supabase storage
       const { error: uploadError } = await supabase.storage
         .from('store-images')
-        .upload(filePath, file);
+        .upload(filePath, processedBlob, {
+          contentType: 'image/jpeg',
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -394,13 +417,13 @@ const ProductManagement = () => {
       
       toast({
         title: "Success",
-        description: "Product image updated",
+        description: "Product image processed and updated",
       });
     } catch (error: any) {
       console.error('Quick upload error:', error);
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload image",
+        description: error.message || "Failed to process and upload image",
         variant: "destructive",
       });
     } finally {
@@ -1033,32 +1056,40 @@ const ProductManagement = () => {
               )}
 
               {/* Upload Button */}
-              <div className="flex items-center gap-3">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <>Uploading...</>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Image
-                    </>
-                  )}
-                </Button>
-                <span className="text-xs text-muted-foreground">Max 5MB</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Image
+                      </>
+                    )}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">Max 10MB • Auto background removal</span>
+                </div>
+                {processingStatus && (
+                  <p className="text-xs text-primary animate-pulse">{processingStatus}</p>
+                )}
               </div>
 
               {/* Manual URL Input */}
