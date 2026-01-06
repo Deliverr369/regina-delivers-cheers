@@ -38,28 +38,40 @@ const PromoBanner = () => {
   if (loading || !banner) return null;
 
   return (
-    <section className="bg-gradient-to-r from-gray-50 to-gray-100 py-12 md:py-16">
+    <section className="bg-white py-8 md:py-12">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
           {/* Left side product images */}
-          <div className="hidden md:flex items-end gap-2">
-            <div className="w-20 h-28 bg-gradient-to-b from-blue-600 to-blue-800 rounded-lg shadow-lg transform -rotate-6"></div>
-            <div className="w-20 h-32 bg-gradient-to-b from-red-500 to-red-700 rounded-lg shadow-lg"></div>
-            <div className="w-20 h-30 bg-gradient-to-b from-blue-400 to-blue-600 rounded-lg shadow-lg transform rotate-3"></div>
+          <div className="hidden md:flex items-end gap-1">
+            <img 
+              src="/images/products/budweiser.jpg" 
+              alt="Bud Light" 
+              className="w-16 h-24 object-contain transform -rotate-3"
+            />
+            <img 
+              src="/images/products/heineken.jpg" 
+              alt="Budweiser" 
+              className="w-18 h-28 object-contain"
+            />
+            <img 
+              src="/images/products/corona-extra.jpg" 
+              alt="Kokanee" 
+              className="w-20 h-32 object-contain transform rotate-2"
+            />
           </div>
 
           {/* Center content */}
-          <div className="text-center flex flex-col items-center gap-4">
-            <h2 className="text-4xl md:text-5xl font-display font-bold italic text-primary">
+          <div className="text-center flex flex-col items-center gap-2">
+            <h2 className="text-4xl md:text-5xl font-display font-bold italic text-primary tracking-tight">
               {banner.title}
             </h2>
             {banner.subtitle && (
-              <h3 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+              <h3 className="text-3xl md:text-4xl font-display font-bold text-foreground tracking-tight">
                 {banner.subtitle}
               </h3>
             )}
             {banner.description && (
-              <p className="text-muted-foreground text-lg max-w-md">
+              <p className="text-muted-foreground text-base md:text-lg max-w-sm mt-2">
                 {banner.description}
               </p>
             )}
@@ -67,7 +79,7 @@ const PromoBanner = () => {
               <Link to={banner.button_link}>
                 <Button 
                   size="lg" 
-                  className="mt-2 bg-foreground text-background hover:bg-foreground/90 rounded-none px-8 py-6 text-lg font-bold"
+                  className="mt-4 bg-foreground text-background hover:bg-foreground/90 rounded-none px-10 py-6 text-lg font-bold uppercase tracking-wide"
                 >
                   {banner.button_text}
                 </Button>
@@ -76,10 +88,22 @@ const PromoBanner = () => {
           </div>
 
           {/* Right side product images */}
-          <div className="hidden md:flex items-end gap-2">
-            <div className="w-16 h-24 bg-gradient-to-b from-amber-100 to-amber-300 rounded-lg shadow-lg transform -rotate-3"></div>
-            <div className="w-20 h-32 bg-gradient-to-b from-pink-400 to-pink-600 rounded-lg shadow-lg"></div>
-            <div className="w-20 h-30 bg-gradient-to-b from-purple-500 to-purple-700 rounded-lg shadow-lg transform rotate-6"></div>
+          <div className="hidden md:flex items-end gap-1">
+            <img 
+              src="/images/products/stella-artois.jpg" 
+              alt="Stella Artois" 
+              className="w-16 h-24 object-contain transform -rotate-2"
+            />
+            <img 
+              src="/images/products/coors-light.jpg" 
+              alt="Palm Bay" 
+              className="w-18 h-28 object-contain"
+            />
+            <img 
+              src="/images/products/pilsner-urquell.jpg" 
+              alt="Mike's" 
+              className="w-20 h-32 object-contain transform rotate-3"
+            />
           </div>
         </div>
       </div>
