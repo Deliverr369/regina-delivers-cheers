@@ -165,6 +165,9 @@ const ProductManagement = () => {
   const [savingInline, setSavingInline] = useState<string | null>(null);
   const [inlinePackEditing, setInlinePackEditing] = useState<Record<string, string>>({});
   const [savingPackInline, setSavingPackInline] = useState<string | null>(null);
+  // For inline "add size" rows: keyed by product.id
+  const [addingSizeFor, setAddingSizeFor] = useState<Record<string, { size: string; price: string }>>({}); 
+  const [savingNewSize, setSavingNewSize] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStores();
