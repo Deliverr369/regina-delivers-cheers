@@ -158,6 +158,9 @@ const Header = () => {
             </Link>
             {user && (
               <>
+                <Link to="/profile" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
+                  My Profile
+                </Link>
                 <Link to="/orders" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
                   My Orders
                 </Link>
