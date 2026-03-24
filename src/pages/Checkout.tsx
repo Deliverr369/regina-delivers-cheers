@@ -38,12 +38,21 @@ const Checkout = () => {
     deliveryInstructions: "",
     paymentMethod: "card",
   });
+  const [cityError, setCityError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+    if (name === "city") {
+      if (value.trim().toLowerCase() !== "regina") {
+        setCityError("Sorry, we are currently out of service area. We only deliver within Regina.");
+      } else {
+        setCityError(null);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +60,11 @@ const Checkout = () => {
     
     if (!user) {
       navigate("/login");
+      return;
+    }
+
+    if (formData.city.trim().toLowerCase() !== "regina") {
+      setCityError("Sorry, we are currently out of service area. We only deliver within Regina.");
       return;
     }
 
