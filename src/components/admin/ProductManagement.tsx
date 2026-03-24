@@ -707,6 +707,35 @@ const ProductManagement = () => {
     return Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredProducts]);
 
+  const CATEGORY_SECTIONS: { key: ProductCategory; label: string; color: string }[] = [
+    { key: "beer", label: "🍺 Beer", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
+    { key: "wine", label: "🍷 Wine", color: "bg-rose-500/10 text-rose-700 border-rose-500/30" },
+    { key: "spirits", label: "🥃 Spirits", color: "bg-violet-500/10 text-violet-700 border-violet-500/30" },
+    { key: "smokes", label: "🚬 Smokes & More", color: "bg-slate-500/10 text-slate-700 border-slate-500/30" },
+  ];
+
+  const categorizedGroups = useMemo(() => {
+    const result: Record<ProductCategory, typeof groupedProducts> = {
+      beer: [], wine: [], spirits: [], smokes: [],
+    };
+    groupedProducts.forEach((g) => {
+      const cat = g.category as ProductCategory;
+      if (result[cat]) result[cat].push(g);
+    });
+    return result;
+  }, [groupedProducts]);
+
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["beer", "wine", "spirits", "smokes"]));
+
+  const toggleCategory = (cat: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
+
   const toggleGroup = (name: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
