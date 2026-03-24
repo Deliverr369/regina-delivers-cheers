@@ -764,6 +764,38 @@ const ProductManagement = () => {
     else fetchPackPrices();
   };
 
+  const handleSaveNewSize = async (productId: string) => {
+    const newSize = addingSizeFor[productId];
+    if (!newSize?.size.trim() || !newSize?.price || isNaN(parseFloat(newSize.price))) {
+      toast({ title: "Please enter both size and price", variant: "destructive" });
+      return;
+    }
+    setSavingNewSize(productId);
+    const { error } = await supabase.from("product_pack_prices").insert({
+      product_id: productId,
+      pack_size: newSize.size.trim(),
+      price: parseFloat(newSize.price),
+      is_hidden: false,
+    });
+    if (error) {
+      toast({ title: "Error", description: "Failed to add size", variant: "destructive" });
+    } else {
+      toast({ title: "Size added" });
+      setAddingSizeFor((prev) => { const n = { ...prev }; delete n[productId]; return n; });
+      fetchPackPrices();
+    }
+    setSavingNewSize(null);
+  };
+
+  const handleDeletePackPrice = async (packId: string) => {
+    const { error } = await supabase.from("product_pack_prices").delete().eq("id", packId);
+    if (error) toast({ title: "Error", description: "Failed to delete size", variant: "destructive" });
+    else {
+      toast({ title: "Size removed" });
+      fetchPackPrices();
+    }
+  };
+
   const fetchPackPrices = async () => {
     const { data, error } = await supabase
       .from("product_pack_prices")
