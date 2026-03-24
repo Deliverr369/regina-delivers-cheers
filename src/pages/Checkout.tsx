@@ -268,6 +268,7 @@ const Checkout = () => {
                           value={formData.city}
                           onChange={handleChange}
                           required
+                          className={cityError ? "border-destructive" : ""}
                         />
                       </div>
                       <div>
