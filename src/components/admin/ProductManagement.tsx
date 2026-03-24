@@ -674,6 +674,53 @@ const ProductManagement = () => {
     return matchesStore && matchesCategory && matchesSearch;
   });
 
+  // Group products by name
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, { name: string; category: string; image_url: string | null; products: Product[] }> = {};
+    filteredProducts.forEach((p) => {
+      const key = p.name.toLowerCase().trim();
+      if (!groups[key]) {
+        groups[key] = { name: p.name, category: p.category, image_url: p.image_url, products: [] };
+      }
+      groups[key].products.push(p);
+    });
+    return Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
+  }, [filteredProducts]);
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [inlineEditing, setInlineEditing] = useState<Record<string, string>>({});
+  const [savingInline, setSavingInline] = useState<string | null>(null);
+
+  const toggleGroup = (name: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  const handleInlinePriceChange = (productId: string, value: string) => {
+    setInlineEditing((prev) => ({ ...prev, [productId]: value }));
+  };
+
+  const handleInlinePriceSave = async (productId: string) => {
+    const newPrice = parseFloat(inlineEditing[productId]);
+    if (isNaN(newPrice) || newPrice < 0) {
+      toast({ title: "Invalid price", variant: "destructive" });
+      return;
+    }
+    setSavingInline(productId);
+    const { error } = await supabase.from("products").update({ price: newPrice }).eq("id", productId);
+    if (error) toast({ title: "Error", description: "Failed to update price", variant: "destructive" });
+    else {
+      toast({ title: "Price updated" });
+      setInlineEditing((prev) => { const n = { ...prev }; delete n[productId]; return n; });
+      fetchProducts();
+    }
+    setSavingInline(null);
+  };
+
   return (
     <>
       {/* Hidden file input for quick uploads */}
@@ -735,122 +782,119 @@ const ProductManagement = () => {
 
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Loading products...</div>
-          ) : filteredProducts.length === 0 ? (
+          ) : groupedProducts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No products found. Add your first product!
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className={`flex items-center justify-between p-4 border rounded-lg ${
-                    product.is_hidden ? "opacity-60 bg-muted/50" : ""
-                  }`}
-                >
-                  {/* Product Image with Quick Upload */}
-                  <div className="flex-shrink-0 mr-4 relative group">
-                    {product.image_url ? (
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border bg-background relative">
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/placeholder.svg';
-                          }}
-                        />
-                        {/* Quick upload overlay */}
-                        <div 
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                          onClick={() => handleQuickUploadClick(product.id)}
-                        >
-                          {uploadingProductId === product.id ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Upload className="h-4 w-4 text-white" />
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className="w-14 h-14 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
-                        onClick={() => handleQuickUploadClick(product.id)}
-                      >
-                        {uploadingProductId === product.id ? (
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="space-y-2">
+              {groupedProducts.map((group) => {
+                const isExpanded = expandedGroups.has(group.name);
+                return (
+                  <div key={group.name} className="border rounded-lg overflow-hidden">
+                    {/* Product Header */}
+                    <div
+                      className="flex items-center gap-3 p-3 bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
+                      onClick={() => toggleGroup(group.name)}
+                    >
+                      {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+                      
+                      {/* Product Image */}
+                      <div className="flex-shrink-0">
+                        {group.image_url ? (
+                          <div className="w-10 h-10 rounded overflow-hidden border border-border bg-background">
+                            <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }} />
+                          </div>
                         ) : (
-                          <Upload className="h-5 w-5 text-muted-foreground/50 hover:text-primary" />
+                          <div className="w-10 h-10 rounded border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center">
+                            <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-foreground truncate">{product.name}</h3>
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                        {product.category}
-                      </span>
-                      {product.size && (
-                        <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded">
-                          {product.size}
-                        </span>
-                      )}
-                      {product.is_hidden && (
-                        <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
-                          Hidden
-                        </span>
-                      )}
-                      {!product.in_stock && (
-                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded">
-                          Out of Stock
-                        </span>
-                      )}
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-foreground">{group.name}</h3>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded capitalize">{group.category}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {group.products.length} store{group.products.length > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      ${product.price.toFixed(2)} • {getStoreName(product.store_id)}
-                    </p>
-                    {product.description && (
-                      <p className="text-xs text-muted-foreground mt-1 truncate">{product.description}</p>
+
+                    {/* Expanded Store Rows */}
+                    {isExpanded && (
+                      <div className="divide-y border-t">
+                        {group.products.map((product) => (
+                          <div
+                            key={product.id}
+                            className={`flex items-center gap-3 px-4 py-3 pl-12 ${product.is_hidden ? "opacity-50 bg-muted/30" : "bg-background"}`}
+                          >
+                            <StoreIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground">{getStoreName(product.store_id)}</p>
+                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                {product.size && (
+                                  <span className="text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded">{product.size}</span>
+                                )}
+                                {product.is_hidden && (
+                                  <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">Hidden</span>
+                                )}
+                                {!product.in_stock && (
+                                  <span className="text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">Out of Stock</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Inline Price */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-muted-foreground">$</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                className="w-24 h-8 text-sm"
+                                value={inlineEditing[product.id] ?? product.price.toFixed(2)}
+                                onChange={(e) => handleInlinePriceChange(product.id, e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") handleInlinePriceSave(product.id); }}
+                              />
+                              {inlineEditing[product.id] !== undefined && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  disabled={savingInline === product.id}
+                                  onClick={() => handleInlinePriceSave(product.id)}
+                                >
+                                  <Save className="h-3.5 w-3.5 text-primary" />
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleHidden(product)} title={product.is_hidden ? "Show" : "Hide"}>
+                                {product.is_hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(product)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleOpenDelete(product)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleToggleHidden(product)}
-                      title={product.is_hidden ? "Show Product" : "Hide Product"}
-                    >
-                      {product.is_hidden ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenEdit(product)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenDelete(product)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           <div className="mt-4 text-sm text-muted-foreground">
-            Showing {filteredProducts.length} of {products.length} products
+            {groupedProducts.length} product{groupedProducts.length !== 1 ? "s" : ""} · {filteredProducts.length} total entries
           </div>
         </CardContent>
       </Card>
