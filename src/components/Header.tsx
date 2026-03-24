@@ -85,6 +85,12 @@ const Header = () => {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/orders">My Orders</Link>
                   </DropdownMenuItem>
                   {isAdmin && (
@@ -152,6 +158,9 @@ const Header = () => {
             </Link>
             {user && (
               <>
+                <Link to="/profile" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
+                  My Profile
+                </Link>
                 <Link to="/orders" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
                   My Orders
                 </Link>
