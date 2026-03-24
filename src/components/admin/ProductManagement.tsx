@@ -701,10 +701,6 @@ const ProductManagement = () => {
     return Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredProducts]);
 
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [inlineEditing, setInlineEditing] = useState<Record<string, string>>({});
-  const [savingInline, setSavingInline] = useState<string | null>(null);
-
   const toggleGroup = (name: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -733,6 +729,48 @@ const ProductManagement = () => {
       fetchProducts();
     }
     setSavingInline(null);
+  };
+
+  const handleInlinePackPriceChange = (packId: string, value: string) => {
+    setInlinePackEditing((prev) => ({ ...prev, [packId]: value }));
+  };
+
+  const handleInlinePackPriceSave = async (packPrice: ProductPackPrice) => {
+    const newPrice = parseFloat(inlinePackEditing[packPrice.id]);
+    if (isNaN(newPrice) || newPrice < 0) {
+      toast({ title: "Invalid price", variant: "destructive" });
+      return;
+    }
+    setSavingPackInline(packPrice.id);
+    const { error } = await supabase.from("product_pack_prices").update({ price: newPrice }).eq("id", packPrice.id);
+    if (error) toast({ title: "Error", description: "Failed to update pack price", variant: "destructive" });
+    else {
+      toast({ title: "Pack price updated" });
+      setInlinePackEditing((prev) => { const n = { ...prev }; delete n[packPrice.id]; return n; });
+      fetchPackPrices();
+    }
+    setSavingPackInline(null);
+  };
+
+  const handleTogglePackHidden = async (packPrice: ProductPackPrice) => {
+    const { error } = await supabase.from("product_pack_prices").update({ is_hidden: !packPrice.is_hidden }).eq("id", packPrice.id);
+    if (error) toast({ title: "Error", description: "Failed to update visibility", variant: "destructive" });
+    else fetchPackPrices();
+  };
+
+  const fetchPackPrices = async () => {
+    const { data, error } = await supabase
+      .from("product_pack_prices")
+      .select("*")
+      .order("pack_size");
+    if (!error && data) {
+      const map: Record<string, ProductPackPrice[]> = {};
+      data.forEach((pp: any) => {
+        if (!map[pp.product_id]) map[pp.product_id] = [];
+        map[pp.product_id].push(pp as ProductPackPrice);
+      });
+      setPackPricesMap(map);
+    }
   };
 
   return (
