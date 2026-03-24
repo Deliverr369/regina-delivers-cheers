@@ -169,6 +169,7 @@ const ProductManagement = () => {
   useEffect(() => {
     fetchStores();
     fetchProducts();
+    fetchPackPrices();
   }, []);
 
   const fetchStores = async () => {
