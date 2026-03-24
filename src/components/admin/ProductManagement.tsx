@@ -159,6 +159,12 @@ const ProductManagement = () => {
   const [processingStatus, setProcessingStatus] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quickUploadRef = useRef<HTMLInputElement>(null);
+  const [packPricesMap, setPackPricesMap] = useState<Record<string, ProductPackPrice[]>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [inlineEditing, setInlineEditing] = useState<Record<string, string>>({});
+  const [savingInline, setSavingInline] = useState<string | null>(null);
+  const [inlinePackEditing, setInlinePackEditing] = useState<Record<string, string>>({});
+  const [savingPackInline, setSavingPackInline] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStores();
