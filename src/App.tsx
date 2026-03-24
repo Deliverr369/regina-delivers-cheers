@@ -19,6 +19,14 @@ import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+import DashboardOverview from "./pages/dashboard/DashboardOverview";
+import DashboardOrders from "./pages/dashboard/DashboardOrders";
+import DashboardProducts from "./pages/dashboard/DashboardProducts";
+import DashboardStores from "./pages/dashboard/DashboardStores";
+import DashboardStoreHours from "./pages/dashboard/DashboardStoreHours";
+import DashboardUsers from "./pages/dashboard/DashboardUsers";
+import DashboardBanners from "./pages/dashboard/DashboardBanners";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +52,18 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/profile" element={<Profile />} />
+
+              {/* Admin Dashboard */}
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<DashboardOverview />} />
+                <Route path="orders" element={<DashboardOrders />} />
+                <Route path="products" element={<DashboardProducts />} />
+                <Route path="stores" element={<DashboardStores />} />
+                <Route path="store-hours" element={<DashboardStoreHours />} />
+                <Route path="users" element={<DashboardUsers />} />
+                <Route path="banners" element={<DashboardBanners />} />
+              </Route>
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
