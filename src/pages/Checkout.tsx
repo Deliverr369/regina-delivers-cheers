@@ -270,6 +270,9 @@ const Checkout = () => {
                           required
                           className={cityError ? "border-destructive" : ""}
                         />
+                        {cityError && (
+                          <p className="text-destructive text-sm mt-1">{cityError}</p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="postalCode">Postal Code</Label>
