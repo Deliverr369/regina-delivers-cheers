@@ -295,8 +295,6 @@ const Admin = () => {
               <ProductManagement />
             </TabsContent>
 
-            <TabsContent value="banners">
-
             <TabsContent value="store-hours">
               <StoreHoursManagement />
             </TabsContent>
