@@ -217,19 +217,11 @@ const Profile = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/50">
-              <div className="flex items-center gap-3">
-                <CreditCard className="h-8 w-8 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
-                  <p className="text-xs text-muted-foreground">Pay when your order arrives</p>
-                </div>
-              </div>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">Default</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              More payment options coming soon.
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">No saved cards yet.</p>
+            <Button variant="outline" className="w-full" disabled>
+              <CreditCard className="h-4 w-4 mr-2" />
+              Add Card — Coming Soon
+            </Button>
           </CardContent>
         </Card>
 
