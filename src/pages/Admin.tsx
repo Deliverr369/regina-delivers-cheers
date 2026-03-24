@@ -33,6 +33,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductManagement from "@/components/admin/ProductManagement";
+import StoreHoursManagement from "@/components/admin/StoreHoursManagement";
 
 interface PromoBanner {
   id: string;
