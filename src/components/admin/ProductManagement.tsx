@@ -165,6 +165,9 @@ const ProductManagement = () => {
   const [savingInline, setSavingInline] = useState<string | null>(null);
   const [inlinePackEditing, setInlinePackEditing] = useState<Record<string, string>>({});
   const [savingPackInline, setSavingPackInline] = useState<string | null>(null);
+  // For inline "add size" rows: keyed by product.id
+  const [addingSizeFor, setAddingSizeFor] = useState<Record<string, { size: string; price: string }>>({}); 
+  const [savingNewSize, setSavingNewSize] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStores();
@@ -761,6 +764,38 @@ const ProductManagement = () => {
     else fetchPackPrices();
   };
 
+  const handleSaveNewSize = async (productId: string) => {
+    const newSize = addingSizeFor[productId];
+    if (!newSize?.size.trim() || !newSize?.price || isNaN(parseFloat(newSize.price))) {
+      toast({ title: "Please enter both size and price", variant: "destructive" });
+      return;
+    }
+    setSavingNewSize(productId);
+    const { error } = await supabase.from("product_pack_prices").insert({
+      product_id: productId,
+      pack_size: newSize.size.trim(),
+      price: parseFloat(newSize.price),
+      is_hidden: false,
+    });
+    if (error) {
+      toast({ title: "Error", description: "Failed to add size", variant: "destructive" });
+    } else {
+      toast({ title: "Size added" });
+      setAddingSizeFor((prev) => { const n = { ...prev }; delete n[productId]; return n; });
+      fetchPackPrices();
+    }
+    setSavingNewSize(null);
+  };
+
+  const handleDeletePackPrice = async (packId: string) => {
+    const { error } = await supabase.from("product_pack_prices").delete().eq("id", packId);
+    if (error) toast({ title: "Error", description: "Failed to delete size", variant: "destructive" });
+    else {
+      toast({ title: "Size removed" });
+      fetchPackPrices();
+    }
+  };
+
   const fetchPackPrices = async () => {
     const { data, error } = await supabase
       .from("product_pack_prices")
@@ -936,43 +971,92 @@ const ProductManagement = () => {
                               </div>
 
                               {/* Pack Prices under this store */}
-                              {productPacks.length > 0 && (
-                                <div className="pl-20 pr-4 pb-3 space-y-1.5">
-                                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sizes & Prices</p>
-                                  <div className="grid gap-1.5">
-                                    {productPacks.map((pp) => (
-                                      <div
-                                        key={pp.id}
-                                        className={`flex items-center gap-3 px-3 py-1.5 rounded-md border ${pp.is_hidden ? "border-destructive/20 bg-destructive/5 opacity-60" : "border-border bg-muted/20"}`}
-                                      >
-                                        <span className={`text-sm min-w-[100px] ${pp.is_hidden ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
-                                          {pp.pack_size}
-                                        </span>
-                                        <div className="flex items-center gap-1.5">
-                                          <span className="text-xs text-muted-foreground">$</span>
-                                          <Input
-                                            type="number"
-                                            step="0.01"
-                                            className="w-24 h-7 text-sm"
-                                            value={inlinePackEditing[pp.id] ?? pp.price.toFixed(2)}
-                                            onChange={(e) => handleInlinePackPriceChange(pp.id, e.target.value)}
-                                            onKeyDown={(e) => { if (e.key === "Enter") handleInlinePackPriceSave(pp); }}
-                                            disabled={pp.is_hidden}
-                                          />
-                                          {inlinePackEditing[pp.id] !== undefined && (
-                                            <Button size="icon" variant="ghost" className="h-7 w-7" disabled={savingPackInline === pp.id} onClick={() => handleInlinePackPriceSave(pp)}>
-                                              <Save className="h-3 w-3 text-primary" />
+                              <div className="pl-20 pr-4 pb-3 space-y-1.5">
+                                {productPacks.length > 0 && (
+                                  <>
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sizes & Prices</p>
+                                    <div className="grid gap-1.5">
+                                      {productPacks.map((pp) => (
+                                        <div
+                                          key={pp.id}
+                                          className={`flex items-center gap-3 px-3 py-1.5 rounded-md border ${pp.is_hidden ? "border-destructive/20 bg-destructive/5 opacity-60" : "border-border bg-muted/20"}`}
+                                        >
+                                          <span className={`text-sm min-w-[100px] ${pp.is_hidden ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
+                                            {pp.pack_size}
+                                          </span>
+                                          <div className="flex items-center gap-1.5">
+                                            <span className="text-xs text-muted-foreground">$</span>
+                                            <Input
+                                              type="number"
+                                              step="0.01"
+                                              className="w-24 h-7 text-sm"
+                                              value={inlinePackEditing[pp.id] ?? pp.price.toFixed(2)}
+                                              onChange={(e) => handleInlinePackPriceChange(pp.id, e.target.value)}
+                                              onKeyDown={(e) => { if (e.key === "Enter") handleInlinePackPriceSave(pp); }}
+                                              disabled={pp.is_hidden}
+                                            />
+                                            {inlinePackEditing[pp.id] !== undefined && (
+                                              <Button size="icon" variant="ghost" className="h-7 w-7" disabled={savingPackInline === pp.id} onClick={() => handleInlinePackPriceSave(pp)}>
+                                                <Save className="h-3 w-3 text-primary" />
+                                              </Button>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1 ml-auto">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleTogglePackHidden(pp)} title={pp.is_hidden ? "Show" : "Hide"}>
+                                              {pp.is_hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                                             </Button>
-                                          )}
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeletePackPrice(pp.id)} title="Delete size">
+                                              <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                          </div>
                                         </div>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" onClick={() => handleTogglePackHidden(pp)} title={pp.is_hidden ? "Show" : "Hide"}>
-                                          {pp.is_hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                                        </Button>
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+
+                                {/* Inline Add Size Row */}
+                                {addingSizeFor[product.id] ? (
+                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-primary/30 bg-primary/5">
+                                    <Input
+                                      placeholder="Size (e.g. 6-pack, 750ml)"
+                                      className="h-7 text-sm flex-1"
+                                      value={addingSizeFor[product.id].size}
+                                      onChange={(e) => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { ...prev[product.id], size: e.target.value } }))}
+                                      autoFocus
+                                    />
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-muted-foreground">$</span>
+                                      <Input
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="Price"
+                                        className="w-24 h-7 text-sm"
+                                        value={addingSizeFor[product.id].price}
+                                        onChange={(e) => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { ...prev[product.id], price: e.target.value } }))}
+                                        onKeyDown={(e) => { if (e.key === "Enter") handleSaveNewSize(product.id); }}
+                                      />
+                                    </div>
+                                    <Button size="sm" variant="default" className="h-7 text-xs" disabled={savingNewSize === product.id} onClick={() => handleSaveNewSize(product.id)}>
+                                      {savingNewSize === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
+                                      Save
+                                    </Button>
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setAddingSizeFor((prev) => { const n = { ...prev }; delete n[product.id]; return n; })}>
+                                      <X className="h-3 w-3" />
+                                    </Button>
                                   </div>
-                                </div>
-                              )}
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs mt-1"
+                                    onClick={() => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { size: "", price: "" } }))}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Add Size
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
