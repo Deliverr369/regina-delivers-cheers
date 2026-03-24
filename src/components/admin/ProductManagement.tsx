@@ -707,6 +707,35 @@ const ProductManagement = () => {
     return Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredProducts]);
 
+  const CATEGORY_SECTIONS: { key: ProductCategory; label: string; color: string }[] = [
+    { key: "beer", label: "🍺 Beer", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
+    { key: "wine", label: "🍷 Wine", color: "bg-rose-500/10 text-rose-700 border-rose-500/30" },
+    { key: "spirits", label: "🥃 Spirits", color: "bg-violet-500/10 text-violet-700 border-violet-500/30" },
+    { key: "smokes", label: "🚬 Smokes & More", color: "bg-slate-500/10 text-slate-700 border-slate-500/30" },
+  ];
+
+  const categorizedGroups = useMemo(() => {
+    const result: Record<ProductCategory, typeof groupedProducts> = {
+      beer: [], wine: [], spirits: [], smokes: [],
+    };
+    groupedProducts.forEach((g) => {
+      const cat = g.category as ProductCategory;
+      if (result[cat]) result[cat].push(g);
+    });
+    return result;
+  }, [groupedProducts]);
+
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["beer", "wine", "spirits", "smokes"]));
+
+  const toggleCategory = (cat: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
+
   const toggleGroup = (name: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -872,194 +901,214 @@ const ProductManagement = () => {
 
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Loading products...</div>
-          ) : groupedProducts.length === 0 ? (
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No products found. Add your first product!
             </div>
           ) : (
-            <div className="space-y-2">
-              {groupedProducts.map((group) => {
-                const isExpanded = expandedGroups.has(group.name);
+            <div className="space-y-6">
+              {CATEGORY_SECTIONS.map((section) => {
+                const sectionGroups = categorizedGroups[section.key];
+                if (sectionGroups.length === 0 && selectedCategory !== "all" && selectedCategory !== section.key) return null;
+                const isCatExpanded = expandedCategories.has(section.key);
                 return (
-                  <div key={group.name} className="border rounded-lg overflow-hidden">
-                    {/* Product Header */}
+                  <div key={section.key} className="border rounded-xl overflow-hidden">
+                    {/* Category Header */}
                     <div
-                      className="flex items-center gap-3 p-3 bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
-                      onClick={() => toggleGroup(group.name)}
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b ${section.color} transition-colors`}
+                      onClick={() => toggleCategory(section.key)}
                     >
-                      {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
-                      
-                      {/* Product Image */}
-                      <div className="flex-shrink-0">
-                        {group.image_url ? (
-                          <div className="w-10 h-10 rounded overflow-hidden border border-border bg-background">
-                            <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }} />
-                          </div>
-                        ) : (
-                          <div className="w-10 h-10 rounded border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center">
-                            <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-foreground">{group.name}</h3>
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded capitalize">{group.category}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {group.products.length} store{group.products.length > 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      </div>
+                      {isCatExpanded ? <ChevronDown className="h-5 w-5 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 flex-shrink-0" />}
+                      <h2 className="text-lg font-bold">{section.label}</h2>
+                      <span className="text-sm opacity-70 ml-1">({sectionGroups.length} products)</span>
                     </div>
 
-                    {/* Expanded Store Rows */}
-                    {isExpanded && (
-                      <div className="divide-y border-t">
-                        {group.products.map((product) => {
-                          const productPacks = packPricesMap[product.id] || [];
-                          return (
-                            <div key={product.id} className={`${product.is_hidden ? "opacity-50 bg-muted/30" : "bg-background"}`}>
-                              {/* Store Header Row */}
-                              <div className="flex items-center gap-3 px-4 py-3 pl-12">
-                                <StoreIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-foreground">{getStoreName(product.store_id)}</p>
-                                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                    {product.size && (
-                                      <span className="text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded">{product.size}</span>
+                    {isCatExpanded && (
+                      <div className="divide-y">
+                        {sectionGroups.length === 0 ? (
+                          <div className="text-center py-6 text-muted-foreground text-sm">No products in this category</div>
+                        ) : (
+                          sectionGroups.map((group) => {
+                            const isExpanded = expandedGroups.has(group.name);
+                            return (
+                              <div key={group.name}>
+                                {/* Product Header */}
+                                <div
+                                  className="flex items-center gap-3 p-3 bg-muted/20 cursor-pointer hover:bg-muted/40 transition-colors"
+                                  onClick={() => toggleGroup(group.name)}
+                                >
+                                  {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+                                  
+                                  <div className="flex-shrink-0">
+                                    {group.image_url ? (
+                                      <div className="w-10 h-10 rounded overflow-hidden border border-border bg-background">
+                                        <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }} />
+                                      </div>
+                                    ) : (
+                                      <div className="w-10 h-10 rounded border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center">
+                                        <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                                      </div>
                                     )}
-                                    {product.is_hidden && (
-                                      <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">Hidden</span>
-                                    )}
-                                    {!product.in_stock && (
-                                      <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">Out of Stock</span>
-                                    )}
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h3 className="font-semibold text-foreground">{group.name}</h3>
+                                      <span className="text-xs text-muted-foreground">
+                                        {group.products.length} store{group.products.length > 1 ? "s" : ""}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
 
-                                {/* Base Price */}
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-xs text-muted-foreground">Base $</span>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-24 h-8 text-sm"
-                                    value={inlineEditing[product.id] ?? product.price.toFixed(2)}
-                                    onChange={(e) => handleInlinePriceChange(product.id, e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === "Enter") handleInlinePriceSave(product.id); }}
-                                  />
-                                  {inlineEditing[product.id] !== undefined && (
-                                    <Button size="icon" variant="ghost" className="h-8 w-8" disabled={savingInline === product.id} onClick={() => handleInlinePriceSave(product.id)}>
-                                      <Save className="h-3.5 w-3.5 text-primary" />
-                                    </Button>
-                                  )}
-                                </div>
+                                {/* Expanded Store Rows */}
+                                {isExpanded && (
+                                  <div className="divide-y border-t">
+                                    {group.products.map((product) => {
+                                      const productPacks = packPricesMap[product.id] || [];
+                                      return (
+                                        <div key={product.id} className={`${product.is_hidden ? "opacity-50 bg-muted/30" : "bg-background"}`}>
+                                          <div className="flex items-center gap-3 px-4 py-3 pl-12">
+                                            <StoreIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-sm font-medium text-foreground">{getStoreName(product.store_id)}</p>
+                                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                                {product.size && (
+                                                  <span className="text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded">{product.size}</span>
+                                                )}
+                                                {product.is_hidden && (
+                                                  <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">Hidden</span>
+                                                )}
+                                                {!product.in_stock && (
+                                                  <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">Out of Stock</span>
+                                                )}
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="text-xs text-muted-foreground">Base $</span>
+                                              <Input
+                                                type="number"
+                                                step="0.01"
+                                                className="w-24 h-8 text-sm"
+                                                value={inlineEditing[product.id] ?? product.price.toFixed(2)}
+                                                onChange={(e) => handleInlinePriceChange(product.id, e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === "Enter") handleInlinePriceSave(product.id); }}
+                                              />
+                                              {inlineEditing[product.id] !== undefined && (
+                                                <Button size="icon" variant="ghost" className="h-8 w-8" disabled={savingInline === product.id} onClick={() => handleInlinePriceSave(product.id)}>
+                                                  <Save className="h-3.5 w-3.5 text-primary" />
+                                                </Button>
+                                              )}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleHidden(product)} title={product.is_hidden ? "Show" : "Hide"}>
+                                                {product.is_hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                              </Button>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(product)}>
+                                                <Pencil className="h-3.5 w-3.5" />
+                                              </Button>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleOpenDelete(product)}>
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </div>
+                                          </div>
 
-                                {/* Actions */}
-                                <div className="flex items-center gap-1">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleHidden(product)} title={product.is_hidden ? "Show" : "Hide"}>
-                                    {product.is_hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(product)}>
-                                    <Pencil className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleOpenDelete(product)}>
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                              </div>
+                                          {/* Pack Prices */}
+                                          <div className="pl-20 pr-4 pb-3 space-y-1.5">
+                                            {productPacks.length > 0 && (
+                                              <>
+                                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sizes & Prices</p>
+                                                <div className="grid gap-1.5">
+                                                  {productPacks.map((pp) => (
+                                                    <div
+                                                      key={pp.id}
+                                                      className={`flex items-center gap-3 px-3 py-1.5 rounded-md border ${pp.is_hidden ? "border-destructive/20 bg-destructive/5 opacity-60" : "border-border bg-muted/20"}`}
+                                                    >
+                                                      <span className={`text-sm min-w-[100px] ${pp.is_hidden ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
+                                                        {pp.pack_size}
+                                                      </span>
+                                                      <div className="flex items-center gap-1.5">
+                                                        <span className="text-xs text-muted-foreground">$</span>
+                                                        <Input
+                                                          type="number"
+                                                          step="0.01"
+                                                          className="w-24 h-7 text-sm"
+                                                          value={inlinePackEditing[pp.id] ?? pp.price.toFixed(2)}
+                                                          onChange={(e) => handleInlinePackPriceChange(pp.id, e.target.value)}
+                                                          onKeyDown={(e) => { if (e.key === "Enter") handleInlinePackPriceSave(pp); }}
+                                                          disabled={pp.is_hidden}
+                                                        />
+                                                        {inlinePackEditing[pp.id] !== undefined && (
+                                                          <Button size="icon" variant="ghost" className="h-7 w-7" disabled={savingPackInline === pp.id} onClick={() => handleInlinePackPriceSave(pp)}>
+                                                            <Save className="h-3 w-3 text-primary" />
+                                                          </Button>
+                                                        )}
+                                                      </div>
+                                                      <div className="flex items-center gap-1 ml-auto">
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleTogglePackHidden(pp)} title={pp.is_hidden ? "Show" : "Hide"}>
+                                                          {pp.is_hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeletePackPrice(pp.id)} title="Delete size">
+                                                          <Trash2 className="h-3 w-3" />
+                                                        </Button>
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </>
+                                            )}
 
-                              {/* Pack Prices under this store */}
-                              <div className="pl-20 pr-4 pb-3 space-y-1.5">
-                                {productPacks.length > 0 && (
-                                  <>
-                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sizes & Prices</p>
-                                    <div className="grid gap-1.5">
-                                      {productPacks.map((pp) => (
-                                        <div
-                                          key={pp.id}
-                                          className={`flex items-center gap-3 px-3 py-1.5 rounded-md border ${pp.is_hidden ? "border-destructive/20 bg-destructive/5 opacity-60" : "border-border bg-muted/20"}`}
-                                        >
-                                          <span className={`text-sm min-w-[100px] ${pp.is_hidden ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
-                                            {pp.pack_size}
-                                          </span>
-                                          <div className="flex items-center gap-1.5">
-                                            <span className="text-xs text-muted-foreground">$</span>
-                                            <Input
-                                              type="number"
-                                              step="0.01"
-                                              className="w-24 h-7 text-sm"
-                                              value={inlinePackEditing[pp.id] ?? pp.price.toFixed(2)}
-                                              onChange={(e) => handleInlinePackPriceChange(pp.id, e.target.value)}
-                                              onKeyDown={(e) => { if (e.key === "Enter") handleInlinePackPriceSave(pp); }}
-                                              disabled={pp.is_hidden}
-                                            />
-                                            {inlinePackEditing[pp.id] !== undefined && (
-                                              <Button size="icon" variant="ghost" className="h-7 w-7" disabled={savingPackInline === pp.id} onClick={() => handleInlinePackPriceSave(pp)}>
-                                                <Save className="h-3 w-3 text-primary" />
+                                            {/* Inline Add Size */}
+                                            {addingSizeFor[product.id] ? (
+                                              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-primary/30 bg-primary/5">
+                                                <Input
+                                                  placeholder="Size (e.g. 6-pack, 750ml)"
+                                                  className="h-7 text-sm flex-1"
+                                                  value={addingSizeFor[product.id].size}
+                                                  onChange={(e) => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { ...prev[product.id], size: e.target.value } }))}
+                                                  autoFocus
+                                                />
+                                                <div className="flex items-center gap-1">
+                                                  <span className="text-xs text-muted-foreground">$</span>
+                                                  <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="Price"
+                                                    className="w-24 h-7 text-sm"
+                                                    value={addingSizeFor[product.id].price}
+                                                    onChange={(e) => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { ...prev[product.id], price: e.target.value } }))}
+                                                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveNewSize(product.id); }}
+                                                  />
+                                                </div>
+                                                <Button size="sm" variant="default" className="h-7 text-xs" disabled={savingNewSize === product.id} onClick={() => handleSaveNewSize(product.id)}>
+                                                  {savingNewSize === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
+                                                  Save
+                                                </Button>
+                                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setAddingSizeFor((prev) => { const n = { ...prev }; delete n[product.id]; return n; })}>
+                                                  <X className="h-3 w-3" />
+                                                </Button>
+                                              </div>
+                                            ) : (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 text-xs mt-1"
+                                                onClick={() => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { size: "", price: "" } }))}
+                                              >
+                                                <Plus className="h-3 w-3 mr-1" />
+                                                Add Size
                                               </Button>
                                             )}
                                           </div>
-                                          <div className="flex items-center gap-1 ml-auto">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleTogglePackHidden(pp)} title={pp.is_hidden ? "Show" : "Hide"}>
-                                              {pp.is_hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeletePackPrice(pp.id)} title="Delete size">
-                                              <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                          </div>
                                         </div>
-                                      ))}
-                                    </div>
-                                  </>
-                                )}
-
-                                {/* Inline Add Size Row */}
-                                {addingSizeFor[product.id] ? (
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-primary/30 bg-primary/5">
-                                    <Input
-                                      placeholder="Size (e.g. 6-pack, 750ml)"
-                                      className="h-7 text-sm flex-1"
-                                      value={addingSizeFor[product.id].size}
-                                      onChange={(e) => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { ...prev[product.id], size: e.target.value } }))}
-                                      autoFocus
-                                    />
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-xs text-muted-foreground">$</span>
-                                      <Input
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="Price"
-                                        className="w-24 h-7 text-sm"
-                                        value={addingSizeFor[product.id].price}
-                                        onChange={(e) => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { ...prev[product.id], price: e.target.value } }))}
-                                        onKeyDown={(e) => { if (e.key === "Enter") handleSaveNewSize(product.id); }}
-                                      />
-                                    </div>
-                                    <Button size="sm" variant="default" className="h-7 text-xs" disabled={savingNewSize === product.id} onClick={() => handleSaveNewSize(product.id)}>
-                                      {savingNewSize === product.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
-                                      Save
-                                    </Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setAddingSizeFor((prev) => { const n = { ...prev }; delete n[product.id]; return n; })}>
-                                      <X className="h-3 w-3" />
-                                    </Button>
+                                      );
+                                    })}
                                   </div>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-xs mt-1"
-                                    onClick={() => setAddingSizeFor((prev) => ({ ...prev, [product.id]: { size: "", price: "" } }))}
-                                  >
-                                    <Plus className="h-3 w-3 mr-1" />
-                                    Add Size
-                                  </Button>
                                 )}
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                       </div>
                     )}
                   </div>
