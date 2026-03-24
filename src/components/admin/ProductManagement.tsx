@@ -67,6 +67,14 @@ interface Store {
   name: string;
 }
 
+interface ProductPackPrice {
+  id: string;
+  product_id: string;
+  pack_size: string;
+  price: number;
+  is_hidden: boolean;
+}
+
 interface Product {
   id: string;
   name: string;
