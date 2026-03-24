@@ -67,6 +67,14 @@ interface Store {
   name: string;
 }
 
+interface ProductPackPrice {
+  id: string;
+  product_id: string;
+  pack_size: string;
+  price: number;
+  is_hidden: boolean;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -151,10 +159,17 @@ const ProductManagement = () => {
   const [processingStatus, setProcessingStatus] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quickUploadRef = useRef<HTMLInputElement>(null);
+  const [packPricesMap, setPackPricesMap] = useState<Record<string, ProductPackPrice[]>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [inlineEditing, setInlineEditing] = useState<Record<string, string>>({});
+  const [savingInline, setSavingInline] = useState<string | null>(null);
+  const [inlinePackEditing, setInlinePackEditing] = useState<Record<string, string>>({});
+  const [savingPackInline, setSavingPackInline] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStores();
     fetchProducts();
+    fetchPackPrices();
   }, []);
 
   const fetchStores = async () => {
@@ -509,6 +524,7 @@ const ProductManagement = () => {
         });
         setDialogOpen(false);
         fetchProducts();
+        fetchPackPrices();
       }
     } else {
       const { data: newProduct, error } = await supabase
@@ -534,6 +550,7 @@ const ProductManagement = () => {
         });
         setDialogOpen(false);
         fetchProducts();
+        fetchPackPrices();
       }
     }
 
@@ -687,10 +704,6 @@ const ProductManagement = () => {
     return Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredProducts]);
 
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [inlineEditing, setInlineEditing] = useState<Record<string, string>>({});
-  const [savingInline, setSavingInline] = useState<string | null>(null);
-
   const toggleGroup = (name: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -719,6 +732,48 @@ const ProductManagement = () => {
       fetchProducts();
     }
     setSavingInline(null);
+  };
+
+  const handleInlinePackPriceChange = (packId: string, value: string) => {
+    setInlinePackEditing((prev) => ({ ...prev, [packId]: value }));
+  };
+
+  const handleInlinePackPriceSave = async (packPrice: ProductPackPrice) => {
+    const newPrice = parseFloat(inlinePackEditing[packPrice.id]);
+    if (isNaN(newPrice) || newPrice < 0) {
+      toast({ title: "Invalid price", variant: "destructive" });
+      return;
+    }
+    setSavingPackInline(packPrice.id);
+    const { error } = await supabase.from("product_pack_prices").update({ price: newPrice }).eq("id", packPrice.id);
+    if (error) toast({ title: "Error", description: "Failed to update pack price", variant: "destructive" });
+    else {
+      toast({ title: "Pack price updated" });
+      setInlinePackEditing((prev) => { const n = { ...prev }; delete n[packPrice.id]; return n; });
+      fetchPackPrices();
+    }
+    setSavingPackInline(null);
+  };
+
+  const handleTogglePackHidden = async (packPrice: ProductPackPrice) => {
+    const { error } = await supabase.from("product_pack_prices").update({ is_hidden: !packPrice.is_hidden }).eq("id", packPrice.id);
+    if (error) toast({ title: "Error", description: "Failed to update visibility", variant: "destructive" });
+    else fetchPackPrices();
+  };
+
+  const fetchPackPrices = async () => {
+    const { data, error } = await supabase
+      .from("product_pack_prices")
+      .select("*")
+      .order("pack_size");
+    if (!error && data) {
+      const map: Record<string, ProductPackPrice[]> = {};
+      data.forEach((pp: any) => {
+        if (!map[pp.product_id]) map[pp.product_id] = [];
+        map[pp.product_id].push(pp as ProductPackPrice);
+      });
+      setPackPricesMap(map);
+    }
   };
 
   return (
@@ -826,65 +881,101 @@ const ProductManagement = () => {
                     {/* Expanded Store Rows */}
                     {isExpanded && (
                       <div className="divide-y border-t">
-                        {group.products.map((product) => (
-                          <div
-                            key={product.id}
-                            className={`flex items-center gap-3 px-4 py-3 pl-12 ${product.is_hidden ? "opacity-50 bg-muted/30" : "bg-background"}`}
-                          >
-                            <StoreIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground">{getStoreName(product.store_id)}</p>
-                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                {product.size && (
-                                  <span className="text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded">{product.size}</span>
-                                )}
-                                {product.is_hidden && (
-                                  <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">Hidden</span>
-                                )}
-                                {!product.in_stock && (
-                                  <span className="text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">Out of Stock</span>
-                                )}
-                              </div>
-                            </div>
+                        {group.products.map((product) => {
+                          const productPacks = packPricesMap[product.id] || [];
+                          return (
+                            <div key={product.id} className={`${product.is_hidden ? "opacity-50 bg-muted/30" : "bg-background"}`}>
+                              {/* Store Header Row */}
+                              <div className="flex items-center gap-3 px-4 py-3 pl-12">
+                                <StoreIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-foreground">{getStoreName(product.store_id)}</p>
+                                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                    {product.size && (
+                                      <span className="text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded">{product.size}</span>
+                                    )}
+                                    {product.is_hidden && (
+                                      <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">Hidden</span>
+                                    )}
+                                    {!product.in_stock && (
+                                      <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">Out of Stock</span>
+                                    )}
+                                  </div>
+                                </div>
 
-                            {/* Inline Price */}
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs text-muted-foreground">$</span>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                className="w-24 h-8 text-sm"
-                                value={inlineEditing[product.id] ?? product.price.toFixed(2)}
-                                onChange={(e) => handleInlinePriceChange(product.id, e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") handleInlinePriceSave(product.id); }}
-                              />
-                              {inlineEditing[product.id] !== undefined && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8"
-                                  disabled={savingInline === product.id}
-                                  onClick={() => handleInlinePriceSave(product.id)}
-                                >
-                                  <Save className="h-3.5 w-3.5 text-primary" />
-                                </Button>
+                                {/* Base Price */}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs text-muted-foreground">Base $</span>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-24 h-8 text-sm"
+                                    value={inlineEditing[product.id] ?? product.price.toFixed(2)}
+                                    onChange={(e) => handleInlinePriceChange(product.id, e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === "Enter") handleInlinePriceSave(product.id); }}
+                                  />
+                                  {inlineEditing[product.id] !== undefined && (
+                                    <Button size="icon" variant="ghost" className="h-8 w-8" disabled={savingInline === product.id} onClick={() => handleInlinePriceSave(product.id)}>
+                                      <Save className="h-3.5 w-3.5 text-primary" />
+                                    </Button>
+                                  )}
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleHidden(product)} title={product.is_hidden ? "Show" : "Hide"}>
+                                    {product.is_hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(product)}>
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleOpenDelete(product)}>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Pack Prices under this store */}
+                              {productPacks.length > 0 && (
+                                <div className="pl-20 pr-4 pb-3 space-y-1.5">
+                                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sizes & Prices</p>
+                                  <div className="grid gap-1.5">
+                                    {productPacks.map((pp) => (
+                                      <div
+                                        key={pp.id}
+                                        className={`flex items-center gap-3 px-3 py-1.5 rounded-md border ${pp.is_hidden ? "border-destructive/20 bg-destructive/5 opacity-60" : "border-border bg-muted/20"}`}
+                                      >
+                                        <span className={`text-sm min-w-[100px] ${pp.is_hidden ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
+                                          {pp.pack_size}
+                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-xs text-muted-foreground">$</span>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            className="w-24 h-7 text-sm"
+                                            value={inlinePackEditing[pp.id] ?? pp.price.toFixed(2)}
+                                            onChange={(e) => handleInlinePackPriceChange(pp.id, e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === "Enter") handleInlinePackPriceSave(pp); }}
+                                            disabled={pp.is_hidden}
+                                          />
+                                          {inlinePackEditing[pp.id] !== undefined && (
+                                            <Button size="icon" variant="ghost" className="h-7 w-7" disabled={savingPackInline === pp.id} onClick={() => handleInlinePackPriceSave(pp)}>
+                                              <Save className="h-3 w-3 text-primary" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" onClick={() => handleTogglePackHidden(pp)} title={pp.is_hidden ? "Show" : "Hide"}>
+                                          {pp.is_hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
                             </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleHidden(product)} title={product.is_hidden ? "Show" : "Hide"}>
-                                {product.is_hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(product)}>
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleOpenDelete(product)}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
