@@ -296,6 +296,12 @@ const Admin = () => {
             </TabsContent>
 
             <TabsContent value="banners">
+
+            <TabsContent value="store-hours">
+              <StoreHoursManagement />
+            </TabsContent>
+
+            <TabsContent value="banners">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Promo Banners</CardTitle>
