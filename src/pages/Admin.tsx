@@ -33,6 +33,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductManagement from "@/components/admin/ProductManagement";
+import StoreHoursManagement from "@/components/admin/StoreHoursManagement";
 
 interface PromoBanner {
   id: string;
@@ -287,10 +288,15 @@ const Admin = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="banners">Promo Banners</TabsTrigger>
+              <TabsTrigger value="store-hours">Store Hours</TabsTrigger>
             </TabsList>
 
             <TabsContent value="products">
               <ProductManagement />
+            </TabsContent>
+
+            <TabsContent value="store-hours">
+              <StoreHoursManagement />
             </TabsContent>
 
             <TabsContent value="banners">
