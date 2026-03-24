@@ -524,6 +524,7 @@ const ProductManagement = () => {
         });
         setDialogOpen(false);
         fetchProducts();
+        fetchPackPrices();
       }
     } else {
       const { data: newProduct, error } = await supabase
