@@ -550,6 +550,7 @@ const ProductManagement = () => {
         });
         setDialogOpen(false);
         fetchProducts();
+        fetchPackPrices();
       }
     }
 
