@@ -1,3 +1,5 @@
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PromoBanner from "@/components/PromoBanner";
@@ -8,6 +10,14 @@ import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (user) {
+    return <Navigate to="/stores" replace />;
+  }
+
   return (
     <div className="min-h-screen">
       <Header />
