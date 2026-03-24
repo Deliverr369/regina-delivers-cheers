@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import freeDeliveryBanner from "@/assets/promo-banner.png";
 
 interface PromoBanner {
   id: string;
@@ -39,15 +37,30 @@ const PromoBanner = () => {
   if (loading || !banner) return null;
 
   return (
-    <section className="py-4 md:py-6">
+    <section className="py-6 md:py-10">
       <div className="container mx-auto px-4">
-        <Link to={banner.button_link || "/stores"} className="block">
-          <img 
-            src={freeDeliveryBanner} 
-            alt={banner.title}
-            className="w-full h-auto object-contain max-h-[200px] md:max-h-[280px]"
-          />
-        </Link>
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 md:p-12 text-center border border-primary/20">
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+            {banner.title}
+          </h2>
+          {banner.subtitle && (
+            <h3 className="text-xl md:text-2xl font-display font-semibold text-primary mb-2">
+              {banner.subtitle}
+            </h3>
+          )}
+          {banner.description && (
+            <p className="text-muted-foreground text-base md:text-lg max-w-md mx-auto mt-2">
+              {banner.description}
+            </p>
+          )}
+          {banner.button_text && banner.button_link && (
+            <Link to={banner.button_link}>
+              <Button size="lg" className="mt-6 px-10 py-6 text-lg font-bold uppercase tracking-wide">
+                {banner.button_text}
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
     </section>
   );
