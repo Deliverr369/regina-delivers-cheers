@@ -27,6 +27,7 @@ import DashboardStores from "./pages/dashboard/DashboardStores";
 import DashboardStoreHours from "./pages/dashboard/DashboardStoreHours";
 import DashboardUsers from "./pages/dashboard/DashboardUsers";
 import DashboardBanners from "./pages/dashboard/DashboardBanners";
+import DashboardBulkImages from "./pages/dashboard/DashboardBulkImages";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="store-hours" element={<DashboardStoreHours />} />
                 <Route path="users" element={<DashboardUsers />} />
                 <Route path="banners" element={<DashboardBanners />} />
+                <Route path="bulk-images" element={<DashboardBulkImages />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
