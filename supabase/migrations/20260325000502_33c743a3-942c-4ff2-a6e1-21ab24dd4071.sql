@@ -1,0 +1,1 @@
+UPDATE products SET image_url = '/images/products/budweiser.webp' WHERE LOWER(name) LIKE '%budweiser%';
