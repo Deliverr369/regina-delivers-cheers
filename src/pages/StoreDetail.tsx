@@ -269,11 +269,22 @@ const StoreDetail = () => {
                 <SelectValue placeholder="Select size" />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border z-50">
-                {getPackSizesForProduct(product).map((size) => (
-                  <SelectItem key={size.value} value={size.value} className="text-xs">
-                    {size.label}
-                  </SelectItem>
-                ))}
+                {getPackSizesForProduct(product).map((size) => {
+                  const storedPrice = packPrices.find(
+                    bp => bp.product_id === product.id && bp.pack_size === size.value && !bp.is_hidden
+                  );
+                  const sizePrice = storedPrice
+                    ? Number(storedPrice.price)
+                    : Number(product.price) * size.multiplier;
+                  return (
+                    <SelectItem key={size.value} value={size.value} className="text-xs">
+                      <span className="flex items-center justify-between gap-4 w-full">
+                        <span>{size.label}</span>
+                        <span className="text-primary font-semibold">${sizePrice.toFixed(2)}</span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
