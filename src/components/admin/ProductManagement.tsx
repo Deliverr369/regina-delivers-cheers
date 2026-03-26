@@ -168,6 +168,8 @@ const ProductManagement = () => {
   // For inline "add size" rows: keyed by product.id
   const [addingSizeFor, setAddingSizeFor] = useState<Record<string, { size: string; price: string }>>({}); 
   const [savingNewSize, setSavingNewSize] = useState<string | null>(null);
+  const [deleteGroupDialogOpen, setDeleteGroupDialogOpen] = useState(false);
+  const [deletingGroup, setDeletingGroup] = useState<{ name: string; productIds: string[] } | null>(null);
 
   useEffect(() => {
     fetchStores();
@@ -825,6 +827,35 @@ const ProductManagement = () => {
     }
   };
 
+  const handleDeleteGroup = async () => {
+    if (!deletingGroup) return;
+    setSaving(true);
+    // Delete pack prices first, then products
+    const { error: packError } = await supabase
+      .from("product_pack_prices")
+      .delete()
+      .in("product_id", deletingGroup.productIds);
+    if (packError) {
+      toast({ title: "Error", description: "Failed to delete pack prices", variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .in("id", deletingGroup.productIds);
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete products", variant: "destructive" });
+    } else {
+      toast({ title: `Deleted "${deletingGroup.name}" across ${deletingGroup.productIds.length} store(s)` });
+      fetchProducts();
+      fetchPackPrices();
+    }
+    setDeleteGroupDialogOpen(false);
+    setDeletingGroup(null);
+    setSaving(false);
+  };
+
   const fetchPackPrices = async () => {
     const { data, error } = await supabase
       .from("product_pack_prices")
@@ -959,6 +990,19 @@ const ProductManagement = () => {
                                       </span>
                                     </div>
                                   </div>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeletingGroup({ name: group.name, productIds: group.products.map(p => p.id) });
+                                      setDeleteGroupDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 </div>
 
                                 {/* Expanded Store Rows */}
@@ -1450,6 +1494,27 @@ const ProductManagement = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Group Confirmation Dialog */}
+      <AlertDialog open={deleteGroupDialogOpen} onOpenChange={setDeleteGroupDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product Group</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingGroup?.name}" across {deletingGroup?.productIds.length} store(s)? This will remove all listings and pack prices. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteGroup}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
