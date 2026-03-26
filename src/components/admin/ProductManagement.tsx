@@ -946,12 +946,12 @@ const ProductManagement = () => {
                   <div key={section.key} className="border rounded-xl overflow-hidden">
                     {/* Category Header */}
                     <div
-                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b ${section.color} transition-colors`}
+                      className={`flex items-center gap-4 px-6 py-5 cursor-pointer border-b ${section.color} transition-colors`}
                       onClick={() => toggleCategory(section.key)}
                     >
-                      {isCatExpanded ? <ChevronDown className="h-5 w-5 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 flex-shrink-0" />}
-                      <h2 className="text-lg font-bold">{section.label}</h2>
-                      <span className="text-sm opacity-70 ml-1">({sectionGroups.length} products)</span>
+                      {isCatExpanded ? <ChevronDown className="h-6 w-6 flex-shrink-0" /> : <ChevronRight className="h-6 w-6 flex-shrink-0" />}
+                      <h2 className="text-xl font-bold">{section.label}</h2>
+                      <span className="text-base opacity-70 ml-1">({sectionGroups.length} products)</span>
                     </div>
 
                     {isCatExpanded && (
