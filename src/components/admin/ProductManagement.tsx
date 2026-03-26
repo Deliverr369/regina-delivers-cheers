@@ -827,6 +827,35 @@ const ProductManagement = () => {
     }
   };
 
+  const handleDeleteGroup = async () => {
+    if (!deletingGroup) return;
+    setSaving(true);
+    // Delete pack prices first, then products
+    const { error: packError } = await supabase
+      .from("product_pack_prices")
+      .delete()
+      .in("product_id", deletingGroup.productIds);
+    if (packError) {
+      toast({ title: "Error", description: "Failed to delete pack prices", variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .in("id", deletingGroup.productIds);
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete products", variant: "destructive" });
+    } else {
+      toast({ title: `Deleted "${deletingGroup.name}" across ${deletingGroup.productIds.length} store(s)` });
+      fetchProducts();
+      fetchPackPrices();
+    }
+    setDeleteGroupDialogOpen(false);
+    setDeletingGroup(null);
+    setSaving(false);
+  };
+
   const fetchPackPrices = async () => {
     const { data, error } = await supabase
       .from("product_pack_prices")
