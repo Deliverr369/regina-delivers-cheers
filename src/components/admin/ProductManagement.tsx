@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, X, Image as ImageIcon, Loader2, ChevronDown, ChevronRight, Save, Store as StoreIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, X, Image as ImageIcon, Loader2, ChevronDown, ChevronRight, Save, Store as StoreIcon, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,6 +86,7 @@ interface Product {
   image_url: string | null;
   in_stock: boolean;
   is_hidden: boolean;
+  display_order: number;
 }
 
 interface PackPrice {
@@ -769,11 +770,13 @@ const ProductManagement = () => {
       const cat = g.category as ProductCategory;
       if (result[cat]) result[cat].push(g);
     });
-    // Sort beer: 24-pack products first
-    result.beer.sort((a, b) => {
-      const aHas24 = a.products.some(p => p.size === "24-pack") ? 0 : 1;
-      const bHas24 = b.products.some(p => p.size === "24-pack") ? 0 : 1;
-      return aHas24 - bHas24 || a.name.localeCompare(b.name);
+    // Sort by display_order (lower = higher priority), then by name
+    Object.keys(result).forEach((cat) => {
+      result[cat as ProductCategory].sort((a, b) => {
+        const aOrder = Math.min(...a.products.map(p => p.display_order));
+        const bOrder = Math.min(...b.products.map(p => p.display_order));
+        return aOrder - bOrder || a.name.localeCompare(b.name);
+      });
     });
     return result;
   }, [groupedProducts]);
