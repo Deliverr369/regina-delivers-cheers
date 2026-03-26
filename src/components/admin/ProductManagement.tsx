@@ -724,6 +724,12 @@ const ProductManagement = () => {
       const cat = g.category as ProductCategory;
       if (result[cat]) result[cat].push(g);
     });
+    // Sort beer: 24-pack products first
+    result.beer.sort((a, b) => {
+      const aHas24 = a.products.some(p => p.size === "24-pack") ? 0 : 1;
+      const bHas24 = b.products.some(p => p.size === "24-pack") ? 0 : 1;
+      return aHas24 - bHas24 || a.name.localeCompare(b.name);
+    });
     return result;
   }, [groupedProducts]);
 
