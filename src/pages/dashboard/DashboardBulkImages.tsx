@@ -23,6 +23,8 @@ interface UploadedImage {
   };
   error?: string;
   selectedProductId?: string;
+  exactHash?: string;
+  perceptualHash?: string;
 }
 
 interface ExistingProduct {
@@ -38,7 +40,8 @@ const DashboardBulkImages = () => {
   const [products, setProducts] = useState<ExistingProduct[]>([]);
   const [processing, setProcessing] = useState(false);
   const [assigning, setAssigning] = useState(false);
-  const fileHashesRef = useRef<Set<string>>(new Set());
+  const exactHashesRef = useRef<Set<string>>(new Set());
+  const perceptualHashesRef = useRef<string[]>([]);
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("id, name, category, store_id").order("name");
@@ -53,33 +56,124 @@ const DashboardBulkImages = () => {
       .join("");
   };
 
+  const computePerceptualHash = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const imageUrl = URL.createObjectURL(file);
+      const image = new Image();
+
+      image.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = 8;
+          canvas.height = 8;
+          const context = canvas.getContext("2d");
+
+          if (!context) {
+            URL.revokeObjectURL(imageUrl);
+            reject(new Error("Failed to read image"));
+            return;
+          }
+
+          context.drawImage(image, 0, 0, 8, 8);
+          const { data } = context.getImageData(0, 0, 8, 8);
+          const grayscaleValues: number[] = [];
+
+          for (let i = 0; i < data.length; i += 4) {
+            const red = data[i];
+            const green = data[i + 1];
+            const blue = data[i + 2];
+            grayscaleValues.push(0.299 * red + 0.587 * green + 0.114 * blue);
+          }
+
+          const average = grayscaleValues.reduce((sum, value) => sum + value, 0) / grayscaleValues.length;
+          const hash = grayscaleValues.map((value) => (value > average ? "1" : "0")).join("");
+
+          URL.revokeObjectURL(imageUrl);
+          resolve(hash);
+        } catch (error) {
+          URL.revokeObjectURL(imageUrl);
+          reject(error);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(imageUrl);
+        reject(new Error("Invalid image file"));
+      };
+
+      image.src = imageUrl;
+    });
+
+  const getHammingDistance = (hashA: string, hashB: string): number => {
+    if (hashA.length !== hashB.length) return Number.POSITIVE_INFINITY;
+
+    let differences = 0;
+    for (let i = 0; i < hashA.length; i++) {
+      if (hashA[i] !== hashB[i]) differences++;
+    }
+
+    return differences;
+  };
+
+  const isPerceptualDuplicate = (hash: string, existingHashes: string[]) =>
+    existingHashes.some((existingHash) => getHammingDistance(hash, existingHash) <= 4);
+
   const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
     if (products.length === 0) await fetchProducts();
 
+    const normalizedExistingImages: UploadedImage[] = [];
     const newImages: UploadedImage[] = [];
-    const updatedHashes = new Set(fileHashesRef.current);
+    const updatedExactHashes = new Set<string>();
+    const updatedPerceptualHashes: string[] = [];
     let duplicateCount = 0;
 
+    for (const existingImage of images) {
+      const exactHash = existingImage.exactHash ?? (await computeFileHash(existingImage.file));
+      const perceptualHash = existingImage.perceptualHash ?? (await computePerceptualHash(existingImage.file));
+
+      const isDuplicate =
+        updatedExactHashes.has(exactHash) || isPerceptualDuplicate(perceptualHash, updatedPerceptualHashes);
+
+      if (isDuplicate) {
+        duplicateCount++;
+        URL.revokeObjectURL(existingImage.preview);
+        continue;
+      }
+
+      updatedExactHashes.add(exactHash);
+      updatedPerceptualHashes.push(perceptualHash);
+      normalizedExistingImages.push({ ...existingImage, exactHash, perceptualHash });
+    }
+
     for (const file of files) {
-      const hash = await computeFileHash(file);
-      if (updatedHashes.has(hash)) {
+      const [exactHash, perceptualHash] = await Promise.all([computeFileHash(file), computePerceptualHash(file)]);
+
+      const isDuplicate =
+        updatedExactHashes.has(exactHash) || isPerceptualDuplicate(perceptualHash, updatedPerceptualHashes);
+
+      if (isDuplicate) {
         duplicateCount++;
         continue;
       }
-      updatedHashes.add(hash);
+
+      updatedExactHashes.add(exactHash);
+      updatedPerceptualHashes.push(perceptualHash);
       newImages.push({
         id: crypto.randomUUID(),
         file,
         preview: URL.createObjectURL(file),
         status: "pending",
+        exactHash,
+        perceptualHash,
       });
     }
 
-    fileHashesRef.current = updatedHashes;
-    if (newImages.length > 0) setImages((prev) => [...prev, ...newImages]);
+    exactHashesRef.current = updatedExactHashes;
+    perceptualHashesRef.current = updatedPerceptualHashes;
+    setImages([...normalizedExistingImages, ...newImages]);
 
     if (duplicateCount > 0) {
       toast({
@@ -87,6 +181,8 @@ const DashboardBulkImages = () => {
         description: `${duplicateCount} duplicate image(s) were automatically skipped`,
       });
     }
+
+    e.target.value = "";
   };
 
   const fileToBase64 = (file: File): Promise<string> =>
@@ -201,16 +297,28 @@ const DashboardBulkImages = () => {
 
   const removeImage = (id: string) => {
     setImages((prev) => {
-      const img = prev.find((i) => i.id === id);
-      if (img) URL.revokeObjectURL(img.preview);
-      return prev.filter((i) => i.id !== id);
+      const imageToRemove = prev.find((image) => image.id === id);
+      if (imageToRemove) URL.revokeObjectURL(imageToRemove.preview);
+
+      const nextImages = prev.filter((image) => image.id !== id);
+      exactHashesRef.current = new Set(
+        nextImages
+          .map((image) => image.exactHash)
+          .filter((hash): hash is string => typeof hash === "string")
+      );
+      perceptualHashesRef.current = nextImages
+        .map((image) => image.perceptualHash)
+        .filter((hash): hash is string => typeof hash === "string");
+
+      return nextImages;
     });
   };
 
   const clearAll = () => {
-    images.forEach((i) => URL.revokeObjectURL(i.preview));
+    images.forEach((image) => URL.revokeObjectURL(image.preview));
     setImages([]);
-    fileHashesRef.current = new Set();
+    exactHashesRef.current = new Set();
+    perceptualHashesRef.current = [];
   };
 
   const pendingCount = images.filter((i) => i.status === "pending").length;
