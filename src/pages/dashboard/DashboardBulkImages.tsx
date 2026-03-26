@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Upload, Loader2, Check, X, ImagePlus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ const DashboardBulkImages = () => {
   const [products, setProducts] = useState<ExistingProduct[]>([]);
   const [processing, setProcessing] = useState(false);
   const [assigning, setAssigning] = useState(false);
-  const [fileHashes, setFileHashes] = useState<Set<string>>(new Set());
+  const fileHashesRef = useRef<Set<string>>(new Set());
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("id, name, category, store_id").order("name");
@@ -60,7 +60,7 @@ const DashboardBulkImages = () => {
     if (products.length === 0) await fetchProducts();
 
     const newImages: UploadedImage[] = [];
-    const updatedHashes = new Set(fileHashes);
+    const updatedHashes = new Set(fileHashesRef.current);
     let duplicateCount = 0;
 
     for (const file of files) {
@@ -78,7 +78,7 @@ const DashboardBulkImages = () => {
       });
     }
 
-    setFileHashes(updatedHashes);
+    fileHashesRef.current = updatedHashes;
     if (newImages.length > 0) setImages((prev) => [...prev, ...newImages]);
 
     if (duplicateCount > 0) {
@@ -210,7 +210,7 @@ const DashboardBulkImages = () => {
   const clearAll = () => {
     images.forEach((i) => URL.revokeObjectURL(i.preview));
     setImages([]);
-    setFileHashes(new Set());
+    fileHashesRef.current = new Set();
   };
 
   const pendingCount = images.filter((i) => i.status === "pending").length;
