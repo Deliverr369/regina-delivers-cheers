@@ -1137,7 +1137,6 @@ const ProductManagement = () => {
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
-                                  </Button>
                                 </div>
 
                                 {/* Expanded Store Rows */}
