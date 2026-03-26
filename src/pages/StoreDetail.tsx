@@ -135,7 +135,13 @@ const StoreDetail = () => {
   };
 
   const productsByCategory = {
-    beer: products.filter((p) => p.category === "beer"),
+    beer: products
+      .filter((p) => p.category === "beer")
+      .sort((a, b) => {
+        const aIs24 = a.size === "24-pack" ? 0 : 1;
+        const bIs24 = b.size === "24-pack" ? 0 : 1;
+        return aIs24 - bIs24 || a.name.localeCompare(b.name);
+      }),
     wine: products.filter((p) => p.category === "wine"),
     spirits: products.filter((p) => p.category === "spirits"),
     smokes: products.filter((p) => p.category === "smokes"),
