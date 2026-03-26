@@ -415,18 +415,18 @@ const StoreDetail = () => {
             </div>
           ) : (
             <Tabs defaultValue={defaultCategory} className="w-full">
-              <TabsList className="mb-8 w-full justify-center overflow-x-auto h-auto p-1.5 gap-1">
+              <TabsList className="mb-8 w-full justify-center overflow-x-auto h-auto p-2 gap-2 bg-muted/50 rounded-xl">
                 {availableCategories.includes("beer") && (
-                  <TabsTrigger value="beer" className="text-base px-6 py-3 gap-2">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
+                  <TabsTrigger value="beer" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("wine") && (
-                  <TabsTrigger value="wine" className="text-base px-6 py-3 gap-2">🍷 Wine ({productsByCategory.wine.length})</TabsTrigger>
+                  <TabsTrigger value="wine" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-rose-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🍷 Wine ({productsByCategory.wine.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("spirits") && (
-                  <TabsTrigger value="spirits" className="text-base px-6 py-3 gap-2">🥃 Spirits ({productsByCategory.spirits.length})</TabsTrigger>
+                  <TabsTrigger value="spirits" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-violet-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🥃 Spirits ({productsByCategory.spirits.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("smokes") && (
-                  <TabsTrigger value="smokes" className="text-base px-6 py-3 gap-2">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>
+                  <TabsTrigger value="smokes" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-slate-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>
                 )}
               </TabsList>
 
