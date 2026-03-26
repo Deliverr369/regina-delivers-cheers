@@ -210,6 +210,7 @@ const DashboardBulkImages = () => {
   const clearAll = () => {
     images.forEach((i) => URL.revokeObjectURL(i.preview));
     setImages([]);
+    setFileHashes(new Set());
   };
 
   const pendingCount = images.filter((i) => i.status === "pending").length;
