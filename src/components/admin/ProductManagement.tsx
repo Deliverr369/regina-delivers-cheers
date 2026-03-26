@@ -170,6 +170,8 @@ const ProductManagement = () => {
   const [savingNewSize, setSavingNewSize] = useState<string | null>(null);
   const [deleteGroupDialogOpen, setDeleteGroupDialogOpen] = useState(false);
   const [deletingGroup, setDeletingGroup] = useState<{ name: string; productIds: string[] } | null>(null);
+  const groupUploadRef = useRef<HTMLInputElement>(null);
+  const [uploadingGroupIds, setUploadingGroupIds] = useState<string[] | null>(null);
 
   useEffect(() => {
     fetchStores();
@@ -458,6 +460,49 @@ const ProductManagement = () => {
       if (quickUploadRef.current) {
         quickUploadRef.current.value = '';
       }
+    }
+  };
+
+  const handleGroupUploadClick = (productIds: string[]) => {
+    setUploadingGroupIds(productIds);
+    groupUploadRef.current?.click();
+  };
+
+  const handleGroupImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !uploadingGroupIds || uploadingGroupIds.length === 0) {
+      setUploadingGroupIds(null);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Invalid file type", description: "Please select an image file", variant: "destructive" });
+      setUploadingGroupIds(null);
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please select an image under 10MB", variant: "destructive" });
+      setUploadingGroupIds(null);
+      return;
+    }
+    toast({ title: "Processing image", description: "Removing background and optimizing..." });
+    try {
+      const processedBlob = await processProductImage(file, (status) => console.log('Processing:', status));
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
+      const filePath = `products/${fileName}`;
+      const { error: uploadError } = await supabase.storage.from('store-images').upload(filePath, processedBlob, { contentType: 'image/jpeg' });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('store-images').getPublicUrl(filePath);
+      // Update ALL products in the group
+      const { error: updateError } = await supabase.from('products').update({ image_url: publicUrl }).in('id', uploadingGroupIds);
+      if (updateError) throw updateError;
+      fetchProducts();
+      toast({ title: "Success", description: `Image updated for ${uploadingGroupIds.length} product(s) across all stores` });
+    } catch (error: any) {
+      console.error('Group upload error:', error);
+      toast({ title: "Upload failed", description: error.message || "Failed to process and upload image", variant: "destructive" });
+    } finally {
+      setUploadingGroupIds(null);
+      if (groupUploadRef.current) groupUploadRef.current.value = '';
     }
   };
 
@@ -887,6 +932,14 @@ const ProductManagement = () => {
         onChange={handleQuickImageUpload}
         className="hidden"
       />
+      {/* Hidden file input for group image uploads */}
+      <input
+        ref={groupUploadRef}
+        type="file"
+        accept="image/*"
+        onChange={handleGroupImageUpload}
+        className="hidden"
+      />
       
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -976,14 +1029,24 @@ const ProductManagement = () => {
                                 >
                                   {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
                                   
-                                  <div className="flex-shrink-0">
+                                  <div
+                                    className="flex-shrink-0 cursor-pointer group/img relative"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleGroupUploadClick(group.products.map(p => p.id));
+                                    }}
+                                    title="Click to set image for all stores"
+                                  >
                                     {group.image_url ? (
-                                      <div className="w-10 h-10 rounded overflow-hidden border border-border bg-background">
+                                      <div className="w-10 h-10 rounded overflow-hidden border border-border bg-background relative">
                                         <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }} />
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                          <Upload className="h-4 w-4 text-white" />
+                                        </div>
                                       </div>
                                     ) : (
-                                      <div className="w-10 h-10 rounded border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center">
-                                        <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                                      <div className="w-10 h-10 rounded border-2 border-dashed border-primary/40 bg-primary/5 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors">
+                                        <Upload className="h-4 w-4 text-primary" />
                                       </div>
                                     )}
                                   </div>
