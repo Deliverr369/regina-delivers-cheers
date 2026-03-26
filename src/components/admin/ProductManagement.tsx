@@ -990,6 +990,19 @@ const ProductManagement = () => {
                                       </span>
                                     </div>
                                   </div>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeletingGroup({ name: group.name, productIds: group.products.map(p => p.id) });
+                                      setDeleteGroupDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 </div>
 
                                 {/* Expanded Store Rows */}
