@@ -138,13 +138,19 @@ const StoreDetail = () => {
     beer: products
       .filter((p) => p.category === "beer")
       .sort((a, b) => {
-        const aIs24 = a.size === "24-pack" ? 0 : 1;
-        const bIs24 = b.size === "24-pack" ? 0 : 1;
-        return aIs24 - bIs24 || a.name.localeCompare(b.name);
+        const aOrder = (a as any).display_order ?? 0;
+        const bOrder = (b as any).display_order ?? 0;
+        return aOrder - bOrder || a.name.localeCompare(b.name);
       }),
-    wine: products.filter((p) => p.category === "wine"),
-    spirits: products.filter((p) => p.category === "spirits"),
-    smokes: products.filter((p) => p.category === "smokes"),
+    wine: products
+      .filter((p) => p.category === "wine")
+      .sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    spirits: products
+      .filter((p) => p.category === "spirits")
+      .sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    smokes: products
+      .filter((p) => p.category === "smokes")
+      .sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
   };
 
   // Get categories that have products
