@@ -170,6 +170,8 @@ const ProductManagement = () => {
   const [savingNewSize, setSavingNewSize] = useState<string | null>(null);
   const [deleteGroupDialogOpen, setDeleteGroupDialogOpen] = useState(false);
   const [deletingGroup, setDeletingGroup] = useState<{ name: string; productIds: string[] } | null>(null);
+  const groupUploadRef = useRef<HTMLInputElement>(null);
+  const [uploadingGroupIds, setUploadingGroupIds] = useState<string[] | null>(null);
 
   useEffect(() => {
     fetchStores();
