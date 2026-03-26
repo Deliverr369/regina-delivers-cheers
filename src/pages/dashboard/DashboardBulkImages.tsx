@@ -38,7 +38,7 @@ const DashboardBulkImages = () => {
   const [products, setProducts] = useState<ExistingProduct[]>([]);
   const [processing, setProcessing] = useState(false);
   const [assigning, setAssigning] = useState(false);
-  const [fileHashes, setFileHashes] = useState<Set<string>>(new Set());
+  const fileHashesRef = useRef<Set<string>>(new Set());
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("id, name, category, store_id").order("name");
