@@ -910,6 +910,40 @@ const ProductManagement = () => {
     setSaving(false);
   };
 
+  const handleMoveGroup = async (category: ProductCategory, groupIndex: number, direction: "up" | "down") => {
+    const groups = categorizedGroups[category];
+    const targetIndex = direction === "up" ? groupIndex - 1 : groupIndex + 1;
+    if (targetIndex < 0 || targetIndex >= groups.length) return;
+
+    const currentGroup = groups[groupIndex];
+    const swapGroup = groups[targetIndex];
+
+    // Swap display_order values
+    const currentOrder = Math.min(...currentGroup.products.map(p => p.display_order));
+    const swapOrder = Math.min(...swapGroup.products.map(p => p.display_order));
+
+    // If both are 0 (default), assign explicit orders based on position
+    const newCurrentOrder = direction === "up" ? swapOrder - 1 : swapOrder + 1;
+    const newSwapOrder = direction === "up" ? currentOrder + 1 : currentOrder - 1;
+
+    try {
+      // Update all products in both groups
+      const updates = [
+        ...currentGroup.products.map(p => 
+          supabase.from("products").update({ display_order: newCurrentOrder }).eq("id", p.id)
+        ),
+        ...swapGroup.products.map(p => 
+          supabase.from("products").update({ display_order: newSwapOrder }).eq("id", p.id)
+        ),
+      ];
+      await Promise.all(updates);
+      fetchProducts();
+      toast({ title: `Moved "${currentGroup.name}" ${direction}` });
+    } catch {
+      toast({ title: "Error", description: "Failed to reorder", variant: "destructive" });
+    }
+  };
+
   const fetchPackPrices = async () => {
     const { data, error } = await supabase
       .from("product_pack_prices")
