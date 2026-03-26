@@ -463,6 +463,49 @@ const ProductManagement = () => {
     }
   };
 
+  const handleGroupUploadClick = (productIds: string[]) => {
+    setUploadingGroupIds(productIds);
+    groupUploadRef.current?.click();
+  };
+
+  const handleGroupImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !uploadingGroupIds || uploadingGroupIds.length === 0) {
+      setUploadingGroupIds(null);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Invalid file type", description: "Please select an image file", variant: "destructive" });
+      setUploadingGroupIds(null);
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please select an image under 10MB", variant: "destructive" });
+      setUploadingGroupIds(null);
+      return;
+    }
+    toast({ title: "Processing image", description: "Removing background and optimizing..." });
+    try {
+      const processedBlob = await processProductImage(file, (status) => console.log('Processing:', status));
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
+      const filePath = `products/${fileName}`;
+      const { error: uploadError } = await supabase.storage.from('store-images').upload(filePath, processedBlob, { contentType: 'image/jpeg' });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('store-images').getPublicUrl(filePath);
+      // Update ALL products in the group
+      const { error: updateError } = await supabase.from('products').update({ image_url: publicUrl }).in('id', uploadingGroupIds);
+      if (updateError) throw updateError;
+      fetchProducts();
+      toast({ title: "Success", description: `Image updated for ${uploadingGroupIds.length} product(s) across all stores` });
+    } catch (error: any) {
+      console.error('Group upload error:', error);
+      toast({ title: "Upload failed", description: error.message || "Failed to process and upload image", variant: "destructive" });
+    } finally {
+      setUploadingGroupIds(null);
+      if (groupUploadRef.current) groupUploadRef.current.value = '';
+    }
+  };
+
   const handleOpenDelete = (product: Product) => {
     setDeletingProduct(product);
     setDeleteDialogOpen(true);
