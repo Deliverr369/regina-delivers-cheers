@@ -1055,7 +1055,7 @@ const ProductManagement = () => {
                         {sectionGroups.length === 0 ? (
                           <div className="text-center py-6 text-muted-foreground text-sm">No products in this category</div>
                         ) : (
-                          sectionGroups.map((group) => {
+                          sectionGroups.map((group, groupIndex) => {
                             const isExpanded = expandedGroups.has(group.name);
                             return (
                               <div key={group.name}>
@@ -1097,17 +1097,46 @@ const ProductManagement = () => {
                                     </div>
                                   </div>
 
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setDeletingGroup({ name: group.name, productIds: group.products.map(p => p.id) });
-                                      setDeleteGroupDialogOpen(true);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      disabled={groupIndex === 0}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveGroup(section.key, groupIndex, "up");
+                                      }}
+                                      title="Move up"
+                                    >
+                                      <ArrowUp className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      disabled={groupIndex === sectionGroups.length - 1}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveGroup(section.key, groupIndex, "down");
+                                      }}
+                                      title="Move down"
+                                    >
+                                      <ArrowDown className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeletingGroup({ name: group.name, productIds: group.products.map(p => p.id) });
+                                        setDeleteGroupDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                   </Button>
                                 </div>
 
