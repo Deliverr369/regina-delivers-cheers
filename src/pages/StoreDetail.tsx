@@ -415,18 +415,18 @@ const StoreDetail = () => {
             </div>
           ) : (
             <Tabs defaultValue={defaultCategory} className="w-full">
-              <TabsList className="mb-8 w-full justify-start overflow-x-auto">
+              <TabsList className="mb-8 w-full justify-center overflow-x-auto h-auto p-1.5 gap-1">
                 {availableCategories.includes("beer") && (
-                  <TabsTrigger value="beer">Beer ({productsByCategory.beer.length})</TabsTrigger>
+                  <TabsTrigger value="beer" className="text-base px-6 py-3 gap-2">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("wine") && (
-                  <TabsTrigger value="wine">Wine ({productsByCategory.wine.length})</TabsTrigger>
+                  <TabsTrigger value="wine" className="text-base px-6 py-3 gap-2">🍷 Wine ({productsByCategory.wine.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("spirits") && (
-                  <TabsTrigger value="spirits">Spirits ({productsByCategory.spirits.length})</TabsTrigger>
+                  <TabsTrigger value="spirits" className="text-base px-6 py-3 gap-2">🥃 Spirits ({productsByCategory.spirits.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("smokes") && (
-                  <TabsTrigger value="smokes">Smokes ({productsByCategory.smokes.length})</TabsTrigger>
+                  <TabsTrigger value="smokes" className="text-base px-6 py-3 gap-2">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>
                 )}
               </TabsList>
 
