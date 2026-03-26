@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, X, Image as ImageIcon, Loader2, ChevronDown, ChevronRight, Save, Store as StoreIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, X, Image as ImageIcon, Loader2, ChevronDown, ChevronRight, Save, Store as StoreIcon, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,6 +86,7 @@ interface Product {
   image_url: string | null;
   in_stock: boolean;
   is_hidden: boolean;
+  display_order: number;
 }
 
 interface PackPrice {
@@ -769,11 +770,13 @@ const ProductManagement = () => {
       const cat = g.category as ProductCategory;
       if (result[cat]) result[cat].push(g);
     });
-    // Sort beer: 24-pack products first
-    result.beer.sort((a, b) => {
-      const aHas24 = a.products.some(p => p.size === "24-pack") ? 0 : 1;
-      const bHas24 = b.products.some(p => p.size === "24-pack") ? 0 : 1;
-      return aHas24 - bHas24 || a.name.localeCompare(b.name);
+    // Sort by display_order (lower = higher priority), then by name
+    Object.keys(result).forEach((cat) => {
+      result[cat as ProductCategory].sort((a, b) => {
+        const aOrder = Math.min(...a.products.map(p => p.display_order));
+        const bOrder = Math.min(...b.products.map(p => p.display_order));
+        return aOrder - bOrder || a.name.localeCompare(b.name);
+      });
     });
     return result;
   }, [groupedProducts]);
@@ -907,6 +910,40 @@ const ProductManagement = () => {
     setSaving(false);
   };
 
+  const handleMoveGroup = async (category: ProductCategory, groupIndex: number, direction: "up" | "down") => {
+    const groups = categorizedGroups[category];
+    const targetIndex = direction === "up" ? groupIndex - 1 : groupIndex + 1;
+    if (targetIndex < 0 || targetIndex >= groups.length) return;
+
+    const currentGroup = groups[groupIndex];
+    const swapGroup = groups[targetIndex];
+
+    // Swap display_order values
+    const currentOrder = Math.min(...currentGroup.products.map(p => p.display_order));
+    const swapOrder = Math.min(...swapGroup.products.map(p => p.display_order));
+
+    // If both are 0 (default), assign explicit orders based on position
+    const newCurrentOrder = direction === "up" ? swapOrder - 1 : swapOrder + 1;
+    const newSwapOrder = direction === "up" ? currentOrder + 1 : currentOrder - 1;
+
+    try {
+      // Update all products in both groups
+      const updates = [
+        ...currentGroup.products.map(p => 
+          supabase.from("products").update({ display_order: newCurrentOrder }).eq("id", p.id)
+        ),
+        ...swapGroup.products.map(p => 
+          supabase.from("products").update({ display_order: newSwapOrder }).eq("id", p.id)
+        ),
+      ];
+      await Promise.all(updates);
+      fetchProducts();
+      toast({ title: `Moved "${currentGroup.name}" ${direction}` });
+    } catch {
+      toast({ title: "Error", description: "Failed to reorder", variant: "destructive" });
+    }
+  };
+
   const fetchPackPrices = async () => {
     const { data, error } = await supabase
       .from("product_pack_prices")
@@ -1018,7 +1055,7 @@ const ProductManagement = () => {
                         {sectionGroups.length === 0 ? (
                           <div className="text-center py-6 text-muted-foreground text-sm">No products in this category</div>
                         ) : (
-                          sectionGroups.map((group) => {
+                          sectionGroups.map((group, groupIndex) => {
                             const isExpanded = expandedGroups.has(group.name);
                             return (
                               <div key={group.name}>
@@ -1060,18 +1097,46 @@ const ProductManagement = () => {
                                     </div>
                                   </div>
 
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setDeletingGroup({ name: group.name, productIds: group.products.map(p => p.id) });
-                                      setDeleteGroupDialogOpen(true);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      disabled={groupIndex === 0}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveGroup(section.key, groupIndex, "up");
+                                      }}
+                                      title="Move up"
+                                    >
+                                      <ArrowUp className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      disabled={groupIndex === sectionGroups.length - 1}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveGroup(section.key, groupIndex, "down");
+                                      }}
+                                      title="Move down"
+                                    >
+                                      <ArrowDown className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeletingGroup({ name: group.name, productIds: group.products.map(p => p.id) });
+                                        setDeleteGroupDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
 
                                 {/* Expanded Store Rows */}
