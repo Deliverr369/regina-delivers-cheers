@@ -932,6 +932,14 @@ const ProductManagement = () => {
         onChange={handleQuickImageUpload}
         className="hidden"
       />
+      {/* Hidden file input for group image uploads */}
+      <input
+        ref={groupUploadRef}
+        type="file"
+        accept="image/*"
+        onChange={handleGroupImageUpload}
+        className="hidden"
+      />
       
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
