@@ -38,11 +38,20 @@ const DashboardBulkImages = () => {
   const [products, setProducts] = useState<ExistingProduct[]>([]);
   const [processing, setProcessing] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [fileHashes, setFileHashes] = useState<Set<string>>(new Set());
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("id, name, category, store_id").order("name");
     if (data) setProducts(data);
   }, []);
+
+  const computeFileHash = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
 
   const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -50,14 +59,34 @@ const DashboardBulkImages = () => {
 
     if (products.length === 0) await fetchProducts();
 
-    const newImages: UploadedImage[] = files.map((file) => ({
-      id: crypto.randomUUID(),
-      file,
-      preview: URL.createObjectURL(file),
-      status: "pending",
-    }));
+    const newImages: UploadedImage[] = [];
+    const updatedHashes = new Set(fileHashes);
+    let duplicateCount = 0;
 
-    setImages((prev) => [...prev, ...newImages]);
+    for (const file of files) {
+      const hash = await computeFileHash(file);
+      if (updatedHashes.has(hash)) {
+        duplicateCount++;
+        continue;
+      }
+      updatedHashes.add(hash);
+      newImages.push({
+        id: crypto.randomUUID(),
+        file,
+        preview: URL.createObjectURL(file),
+        status: "pending",
+      });
+    }
+
+    setFileHashes(updatedHashes);
+    if (newImages.length > 0) setImages((prev) => [...prev, ...newImages]);
+
+    if (duplicateCount > 0) {
+      toast({
+        title: "Duplicates removed",
+        description: `${duplicateCount} duplicate image(s) were automatically skipped`,
+      });
+    }
   };
 
   const fileToBase64 = (file: File): Promise<string> =>
@@ -181,6 +210,7 @@ const DashboardBulkImages = () => {
   const clearAll = () => {
     images.forEach((i) => URL.revokeObjectURL(i.preview));
     setImages([]);
+    setFileHashes(new Set());
   };
 
   const pendingCount = images.filter((i) => i.status === "pending").length;
