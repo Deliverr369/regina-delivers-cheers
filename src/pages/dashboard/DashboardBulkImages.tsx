@@ -60,7 +60,7 @@ const DashboardBulkImages = () => {
     if (products.length === 0) await fetchProducts();
 
     const newImages: UploadedImage[] = [];
-    const updatedHashes = new Set(fileHashes);
+    const updatedHashes = new Set(fileHashesRef.current);
     let duplicateCount = 0;
 
     for (const file of files) {
