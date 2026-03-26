@@ -1029,14 +1029,24 @@ const ProductManagement = () => {
                                 >
                                   {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
                                   
-                                  <div className="flex-shrink-0">
+                                  <div
+                                    className="flex-shrink-0 cursor-pointer group/img relative"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleGroupUploadClick(group.products.map(p => p.id));
+                                    }}
+                                    title="Click to set image for all stores"
+                                  >
                                     {group.image_url ? (
-                                      <div className="w-10 h-10 rounded overflow-hidden border border-border bg-background">
+                                      <div className="w-10 h-10 rounded overflow-hidden border border-border bg-background relative">
                                         <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }} />
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                          <Upload className="h-4 w-4 text-white" />
+                                        </div>
                                       </div>
                                     ) : (
-                                      <div className="w-10 h-10 rounded border border-dashed border-muted-foreground/25 bg-muted/50 flex items-center justify-center">
-                                        <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                                      <div className="w-10 h-10 rounded border-2 border-dashed border-primary/40 bg-primary/5 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors">
+                                        <Upload className="h-4 w-4 text-primary" />
                                       </div>
                                     )}
                                   </div>
