@@ -78,7 +78,7 @@ const DashboardBulkImages = () => {
       });
     }
 
-    setFileHashes(updatedHashes);
+    fileHashesRef.current = updatedHashes;
     if (newImages.length > 0) setImages((prev) => [...prev, ...newImages]);
 
     if (duplicateCount > 0) {
