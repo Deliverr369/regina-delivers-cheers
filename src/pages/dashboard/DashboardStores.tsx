@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Store as StoreIcon, MapPin, Clock, DollarSign } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -95,47 +96,95 @@ const DashboardStores = () => {
     setDeleteOpen(false); setDeleting(null);
   };
 
-  if (loading) return <div className="text-muted-foreground">Loading stores...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Store Management</h2>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Store</Button>
+        <div>
+          <h2 className="font-display text-2xl font-bold text-foreground">Store Management</h2>
+          <p className="text-sm text-muted-foreground mt-1">Manage your Regina delivery stores</p>
+        </div>
+        <Button onClick={openCreate} className="rounded-xl">
+          <Plus className="h-4 w-4 mr-2" />Add Store
+        </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {stores.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No stores found.</p>
-          ) : (
-            <div className="space-y-3">
-              {stores.map((store) => (
-                <div key={store.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground">{store.name}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded ${store.is_open ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                        {store.is_open ? "Open" : "Closed"}
-                      </span>
+      {stores.length === 0 ? (
+        <Card className="border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <StoreIcon className="h-12 w-12 text-muted-foreground/30 mb-3" />
+            <p className="text-muted-foreground font-medium">No stores yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Add your first store to get started</p>
+            <Button onClick={openCreate} variant="outline" className="mt-4 rounded-xl">
+              <Plus className="h-4 w-4 mr-2" />Add Store
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {stores.map((store) => (
+            <Card key={store.id} className="border-border/50 hover:shadow-md transition-all group">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <StoreIcon className="h-5 w-5 text-primary" />
                     </div>
-                    <p className="text-sm text-muted-foreground">{store.address}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {store.hours} · Fee: ${store.delivery_fee} · {store.delivery_time}
-                    </p>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{store.name}</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge variant={store.is_open ? "default" : "destructive"} className="text-[10px] h-5 px-2">
+                          {store.is_open ? "Open" : "Closed"}
+                        </Badge>
+                        {store.rating && (
+                          <span className="text-xs text-muted-foreground">⭐ {store.rating}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(store)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => { setDeleting(store); setDeleteOpen(true); }}>
-                      <Trash2 className="h-4 w-4" />
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(store)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setDeleting(store); setDeleteOpen(true); }}>
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span className="truncate">{store.address}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {store.hours && (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span className="text-xs">{store.hours}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      <span className="text-xs">${store.delivery_fee || 0} fee · {store.delivery_time || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
