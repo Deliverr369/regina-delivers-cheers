@@ -1,4 +1,4 @@
-import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus } from "lucide-react";
+import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus, Boxes } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ const mainMenu = [
   { title: "Overview", url: "/dashboard", icon: BarChart3 },
   { title: "Orders", url: "/dashboard/orders", icon: ShoppingCart },
   { title: "Products", url: "/dashboard/products", icon: Package },
+  { title: "Inventory Ops", url: "/dashboard/inventory", icon: Boxes },
 ];
 
 const storeMenu = [
