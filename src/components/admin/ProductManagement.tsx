@@ -1307,24 +1307,21 @@ const ProductManagement = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="store">Store *</Label>
-              <Select
-                value={formData.store_id}
-                onValueChange={(value) => setFormData({ ...formData, store_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a store" />
-                </SelectTrigger>
-                <SelectContent>
-                  {stores.map((store) => (
-                    <SelectItem key={store.id} value={store.id}>
-                      {store.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {editingProduct && (
+              <div className="space-y-2">
+                <Label htmlFor="store">Store</Label>
+                <Input
+                  value={stores.find(s => s.id === editingProduct.store_id)?.name || ""}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+            )}
+            {!editingProduct && (
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                This product will be added to all {stores.length} stores automatically.
+              </p>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name">Product Name *</Label>
               <Input
