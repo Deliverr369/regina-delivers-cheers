@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { Upload, Loader2, Check, X, ImagePlus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,6 @@ interface UploadedImage {
   };
   error?: string;
   selectedProductId?: string;
-  exactHash?: string;
-  perceptualHash?: string;
 }
 
 interface ExistingProduct {
@@ -37,90 +35,25 @@ const DashboardBulkImages = () => {
   const [products, setProducts] = useState<ExistingProduct[]>([]);
   const [processing, setProcessing] = useState(false);
   const [assigning, setAssigning] = useState(false);
-  const exactHashesRef = useRef<Set<string>>(new Set());
-  const perceptualHashesRef = useRef<string[]>([]);
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("id, name, category, store_id").order("name");
     if (data) setProducts(data);
   }, []);
 
-  const computeFileHash = async (file: File): Promise<string> => {
-    const buffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-    return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  };
-
-  const computePerceptualHash = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const imageUrl = URL.createObjectURL(file);
-      const image = new Image();
-      image.onload = () => {
-        try {
-          const canvas = document.createElement("canvas");
-          canvas.width = 8; canvas.height = 8;
-          const context = canvas.getContext("2d");
-          if (!context) { URL.revokeObjectURL(imageUrl); reject(new Error("Failed to read image")); return; }
-          context.drawImage(image, 0, 0, 8, 8);
-          const { data } = context.getImageData(0, 0, 8, 8);
-          const grayscaleValues: number[] = [];
-          for (let i = 0; i < data.length; i += 4) {
-            grayscaleValues.push(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-          }
-          const average = grayscaleValues.reduce((sum, v) => sum + v, 0) / grayscaleValues.length;
-          const hash = grayscaleValues.map((v) => (v > average ? "1" : "0")).join("");
-          URL.revokeObjectURL(imageUrl);
-          resolve(hash);
-        } catch (error) { URL.revokeObjectURL(imageUrl); reject(error); }
-      };
-      image.onerror = () => { URL.revokeObjectURL(imageUrl); reject(new Error("Invalid image file")); };
-      image.src = imageUrl;
-    });
-
-  const getHammingDistance = (a: string, b: string) => {
-    if (a.length !== b.length) return Infinity;
-    let d = 0;
-    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++;
-    return d;
-  };
-
-  const isPerceptualDuplicate = (hash: string, existing: string[]) =>
-    existing.some((h) => getHammingDistance(hash, h) <= 4);
-
   const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
     if (products.length === 0) await fetchProducts();
 
-    const normalizedExisting: UploadedImage[] = [];
-    const newImages: UploadedImage[] = [];
-    const updatedExact = new Set<string>();
-    const updatedPerceptual: string[] = [];
-    let duplicateCount = 0;
+    const newImages: UploadedImage[] = files.map((file) => ({
+      id: crypto.randomUUID(),
+      file,
+      preview: URL.createObjectURL(file),
+      status: "pending" as const,
+    }));
 
-    for (const img of images) {
-      const exact = img.exactHash ?? (await computeFileHash(img.file));
-      const perceptual = img.perceptualHash ?? (await computePerceptualHash(img.file));
-      if (updatedExact.has(exact) || isPerceptualDuplicate(perceptual, updatedPerceptual)) {
-        duplicateCount++; URL.revokeObjectURL(img.preview); continue;
-      }
-      updatedExact.add(exact); updatedPerceptual.push(perceptual);
-      normalizedExisting.push({ ...img, exactHash: exact, perceptualHash: perceptual });
-    }
-
-    for (const file of files) {
-      const [exact, perceptual] = await Promise.all([computeFileHash(file), computePerceptualHash(file)]);
-      if (updatedExact.has(exact) || isPerceptualDuplicate(perceptual, updatedPerceptual)) {
-        duplicateCount++; continue;
-      }
-      updatedExact.add(exact); updatedPerceptual.push(perceptual);
-      newImages.push({ id: crypto.randomUUID(), file, preview: URL.createObjectURL(file), status: "pending", exactHash: exact, perceptualHash: perceptual });
-    }
-
-    exactHashesRef.current = updatedExact;
-    perceptualHashesRef.current = updatedPerceptual;
-    setImages([...normalizedExisting, ...newImages]);
-    if (duplicateCount > 0) toast({ title: "Duplicates removed", description: `${duplicateCount} duplicate(s) skipped` });
+    setImages((prev) => [...prev, ...newImages]);
     e.target.value = "";
   };
 
@@ -194,18 +127,13 @@ const DashboardBulkImages = () => {
     setImages((prev) => {
       const toRemove = prev.find((i) => i.id === id);
       if (toRemove) URL.revokeObjectURL(toRemove.preview);
-      const next = prev.filter((i) => i.id !== id);
-      exactHashesRef.current = new Set(next.map((i) => i.exactHash).filter(Boolean) as string[]);
-      perceptualHashesRef.current = next.map((i) => i.perceptualHash).filter(Boolean) as string[];
-      return next;
+      return prev.filter((i) => i.id !== id);
     });
   };
 
   const clearAll = () => {
     images.forEach((i) => URL.revokeObjectURL(i.preview));
     setImages([]);
-    exactHashesRef.current = new Set();
-    perceptualHashesRef.current = [];
   };
 
   const pendingCount = images.filter((i) => i.status === "pending").length;
