@@ -1,11 +1,8 @@
 import { useState, useCallback, useRef } from "react";
 import { Upload, Loader2, Check, X, ImagePlus, Trash2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -51,182 +48,106 @@ const DashboardBulkImages = () => {
   const computeFileHash = async (file: File): Promise<string> => {
     const buffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-    return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
   };
 
   const computePerceptualHash = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const imageUrl = URL.createObjectURL(file);
       const image = new Image();
-
       image.onload = () => {
         try {
           const canvas = document.createElement("canvas");
-          canvas.width = 8;
-          canvas.height = 8;
+          canvas.width = 8; canvas.height = 8;
           const context = canvas.getContext("2d");
-
-          if (!context) {
-            URL.revokeObjectURL(imageUrl);
-            reject(new Error("Failed to read image"));
-            return;
-          }
-
+          if (!context) { URL.revokeObjectURL(imageUrl); reject(new Error("Failed to read image")); return; }
           context.drawImage(image, 0, 0, 8, 8);
           const { data } = context.getImageData(0, 0, 8, 8);
           const grayscaleValues: number[] = [];
-
           for (let i = 0; i < data.length; i += 4) {
-            const red = data[i];
-            const green = data[i + 1];
-            const blue = data[i + 2];
-            grayscaleValues.push(0.299 * red + 0.587 * green + 0.114 * blue);
+            grayscaleValues.push(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
           }
-
-          const average = grayscaleValues.reduce((sum, value) => sum + value, 0) / grayscaleValues.length;
-          const hash = grayscaleValues.map((value) => (value > average ? "1" : "0")).join("");
-
+          const average = grayscaleValues.reduce((sum, v) => sum + v, 0) / grayscaleValues.length;
+          const hash = grayscaleValues.map((v) => (v > average ? "1" : "0")).join("");
           URL.revokeObjectURL(imageUrl);
           resolve(hash);
-        } catch (error) {
-          URL.revokeObjectURL(imageUrl);
-          reject(error);
-        }
+        } catch (error) { URL.revokeObjectURL(imageUrl); reject(error); }
       };
-
-      image.onerror = () => {
-        URL.revokeObjectURL(imageUrl);
-        reject(new Error("Invalid image file"));
-      };
-
+      image.onerror = () => { URL.revokeObjectURL(imageUrl); reject(new Error("Invalid image file")); };
       image.src = imageUrl;
     });
 
-  const getHammingDistance = (hashA: string, hashB: string): number => {
-    if (hashA.length !== hashB.length) return Number.POSITIVE_INFINITY;
-
-    let differences = 0;
-    for (let i = 0; i < hashA.length; i++) {
-      if (hashA[i] !== hashB[i]) differences++;
-    }
-
-    return differences;
+  const getHammingDistance = (a: string, b: string) => {
+    if (a.length !== b.length) return Infinity;
+    let d = 0;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++;
+    return d;
   };
 
-  const isPerceptualDuplicate = (hash: string, existingHashes: string[]) =>
-    existingHashes.some((existingHash) => getHammingDistance(hash, existingHash) <= 4);
+  const isPerceptualDuplicate = (hash: string, existing: string[]) =>
+    existing.some((h) => getHammingDistance(hash, h) <= 4);
 
   const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-
     if (products.length === 0) await fetchProducts();
 
-    const normalizedExistingImages: UploadedImage[] = [];
+    const normalizedExisting: UploadedImage[] = [];
     const newImages: UploadedImage[] = [];
-    const updatedExactHashes = new Set<string>();
-    const updatedPerceptualHashes: string[] = [];
+    const updatedExact = new Set<string>();
+    const updatedPerceptual: string[] = [];
     let duplicateCount = 0;
 
-    for (const existingImage of images) {
-      const exactHash = existingImage.exactHash ?? (await computeFileHash(existingImage.file));
-      const perceptualHash = existingImage.perceptualHash ?? (await computePerceptualHash(existingImage.file));
-
-      const isDuplicate =
-        updatedExactHashes.has(exactHash) || isPerceptualDuplicate(perceptualHash, updatedPerceptualHashes);
-
-      if (isDuplicate) {
-        duplicateCount++;
-        URL.revokeObjectURL(existingImage.preview);
-        continue;
+    for (const img of images) {
+      const exact = img.exactHash ?? (await computeFileHash(img.file));
+      const perceptual = img.perceptualHash ?? (await computePerceptualHash(img.file));
+      if (updatedExact.has(exact) || isPerceptualDuplicate(perceptual, updatedPerceptual)) {
+        duplicateCount++; URL.revokeObjectURL(img.preview); continue;
       }
-
-      updatedExactHashes.add(exactHash);
-      updatedPerceptualHashes.push(perceptualHash);
-      normalizedExistingImages.push({ ...existingImage, exactHash, perceptualHash });
+      updatedExact.add(exact); updatedPerceptual.push(perceptual);
+      normalizedExisting.push({ ...img, exactHash: exact, perceptualHash: perceptual });
     }
 
     for (const file of files) {
-      const [exactHash, perceptualHash] = await Promise.all([computeFileHash(file), computePerceptualHash(file)]);
-
-      const isDuplicate =
-        updatedExactHashes.has(exactHash) || isPerceptualDuplicate(perceptualHash, updatedPerceptualHashes);
-
-      if (isDuplicate) {
-        duplicateCount++;
-        continue;
+      const [exact, perceptual] = await Promise.all([computeFileHash(file), computePerceptualHash(file)]);
+      if (updatedExact.has(exact) || isPerceptualDuplicate(perceptual, updatedPerceptual)) {
+        duplicateCount++; continue;
       }
-
-      updatedExactHashes.add(exactHash);
-      updatedPerceptualHashes.push(perceptualHash);
-      newImages.push({
-        id: crypto.randomUUID(),
-        file,
-        preview: URL.createObjectURL(file),
-        status: "pending",
-        exactHash,
-        perceptualHash,
-      });
+      updatedExact.add(exact); updatedPerceptual.push(perceptual);
+      newImages.push({ id: crypto.randomUUID(), file, preview: URL.createObjectURL(file), status: "pending", exactHash: exact, perceptualHash: perceptual });
     }
 
-    exactHashesRef.current = updatedExactHashes;
-    perceptualHashesRef.current = updatedPerceptualHashes;
-    setImages([...normalizedExistingImages, ...newImages]);
-
-    if (duplicateCount > 0) {
-      toast({
-        title: "Duplicates removed",
-        description: `${duplicateCount} duplicate image(s) were automatically skipped`,
-      });
-    }
-
+    exactHashesRef.current = updatedExact;
+    perceptualHashesRef.current = updatedPerceptual;
+    setImages([...normalizedExisting, ...newImages]);
+    if (duplicateCount > 0) toast({ title: "Duplicates removed", description: `${duplicateCount} duplicate(s) skipped` });
     e.target.value = "";
   };
 
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(",")[1]);
-      };
+      reader.onload = () => resolve((reader.result as string).split(",")[1]);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
 
   const identifyAll = async () => {
     setProcessing(true);
-    const uniqueProducts = Array.from(
-      new Map(products.map((p) => [p.name, { name: p.name, category: p.category }])).values()
-    );
-
+    const uniqueProducts = Array.from(new Map(products.map((p) => [p.name, { name: p.name, category: p.category }])).values());
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
       if (img.status !== "pending") continue;
-
       setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "identifying" } : im)));
-
       try {
         const base64 = await fileToBase64(img.file);
-        const { data, error } = await supabase.functions.invoke("identify-product", {
-          body: { imageBase64: base64, existingProducts: uniqueProducts },
-        });
-
+        const { data, error } = await supabase.functions.invoke("identify-product", { body: { imageBase64: base64, existingProducts: uniqueProducts } });
         if (error) throw error;
         if (data.error) throw new Error(data.error);
-
-        setImages((prev) =>
-          prev.map((im) => (im.id === img.id ? { ...im, status: "identified", result: data } : im))
-        );
+        setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "identified", result: data } : im)));
       } catch (err: any) {
-        setImages((prev) =>
-          prev.map((im) => (im.id === img.id ? { ...im, status: "error", error: err.message } : im))
-        );
+        setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "error", error: err.message } : im)));
       }
-
-      // Small delay to avoid rate limits
       if (i < images.length - 1) await new Promise((r) => setTimeout(r, 1500));
     }
     setProcessing(false);
@@ -236,86 +157,52 @@ const DashboardBulkImages = () => {
     setAssigning(true);
     const identified = images.filter((i) => i.status === "identified" && i.result);
     let successCount = 0;
-
     for (const img of identified) {
       try {
-        // Upload image to storage
         const ext = img.file.name.split(".").pop() || "jpg";
         const fileName = `${img.result!.product_name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("store-images")
-          .upload(`products/${fileName}`, img.file, { contentType: img.file.type });
-
+        const { error: uploadError } = await supabase.storage.from("store-images").upload(`products/${fileName}`, img.file, { contentType: img.file.type });
         if (uploadError) throw uploadError;
-
         const { data: urlData } = supabase.storage.from("store-images").getPublicUrl(`products/${fileName}`);
-        const publicUrl = urlData.publicUrl;
-
         if (img.result!.is_existing) {
-          // Update existing products matching this name
-          const matchingProducts = products.filter(
-            (p) => p.name.toLowerCase() === img.result!.product_name.toLowerCase()
-          );
-          if (matchingProducts.length > 0) {
-            const { error } = await supabase
-              .from("products")
-              .update({ image_url: publicUrl })
-              .in("id", matchingProducts.map((p) => p.id));
+          const matching = products.filter((p) => p.name.toLowerCase() === img.result!.product_name.toLowerCase());
+          if (matching.length > 0) {
+            const { error } = await supabase.from("products").update({ image_url: urlData.publicUrl }).in("id", matching.map((p) => p.id));
             if (error) throw error;
           }
         } else {
-          // Create new product across all stores
           const storeIds = [...new Set(products.map((p) => p.store_id))];
           const newProducts = storeIds.map((storeId) => ({
-            name: img.result!.product_name,
-            category: img.result!.category as "beer" | "wine" | "spirits" | "smokes",
-            price: 0,
-            store_id: storeId,
-            image_url: publicUrl,
-            in_stock: true,
+            name: img.result!.product_name, category: img.result!.category as "beer" | "wine" | "spirits" | "smokes",
+            price: 0, store_id: storeId, image_url: urlData.publicUrl, in_stock: true,
           }));
           const { error } = await supabase.from("products").insert(newProducts);
           if (error) throw error;
         }
-
         setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "assigned" } : im)));
         successCount++;
       } catch (err: any) {
-        setImages((prev) =>
-          prev.map((im) => (im.id === img.id ? { ...im, status: "error", error: err.message } : im))
-        );
+        setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "error", error: err.message } : im)));
       }
     }
-
-    toast({
-      title: "Done",
-      description: `${successCount} image(s) assigned successfully`,
-    });
+    toast({ title: "Done", description: `${successCount} image(s) assigned successfully` });
     setAssigning(false);
     fetchProducts();
   };
 
   const removeImage = (id: string) => {
     setImages((prev) => {
-      const imageToRemove = prev.find((image) => image.id === id);
-      if (imageToRemove) URL.revokeObjectURL(imageToRemove.preview);
-
-      const nextImages = prev.filter((image) => image.id !== id);
-      exactHashesRef.current = new Set(
-        nextImages
-          .map((image) => image.exactHash)
-          .filter((hash): hash is string => typeof hash === "string")
-      );
-      perceptualHashesRef.current = nextImages
-        .map((image) => image.perceptualHash)
-        .filter((hash): hash is string => typeof hash === "string");
-
-      return nextImages;
+      const toRemove = prev.find((i) => i.id === id);
+      if (toRemove) URL.revokeObjectURL(toRemove.preview);
+      const next = prev.filter((i) => i.id !== id);
+      exactHashesRef.current = new Set(next.map((i) => i.exactHash).filter(Boolean) as string[]);
+      perceptualHashesRef.current = next.map((i) => i.perceptualHash).filter(Boolean) as string[];
+      return next;
     });
   };
 
   const clearAll = () => {
-    images.forEach((image) => URL.revokeObjectURL(image.preview));
+    images.forEach((i) => URL.revokeObjectURL(i.preview));
     setImages([]);
     exactHashesRef.current = new Set();
     perceptualHashesRef.current = [];
@@ -324,36 +211,51 @@ const DashboardBulkImages = () => {
   const pendingCount = images.filter((i) => i.status === "pending").length;
   const identifiedCount = images.filter((i) => i.status === "identified").length;
 
+  const statusBadge = (img: UploadedImage) => {
+    switch (img.status) {
+      case "pending": return <Badge variant="secondary" className="text-[10px]">Pending</Badge>;
+      case "identifying": return <Badge variant="secondary" className="text-[10px] animate-pulse">Identifying...</Badge>;
+      case "identified": return (
+        <div className="space-y-1">
+          <p className="font-medium text-xs truncate">{img.result?.product_name}</p>
+          <div className="flex gap-1 flex-wrap">
+            <Badge variant="outline" className="text-[10px] h-4">{img.result?.category}</Badge>
+            {img.result?.size && <Badge variant="outline" className="text-[10px] h-4">{img.result.size}</Badge>}
+            <Badge variant={img.result?.is_existing ? "default" : "secondary"} className="text-[10px] h-4">
+              {img.result?.is_existing ? "Match" : "New"}
+            </Badge>
+          </div>
+        </div>
+      );
+      case "assigned": return <Badge className="text-[10px] bg-emerald-600 border-0"><Check className="h-3 w-3 mr-1" />Assigned</Badge>;
+      case "error": return <Badge variant="destructive" className="text-[10px]">{img.error || "Error"}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Bulk Image Upload</h2>
-          <p className="text-sm text-muted-foreground">
-            Upload product images — AI will identify and assign them to listings
-          </p>
+          <h2 className="font-display text-2xl font-bold text-foreground">Bulk Image Upload</h2>
+          <p className="text-sm text-muted-foreground mt-1">Upload product images — AI identifies and assigns them</p>
         </div>
         {images.length > 0 && (
-          <Button variant="outline" size="sm" onClick={clearAll}>
-            Clear All
+          <Button variant="outline" size="sm" onClick={clearAll} className="rounded-xl">
+            <Trash2 className="h-3.5 w-3.5 mr-2" />Clear All
           </Button>
         )}
       </div>
 
       {/* Upload Area */}
-      <Card>
+      <Card className="border-dashed border-2 border-border hover:border-primary/40 transition-colors">
         <CardContent className="pt-6">
-          <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
-            <ImagePlus className="h-10 w-10 text-muted-foreground mb-2" />
-            <span className="text-sm text-muted-foreground">Click to upload product images</span>
+          <label className="flex flex-col items-center justify-center h-36 cursor-pointer">
+            <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+              <ImagePlus className="h-7 w-7 text-primary" />
+            </div>
+            <span className="text-sm font-medium text-foreground">Drop images or click to upload</span>
             <span className="text-xs text-muted-foreground mt-1">JPG, PNG — multiple files supported</span>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={handleFilesSelected}
-            />
+            <input type="file" multiple accept="image/*" className="hidden" onChange={handleFilesSelected} />
           </label>
         </CardContent>
       </Card>
@@ -362,33 +264,13 @@ const DashboardBulkImages = () => {
       {images.length > 0 && (
         <div className="flex gap-3">
           {pendingCount > 0 && (
-            <Button onClick={identifyAll} disabled={processing}>
-              {processing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Identifying...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Identify All ({pendingCount})
-                </>
-              )}
+            <Button onClick={identifyAll} disabled={processing} className="rounded-xl">
+              {processing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Identifying...</> : <><Upload className="h-4 w-4 mr-2" />Identify All ({pendingCount})</>}
             </Button>
           )}
           {identifiedCount > 0 && (
-            <Button onClick={assignImages} disabled={assigning} variant="default">
-              {assigning ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Assigning...
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Assign All ({identifiedCount})
-                </>
-              )}
+            <Button onClick={assignImages} disabled={assigning} className="rounded-xl">
+              {assigning ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Assigning...</> : <><Check className="h-4 w-4 mr-2" />Assign All ({identifiedCount})</>}
             </Button>
           )}
         </div>
@@ -396,66 +278,21 @@ const DashboardBulkImages = () => {
 
       {/* Image Grid */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {images.map((img) => (
-            <Card key={img.id} className="overflow-hidden">
-              <div className="relative aspect-square bg-muted">
-                <img
-                  src={img.preview}
-                  alt="Upload"
-                  className="w-full h-full object-contain"
-                />
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-1 right-1 h-6 w-6"
-                  onClick={() => removeImage(img.id)}
-                >
+            <Card key={img.id} className="overflow-hidden border-border/50 hover:shadow-md transition-shadow">
+              <div className="relative aspect-square bg-muted/50">
+                <img src={img.preview} alt="Upload" className="w-full h-full object-contain p-2" />
+                <Button variant="destructive" size="icon" className="absolute top-1.5 right-1.5 h-6 w-6 rounded-lg" onClick={() => removeImage(img.id)}>
                   <X className="h-3 w-3" />
                 </Button>
                 {img.status === "identifying" && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
                   </div>
                 )}
               </div>
-              <CardContent className="p-3 space-y-1">
-                {img.status === "pending" && (
-                  <Badge variant="secondary" className="text-xs">Pending</Badge>
-                )}
-                {img.status === "identifying" && (
-                  <Badge variant="secondary" className="text-xs">Identifying...</Badge>
-                )}
-                {img.status === "identified" && img.result && (
-                  <>
-                    <p className="font-medium text-sm truncate">{img.result.product_name}</p>
-                    <div className="flex gap-1 flex-wrap">
-                      <Badge variant="outline" className="text-xs">{img.result.category}</Badge>
-                      {img.result.size && <Badge variant="outline" className="text-xs">{img.result.size}</Badge>}
-                      <Badge
-                        variant={img.result.is_existing ? "default" : "secondary"}
-                        className="text-xs"
-                      >
-                        {img.result.is_existing ? "Existing" : "New"}
-                      </Badge>
-                      <Badge
-                        variant={img.result.confidence === "high" ? "default" : "secondary"}
-                        className="text-xs"
-                      >
-                        {img.result.confidence}
-                      </Badge>
-                    </div>
-                  </>
-                )}
-                {img.status === "assigned" && (
-                  <Badge className="text-xs bg-green-600">
-                    <Check className="h-3 w-3 mr-1" /> Assigned
-                  </Badge>
-                )}
-                {img.status === "error" && (
-                  <Badge variant="destructive" className="text-xs">{img.error || "Error"}</Badge>
-                )}
-              </CardContent>
+              <CardContent className="p-2.5">{statusBadge(img)}</CardContent>
             </Card>
           ))}
         </div>

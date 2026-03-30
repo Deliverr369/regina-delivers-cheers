@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ShoppingCart, Search, Filter } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrderStatus = Database["public"]["Enums"]["order_status"];
@@ -23,11 +25,11 @@ interface Order {
 }
 
 const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
+  pending: "bg-amber-100 text-amber-800",
   confirmed: "bg-blue-100 text-blue-800",
   preparing: "bg-indigo-100 text-indigo-800",
-  out_for_delivery: "bg-purple-100 text-purple-800",
-  delivered: "bg-green-100 text-green-800",
+  out_for_delivery: "bg-violet-100 text-violet-800",
+  delivered: "bg-emerald-100 text-emerald-800",
   cancelled: "bg-red-100 text-red-800",
 };
 
@@ -35,6 +37,8 @@ const DashboardOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchOrders();
@@ -69,47 +73,99 @@ const DashboardOrders = () => {
     }
   };
 
-  if (loading) return <div className="text-muted-foreground">Loading orders...</div>;
+  const filtered = orders.filter((o) => {
+    const matchSearch = search === "" || o.id.includes(search) || o.delivery_address.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === "all" || o.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded-lg" />
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">Order Management</h2>
+      <div>
+        <h2 className="font-display text-2xl font-bold text-foreground">Order Management</h2>
+        <p className="text-sm text-muted-foreground mt-1">Track and manage all customer orders</p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Orders ({orders.length})</CardTitle>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by ID or address..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-44">
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="preparing">Preparing</SelectItem>
+            <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold">
+            Orders ({filtered.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {orders.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No orders found.</p>
+          {filtered.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingCart className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground font-medium">No orders found</p>
+              <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters</p>
+            </div>
           ) : (
-            <div className="space-y-3">
-              {orders.map((order) => (
-                <div key={order.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg gap-3">
+            <div className="space-y-2">
+              {filtered.map((order) => (
+                <div key={order.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-mono text-sm font-medium text-foreground">{order.id.slice(0, 8)}</p>
-                      <Badge className={statusColors[order.status || "pending"]} variant="secondary">
+                      <p className="font-mono text-sm font-semibold text-foreground">#{order.id.slice(0, 8)}</p>
+                      <Badge className={`${statusColors[order.status || "pending"]} text-[10px] font-medium capitalize border-0`}>
                         {(order.status || "pending").replace(/_/g, " ")}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{order.delivery_address}, {order.delivery_city}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground mt-1">{order.delivery_address}{order.delivery_city ? `, ${order.delivery_city}` : ""}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {new Date(order.created_at).toLocaleString()} · {order.payment_method || "card"}
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="font-bold text-foreground">${Number(order.total).toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Sub: ${Number(order.subtotal).toFixed(2)} + Tax: ${Number(order.tax).toFixed(2)}
+                      <p className="text-[11px] text-muted-foreground">
+                        Sub ${Number(order.subtotal).toFixed(2)} + Tax ${Number(order.tax).toFixed(2)}
                       </p>
                     </div>
                     <Select
                       value={order.status || "pending"}
                       onValueChange={(val) => updateStatus(order.id, val as OrderStatus)}
                     >
-                      <SelectTrigger className="w-40">
+                      <SelectTrigger className="w-[150px] h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

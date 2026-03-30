@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Megaphone, GripVertical } from "lucide-react";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -88,52 +89,89 @@ const DashboardBanners = () => {
     if (!error) fetchBanners();
   };
 
-  if (loading) return <div className="text-muted-foreground">Loading banners...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded-lg" />
+        {[...Array(2)].map((_, i) => <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />)}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Promo Banners</h2>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Banner</Button>
+        <div>
+          <h2 className="font-display text-2xl font-bold text-foreground">Promo Banners</h2>
+          <p className="text-sm text-muted-foreground mt-1">Manage homepage promotional banners</p>
+        </div>
+        <Button onClick={openCreate} className="rounded-xl">
+          <Plus className="h-4 w-4 mr-2" />Add Banner
+        </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {banners.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No banners found.</p>
-          ) : (
-            <div className="space-y-3">
-              {banners.map((b) => (
-                <div key={b.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground">{b.title}</h3>
-                      {b.subtitle && <span className="text-muted-foreground">- {b.subtitle}</span>}
-                      <span className={`text-xs px-2 py-0.5 rounded ${b.is_active ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"}`}>
-                        {b.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    {b.description && <p className="text-sm text-muted-foreground mt-1">{b.description}</p>}
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => toggleActive(b)}>
-                      {b.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(b)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => { setDeleting(b); setDeleteOpen(true); }}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+      {banners.length === 0 ? (
+        <Card className="border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Megaphone className="h-12 w-12 text-muted-foreground/30 mb-3" />
+            <p className="text-muted-foreground font-medium">No promo banners</p>
+            <p className="text-xs text-muted-foreground mt-1">Create your first promotional banner</p>
+            <Button onClick={openCreate} variant="outline" className="mt-4 rounded-xl">
+              <Plus className="h-4 w-4 mr-2" />Add Banner
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {banners.map((b) => (
+            <Card key={b.id} className={`border-border/50 transition-all hover:shadow-md ${!b.is_active ? "opacity-60" : ""}`}>
+              <CardContent className="p-4 flex items-center gap-4">
+                <GripVertical className="h-4 w-4 text-muted-foreground/50 flex-shrink-0 cursor-grab" />
+                
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Megaphone className="h-5 w-5 text-primary" />
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-foreground text-sm">{b.title}</h3>
+                    {b.subtitle && <span className="text-xs text-muted-foreground">— {b.subtitle}</span>}
+                    <Badge variant={b.is_active ? "default" : "secondary"} className="text-[10px] h-5">
+                      {b.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">#{b.display_order}</span>
+                  </div>
+                  {b.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{b.description}</p>}
+                  {b.button_text && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      CTA: <span className="font-medium text-foreground">{b.button_text}</span> → {b.button_link}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActive(b)}>
+                    {b.is_active ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(b)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setDeleting(b); setDeleteOpen(true); }}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{editing ? "Edit" : "Create"} Banner</DialogTitle><DialogDescription>{editing ? "Update" : "Fill in"} the banner details.</DialogDescription></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{editing ? "Edit" : "Create"} Banner</DialogTitle>
+            <DialogDescription>{editing ? "Update" : "Fill in"} the banner details.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
             <div className="space-y-2"><Label>Subtitle</Label><Input value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} /></div>
