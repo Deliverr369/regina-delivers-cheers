@@ -522,7 +522,9 @@ const ProductManagement = () => {
       return;
     }
 
-    if (!formData.store_id) {
+    // Store selection not needed for new products (created across all stores)
+    // but required for editing
+    if (editingProduct && !formData.store_id) {
       toast({
         title: "Validation Error",
         description: "Please select a store",
@@ -578,11 +580,17 @@ const ProductManagement = () => {
         fetchPackPrices();
       }
     } else {
-      const { data: newProduct, error } = await supabase
+      // Create product across ALL stores
+      const allStoreIds = stores.map(s => s.id);
+      const productsToInsert = allStoreIds.map(storeId => ({
+        ...productData,
+        store_id: storeId,
+      }));
+
+      const { data: newProducts, error } = await supabase
         .from("products")
-        .insert(productData)
-        .select()
-        .single();
+        .insert(productsToInsert)
+        .select();
 
       if (error) {
         toast({
@@ -591,13 +599,15 @@ const ProductManagement = () => {
           variant: "destructive",
         });
       } else {
-        // Save pack prices and custom sizes
-        if (newProduct) {
-          await savePackPrices(newProduct.id);
+        // Save pack prices for all created products
+        if (newProducts) {
+          for (const product of newProducts) {
+            await savePackPrices(product.id);
+          }
         }
         toast({
           title: "Success",
-          description: "Product created successfully",
+          description: `Product created across ${allStoreIds.length} stores`,
         });
         setDialogOpen(false);
         fetchProducts();
