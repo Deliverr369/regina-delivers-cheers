@@ -35,8 +35,6 @@ const DashboardBulkImages = () => {
   const [products, setProducts] = useState<ExistingProduct[]>([]);
   const [processing, setProcessing] = useState(false);
   const [assigning, setAssigning] = useState(false);
-  const exactHashesRef = useRef<Set<string>>(new Set());
-  const perceptualHashesRef = useRef<string[]>([]);
 
   const fetchProducts = useCallback(async () => {
     const { data } = await supabase.from("products").select("id, name, category, store_id").order("name");
