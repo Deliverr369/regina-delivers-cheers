@@ -20,8 +20,6 @@ interface UploadedImage {
   };
   error?: string;
   selectedProductId?: string;
-  exactHash?: string;
-  perceptualHash?: string;
 }
 
 interface ExistingProduct {
