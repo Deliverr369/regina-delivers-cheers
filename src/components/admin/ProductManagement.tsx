@@ -989,60 +989,86 @@ const ProductManagement = () => {
         className="hidden"
       />
       
-      <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>Products</CardTitle>
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
+      {/* Filters Bar */}
+      <Card className="border-border/50">
+        <CardContent className="py-4 px-5">
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search products..."
+                placeholder="Search products by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-9 h-9"
               />
             </div>
-            <Select value={selectedStore} onValueChange={setSelectedStore}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Filter by store" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Stores</SelectItem>
-                {stores.map((store) => (
-                  <SelectItem key={store.id} value={store.id}>
-                    {store.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-[150px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading products...</div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No products found. Add your first product!
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Select value={selectedStore} onValueChange={setSelectedStore}>
+                <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
+                  <StoreIcon className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="All Stores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stores</SelectItem>
+                  {stores.map((store) => (
+                    <SelectItem key={store.id} value={store.id}>{store.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat === "beer" ? "🍺 " : cat === "wine" ? "🍷 " : cat === "spirits" ? "🥃 " : "🚬 "}
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleOpenCreate} className="rounded-xl h-9 whitespace-nowrap">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Product
+              </Button>
             </div>
+          </div>
+          {(searchQuery || selectedStore !== "all" || selectedCategory !== "all") && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+              <span className="text-xs text-muted-foreground">
+                {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""} found
+                {searchQuery && <> matching "<span className="font-medium text-foreground">{searchQuery}</span>"</>}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs px-2"
+                onClick={() => { setSearchQuery(""); setSelectedStore("all"); setSelectedCategory("all"); }}
+              >
+                Clear filters
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-muted animate-pulse rounded-xl" />)}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <Card className="border-dashed border-2">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <Search className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground font-medium">No products found</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {searchQuery ? "Try a different search term" : "Add your first product to get started"}
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-6">
               {CATEGORY_SECTIONS.map((section) => {
@@ -1309,8 +1335,7 @@ const ProductManagement = () => {
           <div className="mt-4 text-sm text-muted-foreground">
             {groupedProducts.length} product{groupedProducts.length !== 1 ? "s" : ""} · {filteredProducts.length} total entries
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
