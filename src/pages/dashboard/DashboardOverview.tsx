@@ -1,24 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Users, Store, DollarSign, TrendingUp, Package } from "lucide-react";
+import { ShoppingCart, Users, Store, DollarSign, TrendingUp, Package, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
+import { format, subDays, startOfDay, parseISO } from "date-fns";
+
+interface OrderData {
+  id: string;
+  total: number;
+  status: string | null;
+  created_at: string;
+  delivery_address: string;
+}
+
+const CHART_COLORS = [
+  "hsl(354, 75%, 55%)",   // primary
+  "hsl(160, 60%, 45%)",   // emerald
+  "hsl(250, 60%, 55%)",   // violet
+  "hsl(40, 90%, 55%)",    // amber
+  "hsl(210, 70%, 55%)",   // blue
+  "hsl(0, 70%, 55%)",     // red
+];
 
 const DashboardOverview = () => {
   const [stats, setStats] = useState({ orders: 0, revenue: 0, users: 0, stores: 0 });
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [allOrders, setAllOrders] = useState<OrderData[]>([]);
+  const [recentOrders, setRecentOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [ordersRes, profilesRes, storesRes, recentRes] = await Promise.all([
-        supabase.from("orders").select("id, total"),
+      const [ordersRes, profilesRes, storesRes] = await Promise.all([
+        supabase.from("orders").select("id, total, status, created_at, delivery_address").order("created_at", { ascending: false }),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("stores").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("id, total, status, created_at, delivery_address").order("created_at", { ascending: false }).limit(5),
       ]);
 
-      const orders = ordersRes.data || [];
+      const orders = (ordersRes.data || []) as OrderData[];
       const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
 
       setStats({
@@ -27,11 +49,65 @@ const DashboardOverview = () => {
         users: profilesRes.count || 0,
         stores: storesRes.count || 0,
       });
-      setRecentOrders(recentRes.data || []);
+      setAllOrders(orders);
+      setRecentOrders(orders.slice(0, 5));
       setLoading(false);
     };
     fetchStats();
   }, []);
+
+  // Generate last 30 days revenue + order count data
+  const dailyData = useMemo(() => {
+    const days = 30;
+    const data: { date: string; label: string; orders: number; revenue: number }[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const day = startOfDay(subDays(new Date(), i));
+      const dayStr = format(day, "yyyy-MM-dd");
+      const dayOrders = allOrders.filter((o) => {
+        const orderDay = format(startOfDay(parseISO(o.created_at)), "yyyy-MM-dd");
+        return orderDay === dayStr;
+      });
+      data.push({
+        date: dayStr,
+        label: format(day, "MMM d"),
+        orders: dayOrders.length,
+        revenue: dayOrders.reduce((s, o) => s + Number(o.total), 0),
+      });
+    }
+    return data;
+  }, [allOrders]);
+
+  // Order status distribution for pie chart
+  const statusData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allOrders.forEach((o) => {
+      const s = o.status || "pending";
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({
+      name: name.replace(/_/g, " "),
+      value,
+    }));
+  }, [allOrders]);
+
+  // Weekly comparison for bar chart
+  const weeklyData = useMemo(() => {
+    const weeks: { name: string; orders: number; revenue: number }[] = [];
+    for (let w = 3; w >= 0; w--) {
+      const weekStart = subDays(new Date(), (w + 1) * 7);
+      const weekEnd = subDays(new Date(), w * 7);
+      const weekOrders = allOrders.filter((o) => {
+        const d = parseISO(o.created_at);
+        return d >= weekStart && d < weekEnd;
+      });
+      weeks.push({
+        name: `Week ${4 - w}`,
+        orders: weekOrders.length,
+        revenue: Math.round(weekOrders.reduce((s, o) => s + Number(o.total), 0)),
+      });
+    }
+    return weeks;
+  }, [allOrders]);
 
   if (loading) {
     return (
@@ -40,6 +116,11 @@ const DashboardOverview = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse"><CardContent className="pt-6"><div className="h-16 bg-muted rounded" /></CardContent></Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i} className="animate-pulse"><CardContent className="pt-6"><div className="h-64 bg-muted rounded" /></CardContent></Card>
           ))}
         </div>
       </div>
@@ -57,9 +138,24 @@ const DashboardOverview = () => {
     pending: "bg-amber-100 text-amber-800",
     confirmed: "bg-blue-100 text-blue-800",
     preparing: "bg-indigo-100 text-indigo-800",
-    out_for_delivery: "bg-violet-100 text-violet-800",
+    "out for delivery": "bg-violet-100 text-violet-800",
     delivered: "bg-emerald-100 text-emerald-800",
     cancelled: "bg-red-100 text-red-800",
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="bg-background border border-border rounded-xl shadow-lg p-3 text-sm">
+        <p className="font-medium text-foreground mb-1">{label}</p>
+        {payload.map((entry: any, i: number) => (
+          <p key={i} className="text-muted-foreground">
+            <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: entry.color }} />
+            {entry.name}: {entry.name === "revenue" ? `$${entry.value.toFixed(2)}` : entry.value}
+          </p>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -69,6 +165,7 @@ const DashboardOverview = () => {
         <p className="text-sm text-muted-foreground mt-1">Welcome back! Here's what's happening with Deliverr.</p>
       </div>
 
+      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => (
           <Card key={stat.title} className="border-border/50 hover:shadow-md transition-shadow">
@@ -91,6 +188,116 @@ const DashboardOverview = () => {
         ))}
       </div>
 
+      {/* Revenue Trend Chart (Full Width) */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            Revenue & Orders — Last 30 Days
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dailyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(354, 75%, 55%)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(354, 75%, 55%)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="ordersGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(250, 60%, 55%)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(250, 60%, 55%)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 90%)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis yAxisId="rev" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} width={55} />
+                <YAxis yAxisId="ord" orientation="right" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={30} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <Area yAxisId="rev" type="monotone" dataKey="revenue" stroke="hsl(354, 75%, 55%)" fill="url(#revenueGrad)" strokeWidth={2} name="revenue" />
+                <Area yAxisId="ord" type="monotone" dataKey="orders" stroke="hsl(250, 60%, 55%)" fill="url(#ordersGrad)" strokeWidth={2} name="orders" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Weekly Comparison + Order Status Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              Weekly Comparison
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 90%)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                  <Bar dataKey="revenue" fill="hsl(354, 75%, 55%)" radius={[6, 6, 0, 0]} name="revenue" />
+                  <Bar dataKey="orders" fill="hsl(250, 60%, 55%)" radius={[6, 6, 0, 0]} name="orders" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Package className="h-4 w-4 text-primary" />
+              Order Status Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {statusData.length === 0 ? (
+              <div className="h-56 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">No order data yet</p>
+              </div>
+            ) : (
+              <div className="h-56 flex items-center">
+                <ResponsiveContainer width="50%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={75}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {statusData.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex-1 space-y-2 pl-2">
+                  {statusData.map((entry, i) => (
+                    <div key={entry.name} className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                      <span className="text-xs text-muted-foreground capitalize flex-1">{entry.name}</span>
+                      <span className="text-xs font-semibold text-foreground">{entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Orders + Quick Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-border/50">
           <CardHeader className="pb-3">
@@ -114,7 +321,7 @@ const DashboardOverview = () => {
                       <p className="text-xs text-muted-foreground truncate">{order.delivery_address}</p>
                     </div>
                     <div className="text-right flex items-center gap-3">
-                      <Badge className={`${statusColors[order.status || "pending"]} text-[10px] font-medium capitalize border-0`}>
+                      <Badge className={`${statusColors[(order.status || "pending").replace(/_/g, " ")] || statusColors.pending} text-[10px] font-medium capitalize border-0`}>
                         {(order.status || "pending").replace(/_/g, " ")}
                       </Badge>
                       <p className="font-semibold text-foreground text-sm">${Number(order.total).toFixed(2)}</p>
