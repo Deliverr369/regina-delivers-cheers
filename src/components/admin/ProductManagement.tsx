@@ -523,6 +523,83 @@ const ProductManagement = () => {
     }
 
     if (!formData.price || isNaN(parseFloat(formData.price))) {
+      toast({
+        title: "Validation Error",
+        description: "Valid price is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+
+    const baseProductData = {
+      name: formData.name.trim(),
+      description: formData.description.trim() || null,
+      price: parseFloat(formData.price),
+      size: formData.size.trim() || null,
+      category: formData.category,
+      image_url: formData.image_url.trim() || null,
+      in_stock: formData.in_stock,
+      is_hidden: formData.is_hidden,
+    };
+
+    if (editingProduct) {
+      const { error } = await supabase
+        .from("products")
+        .update({ ...baseProductData, store_id: editingProduct.store_id })
+        .eq("id", editingProduct.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update product",
+          variant: "destructive",
+        });
+      } else {
+        await savePackPrices(editingProduct.id);
+        toast({
+          title: "Success",
+          description: "Product updated successfully",
+        });
+        setDialogOpen(false);
+        fetchProducts();
+        fetchPackPrices();
+      }
+    } else {
+      // Create product for ALL stores
+      const productsToInsert = stores.map(store => ({
+        ...baseProductData,
+        store_id: store.id,
+      }));
+
+      const { data: newProducts, error } = await supabase
+        .from("products")
+        .insert(productsToInsert)
+        .select();
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create product",
+          variant: "destructive",
+        });
+      } else {
+        // Save pack prices for all created products
+        if (newProducts) {
+          for (const product of newProducts) {
+            await savePackPrices(product.id);
+          }
+        }
+        toast({
+          title: "Success",
+          description: `Product added to all ${stores.length} stores`,
+        });
+        setDialogOpen(false);
+        fetchProducts();
+        fetchPackPrices();
+      }
+    }
 
     setSaving(false);
   };
