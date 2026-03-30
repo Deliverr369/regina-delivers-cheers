@@ -1335,8 +1335,7 @@ const ProductManagement = () => {
           <div className="mt-4 text-sm text-muted-foreground">
             {groupedProducts.length} product{groupedProducts.length !== 1 ? "s" : ""} · {filteredProducts.length} total entries
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
