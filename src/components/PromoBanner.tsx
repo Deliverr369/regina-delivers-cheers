@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight } from "lucide-react";
 
-interface PromoBanner {
+interface PromoBannerData {
   id: string;
   title: string;
   subtitle: string | null;
@@ -15,7 +16,7 @@ interface PromoBanner {
 }
 
 const PromoBanner = () => {
-  const { data: banner, isLoading: loading } = useQuery({
+  const { data: banner, isLoading } = useQuery({
     queryKey: ["promo-banner"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,37 +27,35 @@ const PromoBanner = () => {
         .limit(1)
         .single();
 
-      if (error) {
-        console.error("Error fetching promo banner:", error);
-        return null;
-      }
-      return data as PromoBanner;
+      if (error) return null;
+      return data as PromoBannerData;
     },
   });
 
-  if (loading || !banner) return null;
+  if (isLoading || !banner) return null;
 
   return (
-    <section className="py-6 md:py-10">
+    <section className="py-4 md:py-6">
       <div className="container mx-auto px-4">
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 md:p-12 text-center border border-primary/20">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+        <div className="bg-gradient-to-r from-primary/8 via-primary/4 to-primary/8 rounded-2xl p-6 md:p-8 text-center border border-primary/15">
+          <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-1">
             {banner.title}
           </h2>
           {banner.subtitle && (
-            <h3 className="text-xl md:text-2xl font-display font-semibold text-primary mb-2">
+            <h3 className="text-lg md:text-xl font-display font-semibold text-primary mb-1">
               {banner.subtitle}
             </h3>
           )}
           {banner.description && (
-            <p className="text-muted-foreground text-base md:text-lg max-w-md mx-auto mt-2">
+            <p className="text-muted-foreground text-sm md:text-base max-w-md mx-auto mt-1">
               {banner.description}
             </p>
           )}
           {banner.button_text && banner.button_link && (
             <Link to={banner.button_link}>
-              <Button size="lg" className="mt-6 px-10 py-6 text-lg font-bold uppercase tracking-wide">
+              <Button size="lg" className="mt-5 px-8 rounded-full font-semibold gap-2">
                 {banner.button_text}
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           )}
