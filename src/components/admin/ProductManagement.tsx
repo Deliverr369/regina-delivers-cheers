@@ -548,7 +548,7 @@ const ProductManagement = () => {
     const productData = {
       name: formData.name.trim(),
       description: formData.description.trim() || null,
-      price: parseFloat(formData.price),
+      price: parsedPrice,
       size: formData.size.trim() || null,
       category: formData.category,
       store_id: formData.store_id,
