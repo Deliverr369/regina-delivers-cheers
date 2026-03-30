@@ -533,10 +533,11 @@ const ProductManagement = () => {
       return;
     }
 
-    if (!formData.price || isNaN(parseFloat(formData.price))) {
+    const parsedPrice = formData.price ? parseFloat(formData.price) : 0;
+    if (isNaN(parsedPrice)) {
       toast({
         title: "Validation Error",
-        description: "Valid price is required",
+        description: "Price must be a valid number",
         variant: "destructive",
       });
       return;
@@ -547,7 +548,7 @@ const ProductManagement = () => {
     const productData = {
       name: formData.name.trim(),
       description: formData.description.trim() || null,
-      price: parseFloat(formData.price),
+      price: parsedPrice,
       size: formData.size.trim() || null,
       category: formData.category,
       store_id: formData.store_id,
