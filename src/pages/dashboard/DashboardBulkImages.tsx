@@ -127,18 +127,13 @@ const DashboardBulkImages = () => {
     setImages((prev) => {
       const toRemove = prev.find((i) => i.id === id);
       if (toRemove) URL.revokeObjectURL(toRemove.preview);
-      const next = prev.filter((i) => i.id !== id);
-      exactHashesRef.current = new Set(next.map((i) => i.exactHash).filter(Boolean) as string[]);
-      perceptualHashesRef.current = next.map((i) => i.perceptualHash).filter(Boolean) as string[];
-      return next;
+      return prev.filter((i) => i.id !== id);
     });
   };
 
   const clearAll = () => {
     images.forEach((i) => URL.revokeObjectURL(i.preview));
     setImages([]);
-    exactHashesRef.current = new Set();
-    perceptualHashesRef.current = [];
   };
 
   const pendingCount = images.filter((i) => i.status === "pending").length;
