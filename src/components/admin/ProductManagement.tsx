@@ -522,7 +522,9 @@ const ProductManagement = () => {
       return;
     }
 
-    if (!formData.store_id) {
+    // Store selection not needed for new products (created across all stores)
+    // but required for editing
+    if (editingProduct && !formData.store_id) {
       toast({
         title: "Validation Error",
         description: "Please select a store",
