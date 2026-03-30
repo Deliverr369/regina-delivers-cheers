@@ -522,6 +522,15 @@ const ProductManagement = () => {
       return;
     }
 
+    if (!formData.store_id) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a store",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.price || isNaN(parseFloat(formData.price))) {
       toast({
         title: "Validation Error",
@@ -533,12 +542,13 @@ const ProductManagement = () => {
 
     setSaving(true);
 
-    const baseProductData = {
+    const productData = {
       name: formData.name.trim(),
       description: formData.description.trim() || null,
       price: parseFloat(formData.price),
       size: formData.size.trim() || null,
       category: formData.category,
+      store_id: formData.store_id,
       image_url: formData.image_url.trim() || null,
       in_stock: formData.in_stock,
       is_hidden: formData.is_hidden,
@@ -547,7 +557,7 @@ const ProductManagement = () => {
     if (editingProduct) {
       const { error } = await supabase
         .from("products")
-        .update({ ...baseProductData, store_id: editingProduct.store_id })
+        .update(productData)
         .eq("id", editingProduct.id);
 
       if (error) {
@@ -557,6 +567,7 @@ const ProductManagement = () => {
           variant: "destructive",
         });
       } else {
+        // Save pack prices and custom sizes
         await savePackPrices(editingProduct.id);
         toast({
           title: "Success",
@@ -567,16 +578,11 @@ const ProductManagement = () => {
         fetchPackPrices();
       }
     } else {
-      // Create product for ALL stores
-      const productsToInsert = stores.map(store => ({
-        ...baseProductData,
-        store_id: store.id,
-      }));
-
-      const { data: newProducts, error } = await supabase
+      const { data: newProduct, error } = await supabase
         .from("products")
-        .insert(productsToInsert)
-        .select();
+        .insert(productData)
+        .select()
+        .single();
 
       if (error) {
         toast({
@@ -585,15 +591,13 @@ const ProductManagement = () => {
           variant: "destructive",
         });
       } else {
-        // Save pack prices for all created products
-        if (newProducts) {
-          for (const product of newProducts) {
-            await savePackPrices(product.id);
-          }
+        // Save pack prices and custom sizes
+        if (newProduct) {
+          await savePackPrices(newProduct.id);
         }
         toast({
           title: "Success",
-          description: `Product added to all ${stores.length} stores`,
+          description: "Product created successfully",
         });
         setDialogOpen(false);
         fetchProducts();
@@ -1307,21 +1311,24 @@ const ProductManagement = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {editingProduct && (
-              <div className="space-y-2">
-                <Label htmlFor="store">Store</Label>
-                <Input
-                  value={stores.find(s => s.id === editingProduct.store_id)?.name || ""}
-                  disabled
-                  className="bg-muted"
-                />
-              </div>
-            )}
-            {!editingProduct && (
-              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                This product will be added to all {stores.length} stores automatically.
-              </p>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="store">Store *</Label>
+              <Select
+                value={formData.store_id}
+                onValueChange={(value) => setFormData({ ...formData, store_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a store" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stores.map((store) => (
+                    <SelectItem key={store.id} value={store.id}>
+                      {store.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="name">Product Name *</Label>
               <Input
