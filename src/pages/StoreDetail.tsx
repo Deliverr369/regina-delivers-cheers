@@ -125,12 +125,10 @@ const StoreDetail = () => {
     const baseSizes = PACK_SIZES_BY_CATEGORY[category];
     const productPackPrices = packPrices.filter(pp => pp.product_id === productId);
     
-    // Filter out sizes that are explicitly hidden
+    // Only show sizes that have a stored price entry and are not hidden
     return baseSizes.filter(size => {
       const packPrice = productPackPrices.find(pp => pp.pack_size === size.value);
-      // If there's no entry for this size, it's visible by default
-      // If there's an entry, check if it's hidden
-      return !packPrice?.is_hidden;
+      return packPrice && !packPrice.is_hidden;
     });
   };
 
