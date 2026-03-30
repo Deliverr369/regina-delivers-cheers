@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2 } from "lucide-react";
+import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Truck, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -43,7 +43,6 @@ interface PackPrice {
   is_hidden: boolean;
 }
 
-// Smokes subcategories for filtering
 const SMOKES_SUBCATEGORIES = [
   { value: "all", label: "All" },
   { value: "cigarettes", label: "Cigarettes" },
@@ -54,7 +53,6 @@ const SMOKES_SUBCATEGORIES = [
   { value: "accessories", label: "Accessories" },
 ];
 
-// Helper to detect subcategory from product name
 const getSmokesSubcategory = (productName: string): string => {
   const name = productName.toLowerCase();
   if (name.includes("cigarette") || name.includes("marlboro") || name.includes("camel") || name.includes("newport") || name.includes("american spirit") || name.includes("pall mall") || name.includes("winston") || name.includes("l&m") || name.includes("lucky strike")) return "cigarettes";
@@ -63,7 +61,7 @@ const getSmokesSubcategory = (productName: string): string => {
   if (name.includes("rolling") || name.includes("drum") || name.includes("top ") || name.includes("bugler") || name.includes("zig-zag") || name.includes("raw ") || name.includes("papers") || name.includes("filter") || name.includes("rizla") || name.includes("elements")) return "rolling";
   if (name.includes("pouch") || name.includes("zyn") || name.includes("velo") || name.includes("on!") || name.includes("nicotine pouch") || name.includes("snus")) return "pouches";
   if (name.includes("lighter") || name.includes("case") || name.includes("grinder") || name.includes("ashtray") || name.includes("holder") || name.includes("cutter") || name.includes("humidor")) return "accessories";
-  return "cigarettes"; // default
+  return "cigarettes";
 };
 
 const StoreDetail = () => {
@@ -77,12 +75,7 @@ const StoreDetail = () => {
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stores")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      
+      const { data, error } = await supabase.from("stores").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -91,41 +84,28 @@ const StoreDetail = () => {
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ["products", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("store_id", id)
-        .eq("in_stock", true);
-      
+      const { data, error } = await supabase.from("products").select("*").eq("store_id", id).eq("in_stock", true);
       if (error) throw error;
       return data;
     },
   });
 
-  // Fetch pack prices for products with pack options
   const productsWithPacks = products.filter(p => PACK_SIZES_BY_CATEGORY[p.category].length > 0);
   const productIdsWithPacks = productsWithPacks.map(p => p.id);
   const { data: packPrices = [] } = useQuery<PackPrice[]>({
     queryKey: ["product_pack_prices", productIdsWithPacks],
     queryFn: async () => {
       if (productIdsWithPacks.length === 0) return [];
-      const { data, error } = await supabase
-        .from("product_pack_prices")
-        .select("product_id, pack_size, price, is_hidden")
-        .in("product_id", productIdsWithPacks);
-      
+      const { data, error } = await supabase.from("product_pack_prices").select("product_id, pack_size, price, is_hidden").in("product_id", productIdsWithPacks);
       if (error) throw error;
       return (data || []) as PackPrice[];
     },
     enabled: productIdsWithPacks.length > 0,
   });
 
-  // Helper to get available (non-hidden) pack sizes for a product
   const getAvailablePackSizes = (productId: string, category: keyof typeof PACK_SIZES_BY_CATEGORY) => {
     const baseSizes = PACK_SIZES_BY_CATEGORY[category];
     const productPackPrices = packPrices.filter(pp => pp.product_id === productId);
-    
-    // Only show sizes that have a stored price entry and are not hidden
     return baseSizes.filter(size => {
       const packPrice = productPackPrices.find(pp => pp.pack_size === size.value);
       return packPrice && !packPrice.is_hidden;
@@ -133,79 +113,18 @@ const StoreDetail = () => {
   };
 
   const productsByCategory = {
-    beer: products
-      .filter((p) => p.category === "beer")
-      .sort((a, b) => {
-        const aOrder = (a as any).display_order ?? 0;
-        const bOrder = (b as any).display_order ?? 0;
-        return aOrder - bOrder || a.name.localeCompare(b.name);
-      }),
-    wine: products
-      .filter((p) => p.category === "wine")
-      .sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-    spirits: products
-      .filter((p) => p.category === "spirits")
-      .sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-    smokes: products
-      .filter((p) => p.category === "smokes")
-      .sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    beer: products.filter((p) => p.category === "beer").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    wine: products.filter((p) => p.category === "wine").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    spirits: products.filter((p) => p.category === "spirits").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    smokes: products.filter((p) => p.category === "smokes").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
   };
 
-  // Get categories that have products
-  const availableCategories = Object.entries(productsByCategory)
-    .filter(([_, items]) => items.length > 0)
-    .map(([category]) => category);
-  
-  // Get default tab (first category with products)
+  const availableCategories = Object.entries(productsByCategory).filter(([_, items]) => items.length > 0).map(([cat]) => cat);
   const defaultCategory = availableCategories.length > 0 ? availableCategories[0] : "beer";
 
   const getQuantity = (productId: string) => quantities[productId] || 0;
-
   const updateQuantity = (productId: string, delta: number) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: Math.max(0, (prev[productId] || 0) + delta),
-    }));
-  };
-
-  const handleAddToCart = (product: typeof products[0]) => {
-    const qty = getQuantity(product.id);
-    if (qty === 0) {
-      updateQuantity(product.id, 1);
-    }
-    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
-    const packSizes = PACK_SIZES_BY_CATEGORY[category];
-    const defaultSize = packSizes.length > 0 ? packSizes[0].value : "single";
-    const selectedSize = selectedPackSizes[product.id] || defaultSize;
-    const packSize = packSizes.find(p => p.value === selectedSize);
-    
-    // Check for stored price first, then fall back to multiplier calculation
-    const storedPrice = packPrices.find(
-      bp => bp.product_id === product.id && bp.pack_size === selectedSize
-    );
-    
-    const displayPrice = storedPrice 
-      ? Number(storedPrice.price)
-      : packSize 
-        ? Number(product.price) * packSize.multiplier 
-        : Number(product.price);
-    
-    const displayName = packSize && packSize.multiplier !== 1
-      ? `${product.name} (${packSize.label})`
-      : product.name;
-
-    addToCart({
-      id: `${product.id}-${packSize?.value || "single"}`,
-      name: displayName,
-      price: displayPrice,
-      image: product.image_url || "",
-      storeId: store?.id || "",
-      storeName: store?.name || "",
-    });
-    toast({
-      title: "Added to cart",
-      description: `${displayName} has been added to your cart`,
-    });
+    setQuantities((prev) => ({ ...prev, [productId]: Math.max(0, (prev[productId] || 0) + delta) }));
   };
 
   const getPackSizesForProduct = (product: typeof products[0]) => {
@@ -217,11 +136,7 @@ const StoreDetail = () => {
     const availableSizes = getPackSizesForProduct(product);
     const defaultSize = availableSizes.length > 0 ? availableSizes[0].value : "single";
     const currentSelection = selectedPackSizes[product.id];
-    
-    // Ensure selected size is still available
-    if (currentSelection && availableSizes.some(s => s.value === currentSelection)) {
-      return currentSelection;
-    }
+    if (currentSelection && availableSizes.some(s => s.value === currentSelection)) return currentSelection;
     return defaultSize;
   };
 
@@ -230,62 +145,62 @@ const StoreDetail = () => {
   };
 
   const getDisplayPrice = (product: typeof products[0]) => {
-    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
     const availableSizes = getPackSizesForProduct(product);
-    
     if (availableSizes.length === 0) return Number(product.price);
-    
     const selectedSize = getSelectedPackSize(product);
-    
-    // Check for stored price first
-    const storedPrice = packPrices.find(
-      bp => bp.product_id === product.id && bp.pack_size === selectedSize && !bp.is_hidden
-    );
-    
-    if (storedPrice) {
-      return Number(storedPrice.price);
-    }
-    
-    // Fall back to multiplier calculation
+    const storedPrice = packPrices.find(bp => bp.product_id === product.id && bp.pack_size === selectedSize && !bp.is_hidden);
+    if (storedPrice) return Number(storedPrice.price);
     const packSize = availableSizes.find(p => p.value === selectedSize);
     return Number(product.price) * (packSize?.multiplier || 1);
   };
 
+  const handleAddToCart = (product: typeof products[0]) => {
+    const qty = getQuantity(product.id);
+    if (qty === 0) updateQuantity(product.id, 1);
+    const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
+    const packSizes = PACK_SIZES_BY_CATEGORY[category];
+    const defaultSize = packSizes.length > 0 ? packSizes[0].value : "single";
+    const selectedSize = selectedPackSizes[product.id] || defaultSize;
+    const packSize = packSizes.find(p => p.value === selectedSize);
+    const storedPrice = packPrices.find(bp => bp.product_id === product.id && bp.pack_size === selectedSize);
+    const displayPrice = storedPrice ? Number(storedPrice.price) : packSize ? Number(product.price) * packSize.multiplier : Number(product.price);
+    const displayName = packSize && packSize.multiplier !== 1 ? `${product.name} (${packSize.label})` : product.name;
+
+    addToCart({
+      id: `${product.id}-${packSize?.value || "single"}`,
+      name: displayName, price: displayPrice,
+      image: product.image_url || "", storeId: store?.id || "", storeName: store?.name || "",
+    });
+    toast({ title: "Added to cart", description: `${displayName} added` });
+  };
+
   const ProductCard = ({ product }: { product: typeof products[0] }) => (
-    <div className="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300">
+    <div className="group bg-card rounded-xl border border-border overflow-hidden card-hover">
       <div className="aspect-square overflow-hidden bg-muted/30 relative">
-        <img 
-          src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"} 
-          alt={product.name} 
-          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" 
+        <img
+          src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
         />
         {product.size && (
-          <span className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm text-foreground text-xs font-semibold px-2 py-1 rounded-full border border-border shadow-sm">
+          <span className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm text-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border">
             {product.size}
           </span>
         )}
       </div>
-      <div className="p-4">
-        <h4 className="font-medium text-foreground mb-1 line-clamp-2">{product.name}</h4>
-        
-        {/* Pack size selector - shows for beer, wine, spirits */}
+      <div className="p-3.5">
+        <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2 leading-snug">{product.name}</h4>
+
         {getPackSizesForProduct(product).length > 0 && (
-          <div className="mb-3">
-            <Select
-              value={getSelectedPackSize(product)}
-              onValueChange={(value) => setPackSize(product.id, value)}
-            >
+          <div className="mb-2.5">
+            <Select value={getSelectedPackSize(product)} onValueChange={(v) => setPackSize(product.id, v)}>
               <SelectTrigger className="h-8 text-xs bg-background">
                 <SelectValue placeholder="Select size" />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border z-50">
                 {getPackSizesForProduct(product).map((size) => {
-                  const storedPrice = packPrices.find(
-                    bp => bp.product_id === product.id && bp.pack_size === size.value && !bp.is_hidden
-                  );
-                  const sizePrice = storedPrice
-                    ? Number(storedPrice.price)
-                    : Number(product.price) * size.multiplier;
+                  const storedPrice = packPrices.find(bp => bp.product_id === product.id && bp.pack_size === size.value && !bp.is_hidden);
+                  const sizePrice = storedPrice ? Number(storedPrice.price) : Number(product.price) * size.multiplier;
                   return (
                     <SelectItem key={size.value} value={size.value} className="text-xs">
                       <span className="flex items-center justify-between gap-4 w-full">
@@ -299,34 +214,23 @@ const StoreDetail = () => {
             </Select>
           </div>
         )}
-        
-        <p className="text-xl font-bold text-primary mb-4">${getDisplayPrice(product).toFixed(2)}</p>
-        
+
+        <p className="text-lg font-bold text-primary mb-3">${getDisplayPrice(product).toFixed(2)}</p>
+
         <div className="flex items-center gap-2">
           {getQuantity(product.id) > 0 ? (
-            <div className="flex items-center gap-2 flex-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => updateQuantity(product.id, -1)}
-              >
-                <Minus className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 flex-1">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(product.id, -1)}>
+                <Minus className="h-3.5 w-3.5" />
               </Button>
-              <span className="font-medium w-8 text-center">{getQuantity(product.id)}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => updateQuantity(product.id, 1)}
-              >
-                <Plus className="h-4 w-4" />
+              <span className="font-medium w-7 text-center text-sm">{getQuantity(product.id)}</span>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(product.id, 1)}>
+                <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
           ) : (
-            <Button className="flex-1" onClick={() => handleAddToCart(product)}>
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Add
+            <Button className="flex-1 h-9 text-sm rounded-lg font-medium" onClick={() => handleAddToCart(product)}>
+              <ShoppingCart className="h-3.5 w-3.5 mr-1.5" /> Add
             </Button>
           )}
         </div>
@@ -347,11 +251,9 @@ const StoreDetail = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="pt-24 pb-16">
-          <div className="container mx-auto px-4 text-center">
+          <div className="container mx-auto px-4 text-center py-20">
             <h1 className="text-2xl font-bold mb-4">Store not found</h1>
-            <Link to="/stores">
-              <Button>Back to Stores</Button>
-            </Link>
+            <Link to="/stores"><Button className="rounded-full">Back to Stores</Button></Link>
           </div>
         </main>
         <Footer />
@@ -362,53 +264,47 @@ const StoreDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
-      <main className="pt-20">
+
+      <main className="pt-16">
         {/* Store Header */}
-        <div className="relative h-64 md:h-80">
+        <div className="relative h-56 md:h-72 overflow-hidden">
           <img
             src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=800&auto=format"}
             alt={store.name}
-            className="w-full h-full object-cover"
+            className={`w-full h-full ${store.image_url?.includes('.png') ? 'object-contain bg-gradient-to-br from-muted to-muted/50 p-8' : 'object-cover'}`}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent" />
           
-          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+          <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8">
             <div className="container mx-auto">
-              <Link to="/stores" className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-4 transition-colors">
-                <ArrowLeft className="h-4 w-4" />
-                Back to stores
+              <Link to="/stores" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white mb-3 transition-colors text-sm">
+                <ArrowLeft className="h-4 w-4" /> All Stores
               </Link>
               
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="font-display text-3xl md:text-4xl font-bold text-white">
-                      {store.name}
-                    </h1>
-                    {store.is_open && (
-                      <Badge className="bg-success text-white">Open</Badge>
+                  <div className="flex items-center gap-2.5 mb-1.5">
+                    <h1 className="font-display text-2xl md:text-3xl font-bold text-white">{store.name}</h1>
+                    {store.is_open ? (
+                      <Badge className="bg-success text-white text-xs">Open</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">Closed</Badge>
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-4 text-white/80">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {store.address}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {store.hours}
-                    </span>
+                  <div className="flex flex-wrap items-center gap-3 text-white/70 text-sm">
+                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{store.address}</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{store.hours}</span>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 text-white">
+                <div className="flex items-center gap-4 text-white text-sm">
                   <div className="flex items-center gap-1">
-                    <Star className="h-5 w-5 fill-gold text-gold" />
+                    <Star className="h-4 w-4 fill-gold text-gold" />
                     <span className="font-bold">{store.rating}</span>
-                    <span className="text-white/70">({store.reviews_count})</span>
+                    <span className="text-white/60">({store.reviews_count})</span>
                   </div>
-                  <div className="text-white/70">
+                  <div className="flex items-center gap-1 text-white/70">
+                    <Truck className="h-3.5 w-3.5" />
                     {store.delivery_time} • {Number(store.delivery_fee) === 0 ? "Free" : `$${Number(store.delivery_fee).toFixed(2)}`} delivery
                   </div>
                 </div>
@@ -418,25 +314,25 @@ const StoreDetail = () => {
         </div>
 
         {/* Products */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-6">
           {productsLoading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
             <Tabs defaultValue={defaultCategory} className="w-full">
-              <TabsList className="mb-8 w-full justify-center overflow-x-auto h-auto p-2 gap-2 bg-muted/50 rounded-xl">
+              <TabsList className="mb-6 w-full justify-center overflow-x-auto h-auto p-1.5 gap-1 bg-muted/50 rounded-xl">
                 {availableCategories.includes("beer") && (
-                  <TabsTrigger value="beer" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
+                  <TabsTrigger value="beer" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("wine") && (
-                  <TabsTrigger value="wine" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-rose-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🍷 Wine ({productsByCategory.wine.length})</TabsTrigger>
+                  <TabsTrigger value="wine" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-rose-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍷 Wine ({productsByCategory.wine.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("spirits") && (
-                  <TabsTrigger value="spirits" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-violet-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🥃 Spirits ({productsByCategory.spirits.length})</TabsTrigger>
+                  <TabsTrigger value="spirits" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-violet-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🥃 Spirits ({productsByCategory.spirits.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("smokes") && (
-                  <TabsTrigger value="smokes" className="text-lg font-semibold px-8 py-3.5 gap-2 data-[state=active]:bg-slate-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>
+                  <TabsTrigger value="smokes" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-slate-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>
                 )}
               </TabsList>
 
@@ -445,20 +341,12 @@ const StoreDetail = () => {
                 .map(([category, items]) => (
                 <TabsContent key={category} value={category}>
                   {category === "smokes" && items.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="flex flex-wrap gap-1.5 mb-5">
                       {SMOKES_SUBCATEGORIES.map((sub) => {
-                        const count = sub.value === "all" 
-                          ? items.length 
-                          : items.filter(p => getSmokesSubcategory(p.name) === sub.value).length;
+                        const count = sub.value === "all" ? items.length : items.filter(p => getSmokesSubcategory(p.name) === sub.value).length;
                         if (sub.value !== "all" && count === 0) return null;
                         return (
-                          <Button
-                            key={sub.value}
-                            variant={smokesSubcategory === sub.value ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setSmokesSubcategory(sub.value)}
-                            className="rounded-full"
-                          >
+                          <Button key={sub.value} variant={smokesSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setSmokesSubcategory(sub.value)} className="rounded-full text-xs h-8">
                             {sub.label} ({count})
                           </Button>
                         );
@@ -466,7 +354,7 @@ const StoreDetail = () => {
                     </div>
                   )}
                   {items.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                       {(category === "smokes" && smokesSubcategory !== "all"
                         ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
                         : items
@@ -475,7 +363,7 @@ const StoreDetail = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground">
+                    <div className="text-center py-12 text-muted-foreground text-sm">
                       No products available in this category
                     </div>
                   )}

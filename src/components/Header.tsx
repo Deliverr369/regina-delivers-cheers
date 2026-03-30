@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Menu, X, User, LogOut, Settings, LayoutDashboard } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Settings, LayoutDashboard, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -30,40 +30,36 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white backdrop-blur-lg border-b border-gray-200">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/80">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="Deliverr" className="h-8 md:h-10" />
+            <img src={logo} alt="Deliverr" className="h-7 md:h-8" />
           </Link>
 
-          {/* Desktop Navigation - Earn Rewards */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link 
-              to="/how-it-works" 
-              className="font-medium transition-colors hover:text-primary text-foreground flex items-center gap-2"
-            >
-              Earn Rewards
-              <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">
-                New
-              </Badge>
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            <Link to="/stores" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
+              Stores
+            </Link>
+            <Link to="/products" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
+              Products
+            </Link>
+            <Link to="/how-it-works" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
+              How It Works
             </Link>
           </nav>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
+          {/* Right Side */}
+          <div className="flex items-center gap-2">
             <Link to="/cart" className="relative">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="text-foreground hover:bg-gray-100"
-              >
-                <ShoppingCart className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground">
+                <ShoppingCart className="h-[18px] w-[18px]" />
                 {cartCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-primary text-primary-foreground">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
                     {cartCount}
-                  </Badge>
+                  </span>
                 )}
               </Button>
             </Link>
@@ -71,81 +67,69 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="text-foreground hover:bg-gray-100"
-                  >
-                    <User className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground">
+                    <User className="h-[18px] w-[18px]" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem className="text-muted-foreground text-sm">
-                    {user.email}
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-52">
+                  <div className="px-3 py-2">
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
-                      <User className="h-4 w-4 mr-2" />
-                      My Profile
+                    <Link to="/profile" className="flex items-center gap-2">
+                      <User className="h-4 w-4" /> My Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/orders">My Orders</Link>
+                    <Link to="/orders" className="flex items-center gap-2">
+                      <Package className="h-4 w-4" /> My Orders
+                    </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link to="/dashboard" className="flex items-center">
-                          <LayoutDashboard className="h-4 w-4 mr-2" />
-                          Dashboard
+                        <Link to="/dashboard" className="flex items-center gap-2">
+                          <LayoutDashboard className="h-4 w-4" /> Dashboard
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin" className="flex items-center">
-                          <Settings className="h-4 w-4 mr-2" />
-                          Admin Panel
+                        <Link to="/admin" className="flex items-center gap-2">
+                          <Settings className="h-4 w-4" /> Admin Panel
                         </Link>
                       </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" /> Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                <Link to="/login" className="hidden md:block">
-                  <Button 
-                    variant="outline" 
-                    className="rounded-full px-6 border-primary bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    Login
+              <div className="hidden md:flex items-center gap-2">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" className="text-sm font-medium">
+                    Log In
                   </Button>
                 </Link>
-                
-                <Link to="/signup" className="hidden md:block">
-                  <Button 
-                    variant="outline" 
-                    className="rounded-full px-6 border-primary bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
+                <Link to="/signup">
+                  <Button size="sm" className="rounded-full px-5 text-sm font-medium">
                     Sign Up
                   </Button>
                 </Link>
-              </>
+              </div>
             )}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu */}
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-foreground hover:bg-gray-100"
+              className="md:hidden h-9 w-9 text-foreground"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -154,42 +138,41 @@ const Header = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-background border-t border-border animate-fade-in">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            <Link to="/stores" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
-              Browse Stores
-            </Link>
-            <Link to="/products" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
-              Products
-            </Link>
-            <Link to="/how-it-works" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
-              How It Works
-            </Link>
+          <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
+            {[
+              { to: "/stores", label: "Browse Stores" },
+              { to: "/products", label: "Products" },
+              { to: "/how-it-works", label: "How It Works" },
+            ].map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
             {user && (
               <>
-                <Link to="/profile" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
-                  My Profile
-                </Link>
-                <Link to="/orders" className="text-foreground font-medium py-2" onClick={() => setIsMenuOpen(false)}>
-                  My Orders
-                </Link>
+                <Link to="/profile" className="text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50" onClick={() => setIsMenuOpen(false)}>My Profile</Link>
+                <Link to="/orders" className="text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50" onClick={() => setIsMenuOpen(false)}>My Orders</Link>
                 {isAdmin && (
-                  <Link to="/admin" className="text-foreground font-medium py-2 flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                    <Settings className="h-4 w-4" />
-                    Admin Panel
+                  <Link to="/dashboard" className="text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50 flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                    <LayoutDashboard className="h-4 w-4" /> Dashboard
                   </Link>
                 )}
               </>
             )}
-            <hr className="border-border" />
+            <hr className="border-border my-2" />
             {user ? (
               <Button variant="outline" className="w-full" onClick={() => { handleSignOut(); setIsMenuOpen(false); }}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+                <LogOut className="h-4 w-4 mr-2" /> Sign Out
               </Button>
             ) : (
               <div className="flex gap-3">
                 <Link to="/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">Login</Button>
+                  <Button variant="outline" className="w-full">Log In</Button>
                 </Link>
                 <Link to="/signup" className="flex-1" onClick={() => setIsMenuOpen(false)}>
                   <Button className="w-full">Sign Up</Button>

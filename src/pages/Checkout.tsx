@@ -28,107 +28,52 @@ const Checkout = () => {
   const total = subtotal + deliveryFee + tax;
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: user?.email || "",
-    phone: "",
-    address: "",
-    city: "Regina",
-    postalCode: "",
-    deliveryInstructions: "",
-    paymentMethod: "card",
+    firstName: "", lastName: "", email: user?.email || "", phone: "",
+    address: "", city: "Regina", postalCode: "", deliveryInstructions: "", paymentMethod: "card",
   });
   const [cityError, setCityError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === "city") {
-      if (value.trim().toLowerCase() !== "regina") {
-        setCityError("Sorry, we are currently out of service area. We only deliver within Regina.");
-      } else {
-        setCityError(null);
-      }
+      setCityError(value.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
+    if (!user) { navigate("/login"); return; }
     if (formData.city.trim().toLowerCase() !== "regina") {
-      setCityError("Sorry, we are currently out of service area. We only deliver within Regina.");
+      setCityError("We only deliver within Regina.");
       return;
     }
-
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Get store ID from first cart item
       const storeId = cartItems[0]?.storeId;
-
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          store_id: storeId || null,
-          subtotal,
-          delivery_fee: deliveryFee,
-          tax,
-          total,
-          delivery_address: formData.address,
-          delivery_city: formData.city,
-          delivery_postal_code: formData.postalCode,
-          delivery_instructions: formData.deliveryInstructions,
-          payment_method: formData.paymentMethod,
-          status: "pending",
-        })
-        .select()
-        .single();
-
+      const { data: order, error: orderError } = await supabase.from("orders").insert({
+        user_id: user.id, store_id: storeId || null, subtotal, delivery_fee: deliveryFee,
+        tax, total, delivery_address: formData.address, delivery_city: formData.city,
+        delivery_postal_code: formData.postalCode, delivery_instructions: formData.deliveryInstructions,
+        payment_method: formData.paymentMethod, status: "pending",
+      }).select().single();
       if (orderError) throw orderError;
 
-      // Create order items
       const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        product_name: item.name,
-        quantity: item.quantity,
-        price: item.price,
+        order_id: order.id, product_id: item.id, product_name: item.name, quantity: item.quantity, price: item.price,
       }));
-
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
-
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // Update user profile
-      await supabase
-        .from("profiles")
-        .update({
-          full_name: `${formData.firstName} ${formData.lastName}`,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          postal_code: formData.postalCode,
-        })
-        .eq("id", user.id);
+      await supabase.from("profiles").update({
+        full_name: `${formData.firstName} ${formData.lastName}`, phone: formData.phone,
+        address: formData.address, city: formData.city, postal_code: formData.postalCode,
+      }).eq("id", user.id);
 
       clearCart();
-      toast({
-        title: "Order placed successfully!",
-        description: "Your order will arrive in 25-35 minutes.",
-      });
+      toast({ title: "Order placed!", description: "Your order will arrive in 25-35 minutes." });
       navigate("/order-confirmation");
     } catch (err: any) {
       setError(err.message);
@@ -142,11 +87,9 @@ const Checkout = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="pt-24 pb-16">
-          <div className="container mx-auto px-4 text-center">
+          <div className="container mx-auto px-4 text-center py-20">
             <h1 className="font-display text-2xl font-bold mb-4">Please log in to checkout</h1>
-            <Link to="/login">
-              <Button>Log In</Button>
-            </Link>
+            <Link to="/login"><Button className="rounded-full">Log In</Button></Link>
           </div>
         </main>
         <Footer />
@@ -154,253 +97,135 @@ const Checkout = () => {
     );
   }
 
-  if (cartItems.length === 0) {
-    navigate("/cart");
-    return null;
-  }
+  if (cartItems.length === 0) { navigate("/cart"); return null; }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
-      <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-4 mb-8">
-            <Link to="/cart" className="text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <h1 className="font-display text-3xl font-bold text-foreground">
-              Checkout
-            </h1>
+      <main className="pt-20 pb-16">
+        <div className="bg-secondary/50 border-b border-border">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center gap-3">
+              <Link to="/cart" className="text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+              <h1 className="font-display text-2xl font-bold text-foreground">Checkout</h1>
+            </div>
           </div>
+        </div>
 
+        <div className="container mx-auto px-4 py-6">
           {error && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-5">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="grid lg:grid-cols-3 gap-8">
-              {/* Form */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Contact Info */}
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h2 className="font-display text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">1</span>
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-5">
+                {/* Contact */}
+                <div className="bg-card rounded-2xl border border-border p-5">
+                  <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</span>
                     Contact Information
                   </h2>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div><Label className="text-sm">First Name</Label><Input name="firstName" value={formData.firstName} onChange={handleChange} required className="mt-1 h-10" /></div>
+                    <div><Label className="text-sm">Last Name</Label><Input name="lastName" value={formData.lastName} onChange={handleChange} required className="mt-1 h-10" /></div>
+                    <div><Label className="text-sm">Email</Label><Input name="email" type="email" value={formData.email} onChange={handleChange} required className="mt-1 h-10" /></div>
+                    <div><Label className="text-sm">Phone</Label><Input name="phone" type="tel" value={formData.phone} onChange={handleChange} required className="mt-1 h-10" /></div>
                   </div>
                 </div>
 
-                {/* Delivery Address */}
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h2 className="font-display text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">2</span>
+                {/* Address */}
+                <div className="bg-card rounded-2xl border border-border p-5">
+                  <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</span>
                     Delivery Address
                   </h2>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <Label htmlFor="address">Street Address</Label>
-                      <div className="relative">
+                      <Label className="text-sm">Street Address</Label>
+                      <div className="relative mt-1">
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="address"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                          className="pl-10"
-                          placeholder="123 Main St"
-                          required
-                        />
+                        <Input name="address" value={formData.address} onChange={handleChange} className="pl-10 h-10" placeholder="123 Main St" required />
                       </div>
                     </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-3">
                       <div>
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleChange}
-                          required
-                          className={cityError ? "border-destructive" : ""}
-                        />
-                        {cityError && (
-                          <p className="text-destructive text-sm mt-1">{cityError}</p>
-                        )}
+                        <Label className="text-sm">City</Label>
+                        <Input name="city" value={formData.city} onChange={handleChange} required className={`mt-1 h-10 ${cityError ? "border-destructive" : ""}`} />
+                        {cityError && <p className="text-destructive text-xs mt-1">{cityError}</p>}
                       </div>
-                      <div>
-                        <Label htmlFor="postalCode">Postal Code</Label>
-                        <Input
-                          id="postalCode"
-                          name="postalCode"
-                          value={formData.postalCode}
-                          onChange={handleChange}
-                          placeholder="S4X 1A2"
-                          required
-                        />
-                      </div>
+                      <div><Label className="text-sm">Postal Code</Label><Input name="postalCode" value={formData.postalCode} onChange={handleChange} placeholder="S4X 1A2" required className="mt-1 h-10" /></div>
                     </div>
                     <div>
-                      <Label htmlFor="deliveryInstructions">Delivery Instructions (optional)</Label>
-                      <Input
-                        id="deliveryInstructions"
-                        name="deliveryInstructions"
-                        value={formData.deliveryInstructions}
-                        onChange={handleChange}
-                        placeholder="Ring doorbell, leave at door, etc."
-                      />
+                      <Label className="text-sm">Delivery Instructions (optional)</Label>
+                      <Input name="deliveryInstructions" value={formData.deliveryInstructions} onChange={handleChange} placeholder="Ring doorbell, leave at door, etc." className="mt-1 h-10" />
                     </div>
                   </div>
                 </div>
 
                 {/* Payment */}
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h2 className="font-display text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">3</span>
+                <div className="bg-card rounded-2xl border border-border p-5">
+                  <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</span>
                     Payment Method
                   </h2>
-                  <RadioGroup
-                    value={formData.paymentMethod}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, paymentMethod: value }))}
-                    className="space-y-3"
-                  >
-                    <div className="flex items-center space-x-3 p-4 border border-border rounded-lg">
+                  <RadioGroup value={formData.paymentMethod} onValueChange={(v) => setFormData((p) => ({ ...p, paymentMethod: v }))} className="space-y-2">
+                    <div className="flex items-center space-x-3 p-3 border border-border rounded-xl hover:border-primary/20 transition-colors">
                       <RadioGroupItem value="card" id="card" />
-                      <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-1">
-                        <CreditCard className="h-5 w-5 text-muted-foreground" />
-                        Pay on Delivery (Card)
+                      <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-1 text-sm">
+                        <CreditCard className="h-4 w-4 text-muted-foreground" /> Pay on Delivery (Card)
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-3 p-4 border border-border rounded-lg">
+                    <div className="flex items-center space-x-3 p-3 border border-border rounded-xl hover:border-primary/20 transition-colors">
                       <RadioGroupItem value="cash" id="cash" />
-                      <Label htmlFor="cash" className="flex items-center gap-2 cursor-pointer flex-1">
-                        💵 Pay on Delivery (Cash)
-                      </Label>
+                      <Label htmlFor="cash" className="flex items-center gap-2 cursor-pointer flex-1 text-sm">💵 Pay on Delivery (Cash)</Label>
                     </div>
                   </RadioGroup>
                 </div>
               </div>
 
-              {/* Order Summary */}
+              {/* Summary */}
               <div className="lg:col-span-1">
-                <div className="bg-card rounded-xl border border-border p-6 sticky top-24">
-                  <h2 className="font-display text-xl font-bold text-foreground mb-6">
-                    Order Summary
-                  </h2>
-
-                  <div className="space-y-3 mb-6 max-h-48 overflow-y-auto">
+                <div className="bg-card rounded-2xl border border-border p-5 sticky top-20">
+                  <h2 className="font-display text-lg font-bold text-foreground mb-4">Order Summary</h2>
+                  <div className="space-y-2.5 mb-4 max-h-40 overflow-y-auto">
                     {cartItems.map((item) => (
-                      <div key={item.id} className="flex gap-3">
-                        <img
-                          src={item.image || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=100"}
-                          alt={item.name}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground line-clamp-1">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                      <div key={item.id} className="flex gap-2.5">
+                        <img src={item.image || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=100"} alt={item.name} className="w-10 h-10 object-cover rounded-lg bg-muted" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{item.name}</p>
+                          <p className="text-[10px] text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
-                        <span className="text-sm font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="text-xs font-medium shrink-0">${(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
-
-                  <Separator className="my-4" />
-
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Delivery</span>
-                      <span>{deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Tax</span>
-                      <span>${tax.toFixed(2)}</span>
-                    </div>
-                    
+                  <Separator className="my-3" />
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-muted-foreground text-sm"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>{deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}</span></div>
+                    <div className="flex justify-between text-muted-foreground text-sm"><span>Tax</span><span>${tax.toFixed(2)}</span></div>
                     <Separator />
-                    
-                    <div className="flex justify-between font-bold text-foreground text-lg">
-                      <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
-                    </div>
+                    <div className="flex justify-between font-bold text-foreground"><span>Total</span><span>${total.toFixed(2)}</span></div>
                   </div>
-
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-6">
-                    <Clock className="h-4 w-4" />
-                    Estimated delivery: 25-35 min
+                  <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-4">
+                    <Clock className="h-3.5 w-3.5" /> Est. delivery: 25-35 min
                   </div>
-
-                  <Button type="submit" className="w-full gap-2" size="lg" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      "Placing Order..."
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4" />
-                        Place Order - ${total.toFixed(2)}
-                      </>
-                    )}
+                  <Button type="submit" className="w-full gap-2 rounded-full font-semibold" size="lg" disabled={isSubmitting}>
+                    {isSubmitting ? "Placing Order..." : <><CheckCircle className="h-4 w-4" /> Place Order — ${total.toFixed(2)}</>}
                   </Button>
-
-                  <p className="text-xs text-muted-foreground text-center mt-4">
-                    Must be 19+ to order. ID required on delivery.
-                  </p>
+                  <p className="text-[10px] text-muted-foreground text-center mt-3">Must be 19+. ID required on delivery.</p>
                 </div>
               </div>
             </div>
           </form>
         </div>
       </main>
-
       <Footer />
     </div>
   );

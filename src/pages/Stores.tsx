@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, Star, Clock, Search, Filter, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MapPin, Star, Clock, Search, Filter, ChevronDown, Truck, Store } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +15,17 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+const sortOptions = [
+  { value: "rating", label: "Highest Rated" },
+  { value: "delivery", label: "Fastest Delivery" },
+  { value: "fee", label: "Lowest Fee" },
+  { value: "name", label: "Name A-Z" },
+];
+
 const Stores = () => {
-  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
+  const [showOpenOnly, setShowOpenOnly] = useState(false);
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["stores"],
@@ -38,69 +45,87 @@ const Stores = () => {
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.address.toLowerCase().includes(searchQuery.toLowerCase())
     )
+    .filter((store) => !showOpenOnly || store.is_open)
     .sort((a, b) => {
       if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
       if (sortBy === "delivery") return (a.delivery_time || "").localeCompare(b.delivery_time || "");
+      if (sortBy === "fee") return (Number(a.delivery_fee) || 0) - (Number(b.delivery_fee) || 0);
+      if (sortBy === "name") return a.name.localeCompare(b.name);
       return 0;
     });
+
+  const currentSort = sortOptions.find(s => s.value === sortBy);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+      <main className="pt-20 pb-16">
+        {/* Page Header */}
+        <div className="bg-secondary/50 border-b border-border">
+          <div className="container mx-auto px-4 py-8 md:py-10">
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-1.5">
               Liquor Stores in Regina
             </h1>
             <p className="text-muted-foreground">
               Browse and order from {stores.length} local stores
             </p>
           </div>
+        </div>
 
+        <div className="container mx-auto px-4 py-6">
           {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search stores..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-10"
               />
             </div>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Sort by
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setSortBy("rating")}>
-                  Highest Rated
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("delivery")}>
-                  Fastest Delivery
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex gap-2">
+              <Button
+                variant={showOpenOnly ? "default" : "outline"}
+                size="sm"
+                className="rounded-full h-10 px-4 text-sm"
+                onClick={() => setShowOpenOnly(!showOpenOnly)}
+              >
+                <span className={`w-2 h-2 rounded-full mr-2 ${showOpenOnly ? "bg-primary-foreground" : "bg-success"}`} />
+                Open Now
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-10 px-4 text-sm">
+                    <Filter className="h-3.5 w-3.5" />
+                    {currentSort?.label}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {sortOptions.map((opt) => (
+                    <DropdownMenuItem key={opt.value} onClick={() => setSortBy(opt.value)}>
+                      {opt.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Loading State */}
           {isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse">
-                  <div className="aspect-video bg-muted" />
-                  <div className="p-6 space-y-4">
-                    <div className="h-6 bg-muted rounded w-3/4" />
+                  <div className="h-44 bg-muted" />
+                  <div className="p-5 space-y-3">
+                    <div className="h-5 bg-muted rounded w-3/4" />
                     <div className="h-4 bg-muted rounded w-1/2" />
-                    <div className="h-4 bg-muted rounded w-1/4" />
+                    <div className="h-4 bg-muted rounded w-1/3" />
                   </div>
                 </div>
               ))}
@@ -109,16 +134,15 @@ const Stores = () => {
 
           {/* Stores Grid */}
           {!isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredStores.map((store, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredStores.map((store) => (
                 <Link
                   key={store.id}
                   to={`/stores/${store.id}`}
-                  className="group bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border animate-fade-in"
-                  style={{ animationDelay: `${index * 0.05}s` }}
+                  className="group bg-card rounded-2xl overflow-hidden border border-border card-hover"
                 >
                   {/* Image/Logo */}
-                  <div className="relative h-40 overflow-hidden bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center p-6">
+                  <div className="relative h-44 overflow-hidden bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center p-6">
                     <img
                       src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
                       alt={store.name}
@@ -128,39 +152,45 @@ const Stores = () => {
                     />
                     <div className="absolute top-3 left-3 flex gap-2">
                       {store.is_open ? (
-                        <Badge className="bg-success text-white text-xs">Open</Badge>
+                        <Badge className="bg-success text-white text-xs font-medium shadow-sm">Open</Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs">Closed</Badge>
-                      )}
-                      {Number(store.delivery_fee) === 0 && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Free Delivery</Badge>
+                        <Badge variant="secondary" className="text-xs font-medium bg-background/90 backdrop-blur-sm">Closed</Badge>
                       )}
                     </div>
+                    {Number(store.delivery_fee) === 0 && (
+                      <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-medium shadow-sm">
+                        <Truck className="h-3 w-3 mr-1" />
+                        Free Delivery
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Content */}
-                  <div className="p-6">
-                    <h3 className="font-display text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  <div className="p-5">
+                    <h3 className="font-display text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
                       {store.name}
                     </h3>
                     
-                    <div className="flex items-center gap-2 text-muted-foreground mb-3">
-                      <MapPin className="h-4 w-4" />
-                      <span className="text-sm">{store.address}</span>
+                    <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-sm truncate">{store.address}</span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-border">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-gold text-gold" />
-                          <span className="font-medium text-foreground">{store.rating}</span>
-                        </div>
-                        <span className="text-muted-foreground text-sm">({store.reviews_count})</span>
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <div className="flex items-center gap-1.5">
+                        <Star className="h-4 w-4 fill-gold text-gold" />
+                        <span className="font-semibold text-foreground text-sm">{store.rating}</span>
+                        <span className="text-muted-foreground text-xs">({store.reviews_count})</span>
                       </div>
                       
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span className="text-sm">{store.delivery_time}</span>
+                      <div className="flex items-center gap-3 text-muted-foreground text-sm">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {store.delivery_time}
+                        </span>
+                        {Number(store.delivery_fee) > 0 && (
+                          <span className="font-medium">${Number(store.delivery_fee).toFixed(2)}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -170,8 +200,12 @@ const Stores = () => {
           )}
 
           {!isLoading && filteredStores.length === 0 && (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground text-lg">No stores found matching your search.</p>
+            <div className="text-center py-20">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <Store className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="font-display text-lg font-bold text-foreground mb-1">No stores found</h3>
+              <p className="text-muted-foreground text-sm">Try adjusting your search or filters</p>
             </div>
           )}
         </div>

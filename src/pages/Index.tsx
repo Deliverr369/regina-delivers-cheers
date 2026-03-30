@@ -5,6 +5,7 @@ import HeroSection from "@/components/HeroSection";
 import PromoBanner from "@/components/PromoBanner";
 import CategoriesSection from "@/components/CategoriesSection";
 import FeaturedStoresSection from "@/components/FeaturedStoresSection";
+import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
@@ -26,6 +27,7 @@ const Index = () => {
         <PromoBanner />
         <CategoriesSection />
         <FeaturedStoresSection />
+        <WhyChooseUsSection />
         <HowItWorksSection />
         <CTASection />
       </main>
