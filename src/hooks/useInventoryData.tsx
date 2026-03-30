@@ -39,6 +39,7 @@ export interface ProductGroup {
   description: string | null;
   image_url: string | null;
   storeCount: number;
+  totalStores: number;
   variantCount: number;
   products: InventoryProduct[];
   hasImage: boolean;
@@ -46,14 +47,16 @@ export interface ProductGroup {
   inStock: boolean;
   isVisible: boolean;
   lastUpdated: string;
+  priceRange: { min: number; max: number } | null;
+  hasPriceInconsistency: boolean;
 }
 
 export interface InventoryFilters {
   search: string;
   category: string;
   storeId: string;
-  status: string; // all | active | inactive | out_of_stock | missing_image | missing_price
-  sortBy: string; // name | category | updated | price | stores
+  status: string;
+  sortBy: string;
   sortDir: "asc" | "desc";
 }
 
@@ -89,16 +92,19 @@ export const useInventoryData = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const packCountMap = useMemo(() => {
-    const map: Record<string, number> = {};
+  const packsByProduct = useMemo(() => {
+    const map: Record<string, PackPrice[]> = {};
     packPrices.forEach(pp => {
-      map[pp.product_id] = (map[pp.product_id] || 0) + 1;
+      if (!map[pp.product_id]) map[pp.product_id] = [];
+      map[pp.product_id].push(pp);
     });
     return map;
   }, [packPrices]);
 
   const groups = useMemo(() => {
     const map: Record<string, ProductGroup> = {};
+    const totalStores = stores.length;
+
     products.forEach((p) => {
       const key = `${p.name.toLowerCase().trim()}::${p.category}`;
       if (!map[key]) {
@@ -107,8 +113,9 @@ export const useInventoryData = () => {
           name: p.name,
           category: p.category,
           description: p.description,
-          image_url: p.image_url,
+          image_url: null,
           storeCount: 0,
+          totalStores,
           variantCount: 0,
           products: [],
           hasImage: false,
@@ -116,32 +123,54 @@ export const useInventoryData = () => {
           inStock: false,
           isVisible: false,
           lastUpdated: p.created_at,
+          priceRange: null,
+          hasPriceInconsistency: false,
         };
       }
       const g = map[key];
       g.products.push(p);
       g.storeCount = g.products.length;
-      if (p.image_url) { g.hasImage = true; g.image_url = p.image_url; }
+      if (p.image_url) { g.hasImage = true; if (!g.image_url) g.image_url = p.image_url; }
       if (p.in_stock) g.inStock = true;
       if (!p.is_hidden) g.isVisible = true;
       if (p.created_at > g.lastUpdated) g.lastUpdated = p.created_at;
-      const pc = packCountMap[p.id] || 0;
-      if (pc > g.variantCount) g.variantCount = pc;
-      if (pc > 0) g.hasPricing = true;
     });
+
+    // Calculate variant counts and price ranges
+    Object.values(map).forEach(g => {
+      const allPrices: number[] = [];
+      let maxVariants = 0;
+      g.products.forEach(p => {
+        const packs = packsByProduct[p.id] || [];
+        if (packs.length > maxVariants) maxVariants = packs.length;
+        if (packs.length > 0) g.hasPricing = true;
+        packs.forEach(pp => { if (!pp.is_hidden) allPrices.push(pp.price); });
+      });
+      g.variantCount = maxVariants;
+      if (allPrices.length > 0) {
+        const min = Math.min(...allPrices);
+        const max = Math.max(...allPrices);
+        g.priceRange = { min, max };
+        g.hasPriceInconsistency = max - min > 0.01;
+      }
+    });
+
     return Object.values(map);
-  }, [products, packCountMap]);
+  }, [products, stores, packsByProduct]);
 
   const filtered = useMemo(() => {
     let result = groups.filter((g) => {
       if (filters.search && !g.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
       if (filters.category !== "all" && g.category !== filters.category) return false;
       if (filters.storeId !== "all" && !g.products.some(p => p.store_id === filters.storeId)) return false;
-      if (filters.status === "active" && !g.isVisible) return false;
-      if (filters.status === "inactive" && g.isVisible) return false;
-      if (filters.status === "out_of_stock" && g.inStock) return false;
-      if (filters.status === "missing_image" && g.hasImage) return false;
-      if (filters.status === "missing_price" && g.hasPricing) return false;
+      switch (filters.status) {
+        case "active": if (!g.isVisible) return false; break;
+        case "inactive": if (g.isVisible) return false; break;
+        case "out_of_stock": if (g.inStock) return false; break;
+        case "missing_image": if (g.hasImage) return false; break;
+        case "missing_price": if (g.hasPricing) return false; break;
+        case "price_inconsistency": if (!g.hasPriceInconsistency) return false; break;
+      }
       return true;
     });
 
@@ -152,38 +181,35 @@ export const useInventoryData = () => {
         case "category": cmp = a.category.localeCompare(b.category); break;
         case "stores": cmp = a.storeCount - b.storeCount; break;
         case "updated": cmp = a.lastUpdated.localeCompare(b.lastUpdated); break;
+        case "variants": cmp = a.variantCount - b.variantCount; break;
         default: cmp = a.name.localeCompare(b.name);
       }
       return filters.sortDir === "desc" ? -cmp : cmp;
     });
-
     return result;
   }, [groups, filters]);
 
-  // Insights
   const insights = useMemo(() => ({
     total: groups.length,
     missingImages: groups.filter(g => !g.hasImage).length,
     missingPrices: groups.filter(g => !g.hasPricing).length,
     outOfStock: groups.filter(g => !g.inStock).length,
     inactive: groups.filter(g => !g.isVisible).length,
-    noStores: groups.filter(g => g.storeCount === 0).length,
+    priceInconsistencies: groups.filter(g => g.hasPriceInconsistency).length,
   }), [groups]);
 
   const toggleSelect = (key: string) => {
     setSelectedKeys(prev => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   };
 
   const selectAll = () => {
-    if (selectedKeys.size === filtered.length) {
-      setSelectedKeys(new Set());
-    } else {
-      setSelectedKeys(new Set(filtered.map(g => g.key)));
-    }
+    setSelectedKeys(prev =>
+      prev.size === filtered.length ? new Set() : new Set(filtered.map(g => g.key))
+    );
   };
 
   const clearSelection = () => setSelectedKeys(new Set());
@@ -200,21 +226,9 @@ export const useInventoryData = () => {
   const resetFilters = () => setFilters(defaultFilters);
 
   return {
-    loading,
-    stores,
-    products,
-    packPrices,
-    groups: filtered,
-    allGroups: groups,
-    insights,
-    filters,
-    updateFilter,
-    resetFilters,
-    selectedKeys,
-    selectedGroups,
-    toggleSelect,
-    selectAll,
-    clearSelection,
-    fetchData,
+    loading, stores, products, packPrices, packsByProduct,
+    groups: filtered, allGroups: groups, insights, filters,
+    updateFilter, resetFilters, selectedKeys, selectedGroups,
+    toggleSelect, selectAll, clearSelection, fetchData,
   };
 };
