@@ -21,6 +21,7 @@ const mainMenu = [
   { title: "Overview", url: "/dashboard", icon: BarChart3 },
   { title: "Orders", url: "/dashboard/orders", icon: ShoppingCart },
   { title: "Products", url: "/dashboard/products", icon: Package },
+  { title: "Inventory Ops", url: "/dashboard/inventory", icon: Boxes },
 ];
 
 const storeMenu = [
