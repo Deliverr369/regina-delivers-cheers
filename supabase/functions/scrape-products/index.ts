@@ -155,7 +155,7 @@ ${markdown.substring(0, 12000)}
 LINKS FOUND ON PAGE:
 ${links.slice(0, 50).join("\n")}`;
 
-    const aiResponse = await fetch("https://ai.lovable.dev/chat/completions", {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${lovableKey}`,
