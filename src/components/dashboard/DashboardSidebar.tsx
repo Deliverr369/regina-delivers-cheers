@@ -22,6 +22,7 @@ const mainMenu = [
   { title: "Orders", url: "/dashboard/orders", icon: ShoppingCart },
   { title: "Products", url: "/dashboard/products", icon: Package },
   { title: "Inventory Ops", url: "/dashboard/inventory", icon: Boxes },
+  { title: "Web Importer", url: "/dashboard/importer", icon: Globe },
 ];
 
 const storeMenu = [

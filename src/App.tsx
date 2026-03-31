@@ -67,6 +67,7 @@ const App = () => (
                 <Route path="banners" element={<DashboardBanners />} />
                 <Route path="bulk-images" element={<DashboardBulkImages />} />
                 <Route path="inventory" element={<DashboardInventory />} />
+                <Route path="importer" element={<DashboardImporter />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
