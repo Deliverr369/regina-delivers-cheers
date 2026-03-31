@@ -166,40 +166,53 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
     setImporting(true);
     let imported = 0;
     let failed = 0;
+    const errors: string[] = [];
 
-    // Get stores to assign — if none specified, use all
-    const { data: allStores } = await supabase.from("stores").select("id");
-    const allStoreIds = (allStores || []).map(s => s.id);
+    // Get all stores for fallback assignment
+    const allStoreIds = stores.map(s => s.id);
 
     for (const draft of approved) {
       try {
         const category = CATEGORY_OPTIONS.includes(draft.category || "")
-          ? draft.category as "beer" | "wine" | "spirits" | "smokes"
+          ? (draft.category as "beer" | "wine" | "spirits" | "smokes")
           : "beer";
 
-        const storeIds = draft.assigned_store_ids.length > 0
+        const storeIds = (draft.assigned_store_ids && draft.assigned_store_ids.length > 0)
           ? draft.assigned_store_ids
           : allStoreIds;
+
+        if (storeIds.length === 0) {
+          errors.push(`${draft.product_name}: No stores available`);
+          failed++;
+          continue;
+        }
+
+        // Determine image URL
+        const imageUrl = draft.image_action !== "keep_current" ? (draft.imported_image_url || null) : null;
 
         for (const storeId of storeIds) {
           const { error } = await supabase.from("products").insert({
             name: draft.product_name,
             category,
-            description: draft.description,
+            description: draft.description || null,
             price: draft.imported_price || 0,
-            size: draft.size || draft.variant,
-            image_url: draft.image_action !== "keep_current" ? draft.imported_image_url : null,
+            size: draft.size || draft.variant || null,
+            image_url: imageUrl,
             store_id: storeId,
             in_stock: draft.availability !== "out_of_stock",
             is_hidden: false,
           });
-          if (error) throw error;
+          if (error) {
+            console.error("Insert error for", draft.product_name, "store", storeId, error);
+            throw error;
+          }
         }
 
         await supabase.from("import_drafts").update({ review_status: "imported" }).eq("id", draft.id);
         imported++;
-      } catch (err) {
+      } catch (err: any) {
         console.error("Import error for", draft.product_name, err);
+        errors.push(`${draft.product_name}: ${err?.message || "Unknown error"}`);
         failed++;
       }
     }
@@ -220,10 +233,20 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
     ));
     setImporting(false);
     setConfirmImport(false);
-    toast({
-      title: "Import complete",
-      description: `${imported} product(s) imported${failed > 0 ? `, ${failed} failed` : ""}`,
-    });
+
+    if (failed > 0) {
+      console.error("Import errors:", errors);
+      toast({
+        title: `Import complete with errors`,
+        description: `${imported} imported, ${failed} failed. Check console for details.`,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Import complete",
+        description: `${imported} product(s) imported successfully`,
+      });
+    }
   };
 
   const toggleSelect = (id: string) => {
