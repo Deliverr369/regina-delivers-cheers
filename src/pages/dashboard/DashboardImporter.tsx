@@ -30,6 +30,7 @@ const DashboardImporter = () => {
   const [scanning, setScanning] = useState(false);
   const [currentScanIndex, setCurrentScanIndex] = useState<number | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionIds, setActiveSessionIds] = useState<string[]>([]);
   const [totalResults, setTotalResults] = useState<{ totalScanned: number; new: number; possible_match: number; exact_match: number } | null>(null);
   const [activeTab, setActiveTab] = useState("import");
 
