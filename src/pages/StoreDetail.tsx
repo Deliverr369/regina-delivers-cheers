@@ -42,6 +42,38 @@ interface PackPrice {
   is_hidden: boolean;
 }
 
+const WINE_SUBCATEGORIES = [
+  { value: "all", label: "All" },
+  { value: "argentina", label: "Argentina" },
+  { value: "australia", label: "Australia" },
+  { value: "austria", label: "Austria" },
+  { value: "bulgaria", label: "Bulgaria" },
+  { value: "canada", label: "Canada" },
+  { value: "canada_vqa", label: "Canada VQA" },
+  { value: "chile", label: "Chile" },
+  { value: "france", label: "France" },
+  { value: "germany", label: "Germany" },
+  { value: "greece", label: "Greece" },
+  { value: "hungary", label: "Hungary" },
+  { value: "italy", label: "Italy" },
+  { value: "japan", label: "Japan" },
+  { value: "montenegro", label: "Montenegro" },
+  { value: "new_zealand", label: "New Zealand" },
+  { value: "portugal", label: "Portugal" },
+  { value: "south_africa", label: "South Africa" },
+  { value: "south_korea", label: "South Korea" },
+  { value: "spain", label: "Spain" },
+  { value: "usa", label: "USA" },
+  { value: "other", label: "Other" },
+];
+
+const getWineSubcategory = (productName: string): string => {
+  const n = productName.toLowerCase();
+  // Argentina
+  if (["malbec", "torront", "1884", "alamos", "alma negra", "argento", "catena", "clos de los siete", "cuma", "don david", "doña paula", "dona paula", "escorihuela", "finca las moras", "finca los primos", "graffigna", "kaiken", "la linda", "la posta", "layer cake malbec", "luigi bosca", "pascual toso", "piedra negra", "portillo", "santa julia", "tapiz", "the show malbec", "tilia", "trapiche", "trivento", "vivo reserva", "zuccardi"].some(k => n.includes(k))) return "argentina";
+  return "other";
+};
+
 const SPIRITS_SUBCATEGORIES = [
   { value: "all", label: "All" },
   { value: "vodka", label: "Vodka" },
@@ -102,6 +134,7 @@ const StoreDetail = () => {
   const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
+  const [wineSubcategory, setWineSubcategory] = useState<string>("all");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
@@ -407,6 +440,19 @@ const StoreDetail = () => {
                       })}
                     </div>
                   )}
+                  {category === "wine" && items.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {WINE_SUBCATEGORIES.map((sub) => {
+                        const count = sub.value === "all" ? items.length : items.filter(p => getWineSubcategory(p.name) === sub.value).length;
+                        if (sub.value !== "all" && count === 0) return null;
+                        return (
+                          <Button key={sub.value} variant={wineSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setWineSubcategory(sub.value)} className="rounded-full text-xs h-8">
+                            {sub.label} ({count})
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
                   {category === "smokes" && items.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-5">
                       {SMOKES_SUBCATEGORIES.map((sub) => {
@@ -422,7 +468,9 @@ const StoreDetail = () => {
                   )}
                   {items.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                      {(category === "spirits" && spiritsSubcategory !== "all"
+                      {(category === "wine" && wineSubcategory !== "all"
+                        ? items.filter(p => getWineSubcategory(p.name) === wineSubcategory)
+                        : category === "spirits" && spiritsSubcategory !== "all"
                         ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
                         : category === "smokes" && smokesSubcategory !== "all"
                         ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
