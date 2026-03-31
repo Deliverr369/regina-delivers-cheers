@@ -4,7 +4,6 @@ import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Tru
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
 import { useQuery } from "@tanstack/react-query";
