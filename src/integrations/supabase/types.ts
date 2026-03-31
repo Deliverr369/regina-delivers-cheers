@@ -512,7 +512,12 @@ export type Database = {
         | "out_for_delivery"
         | "delivered"
         | "cancelled"
-      product_category: "beer" | "wine" | "spirits" | "smokes"
+      product_category:
+        | "beer"
+        | "wine"
+        | "spirits"
+        | "smokes"
+        | "ciders_seltzers"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -649,7 +654,13 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
-      product_category: ["beer", "wine", "spirits", "smokes"],
+      product_category: [
+        "beer",
+        "wine",
+        "spirits",
+        "smokes",
+        "ciders_seltzers",
+      ],
     },
   },
 } as const
