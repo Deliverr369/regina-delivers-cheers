@@ -29,6 +29,7 @@ import DashboardUsers from "./pages/dashboard/DashboardUsers";
 import DashboardBanners from "./pages/dashboard/DashboardBanners";
 import DashboardBulkImages from "./pages/dashboard/DashboardBulkImages";
 import DashboardInventory from "./pages/dashboard/DashboardInventory";
+import DashboardImporter from "./pages/dashboard/DashboardImporter";
 
 const queryClient = new QueryClient();
 
