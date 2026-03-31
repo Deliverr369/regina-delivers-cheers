@@ -928,8 +928,8 @@ const ProductEditor = ({ productName, productCategory, onBack }: Props) => {
               <Select value={editForm.category} onValueChange={(v) => setEditForm(f => ({ ...f, category: v as ProductCategory }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(["beer", "wine", "spirits", "smokes"] as ProductCategory[]).map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
+                  {(["beer", "wine", "spirits", "ciders_seltzers", "smokes"] as ProductCategory[]).map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat === "ciders_seltzers" ? "Ciders & Seltzers" : cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -274,7 +274,7 @@ const ImportReviewQueue = ({ sessionId, sessionIds }: Props) => {
     for (const draft of draftsToImport) {
       try {
         const category = CATEGORY_OPTIONS.includes((draft.category || "") as (typeof CATEGORY_OPTIONS)[number])
-          ? (draft.category as "beer" | "wine" | "spirits" | "smokes")
+          ? (draft.category as "beer" | "wine" | "spirits" | "ciders_seltzers" | "smokes")
           : "beer";
 
         const normalizedName = draft.product_name.trim();

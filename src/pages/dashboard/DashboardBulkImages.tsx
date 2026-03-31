@@ -106,7 +106,7 @@ const DashboardBulkImages = () => {
         } else {
           const storeIds = [...new Set(products.map((p) => p.store_id))];
           const newProducts = storeIds.map((storeId) => ({
-            name: img.result!.product_name, category: img.result!.category as "beer" | "wine" | "spirits" | "smokes",
+            name: img.result!.product_name, category: img.result!.category as "beer" | "wine" | "spirits" | "ciders_seltzers" | "smokes",
             price: 0, store_id: storeId, image_url: urlData.publicUrl, in_stock: true,
           }));
           const { error } = await supabase.from("products").insert(newProducts);
