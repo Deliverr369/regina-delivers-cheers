@@ -22,6 +22,7 @@ const categories = [
   { id: "beer", name: "Beer" },
   { id: "wine", name: "Wine" },
   { id: "spirits", name: "Spirits" },
+  { id: "ciders_seltzers", name: "Ciders & Seltzers" },
   { id: "smokes", name: "Smokes" },
 ];
 
