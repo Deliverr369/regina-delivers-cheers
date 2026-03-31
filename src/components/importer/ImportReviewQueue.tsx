@@ -190,7 +190,8 @@ const ImportReviewQueue = ({ sessionId, sessionIds }: Props) => {
   }, []);
 
   useEffect(() => {
-    if (!sessionId) {
+    const idsToFetch = sessionIds && sessionIds.length > 0 ? sessionIds : sessionId ? [sessionId] : [];
+    if (idsToFetch.length === 0) {
       setDrafts([]);
       return;
     }
@@ -199,7 +200,7 @@ const ImportReviewQueue = ({ sessionId, sessionIds }: Props) => {
     supabase
       .from("import_drafts")
       .select("*")
-      .eq("session_id", sessionId)
+      .in("session_id", idsToFetch)
       .order("product_name")
       .then(({ data, error }) => {
         if (error) console.error(error);
