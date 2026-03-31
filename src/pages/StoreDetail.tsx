@@ -42,6 +42,38 @@ interface PackPrice {
   is_hidden: boolean;
 }
 
+const WINE_SUBCATEGORIES = [
+  { value: "all", label: "All" },
+  { value: "argentina", label: "Argentina" },
+  { value: "australia", label: "Australia" },
+  { value: "austria", label: "Austria" },
+  { value: "bulgaria", label: "Bulgaria" },
+  { value: "canada", label: "Canada" },
+  { value: "canada_vqa", label: "Canada VQA" },
+  { value: "chile", label: "Chile" },
+  { value: "france", label: "France" },
+  { value: "germany", label: "Germany" },
+  { value: "greece", label: "Greece" },
+  { value: "hungary", label: "Hungary" },
+  { value: "italy", label: "Italy" },
+  { value: "japan", label: "Japan" },
+  { value: "montenegro", label: "Montenegro" },
+  { value: "new_zealand", label: "New Zealand" },
+  { value: "portugal", label: "Portugal" },
+  { value: "south_africa", label: "South Africa" },
+  { value: "south_korea", label: "South Korea" },
+  { value: "spain", label: "Spain" },
+  { value: "usa", label: "USA" },
+  { value: "other", label: "Other" },
+];
+
+const getWineSubcategory = (productName: string): string => {
+  const n = productName.toLowerCase();
+  // Argentina
+  if (["malbec", "torront", "1884", "alamos", "alma negra", "argento", "catena", "clos de los siete", "cuma", "don david", "doña paula", "dona paula", "escorihuela", "finca las moras", "finca los primos", "graffigna", "kaiken", "la linda", "la posta", "layer cake malbec", "luigi bosca", "pascual toso", "piedra negra", "portillo", "santa julia", "tapiz", "the show malbec", "tilia", "trapiche", "trivento", "vivo reserva", "zuccardi"].some(k => n.includes(k))) return "argentina";
+  return "other";
+};
+
 const SPIRITS_SUBCATEGORIES = [
   { value: "all", label: "All" },
   { value: "vodka", label: "Vodka" },
