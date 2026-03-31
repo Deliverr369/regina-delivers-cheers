@@ -248,14 +248,7 @@ ${html.substring(0, 8000)}`;
 
     console.log(`Extracted ${products.length} products`);
 
-    // Fix relative image URLs
-    const fixImageUrl = (imgUrl: string | null): string | null => {
-      if (!imgUrl) return null;
-      if (imgUrl.startsWith("//")) return `https:${imgUrl}`;
-      if (imgUrl.startsWith("/")) return `https://${domain}${imgUrl}`;
-      if (imgUrl.startsWith("http")) return imgUrl;
-      return `https://${domain}/${imgUrl}`;
-    };
+    const fixImageUrl = (imgUrl: string | null): string | null => normalizeImageUrl(imgUrl);
 
     // Fetch existing products for matching
     const { data: existingProducts } = await supabase

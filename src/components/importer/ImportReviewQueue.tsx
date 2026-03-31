@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  Check, X, Edit3, Merge, Image as ImageIcon, DollarSign,
-  Eye, Loader2, Store as StoreIcon, AlertTriangle, ChevronDown,
+  Check,
+  X,
+  Edit3,
+  Image as ImageIcon,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,17 +14,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +76,14 @@ interface StoreInfo {
   name: string;
 }
 
+interface BulkEditValues {
+  variantOrSize: string;
+  category: string;
+  priceAction: string;
+  imageAction: string;
+  reviewNotes: string;
+}
+
 const MATCH_BADGES: Record<string, { label: string; className: string }> = {
   new: { label: "New", className: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
   exact_match: { label: "Exact Match", className: "bg-primary/10 text-primary border-primary/20" },
@@ -70,14 +100,76 @@ const REVIEW_BADGES: Record<string, { label: string; className: string }> = {
   skipped: { label: "Skipped", className: "bg-muted text-muted-foreground" },
 };
 
-const CATEGORY_OPTIONS = ["beer", "wine", "spirits", "smokes"];
+const CATEGORY_OPTIONS = ["beer", "wine", "spirits", "smokes"] as const;
+const QUICK_SIZE_OPTIONS = [
+  "1 Tall Can",
+  "4 Pack",
+  "6 Pack",
+  "8 Pack",
+  "12 Pack",
+  "15 Pack",
+  "24 Pack",
+  "36 Pack",
+  "48 Pack",
+  "355ml",
+  "473ml",
+  "750ml",
+  "1L",
+  "1.14L",
+  "1.75L",
+];
+
+const resolveImportedImageUrl = (value?: string | null) => {
+  if (!value) return null;
+
+  let normalized = value.trim();
+  normalized = normalized
+    .replace(/%7Bwidth%7D/gi, "800")
+    .replace(/%7Bheight%7D/gi, "800")
+    .replace(/\{width\}/gi, "800")
+    .replace(/\{height\}/gi, "800");
+
+  if (normalized.startsWith("//")) {
+    normalized = `https:${normalized}`;
+  }
+
+  return normalized;
+};
+
+const normalizeVariantSize = (value?: string | null) => {
+  if (!value) return null;
+
+  const raw = value.trim();
+  if (!raw) return null;
+
+  const packMatch = raw.match(/(\d+)\s*(?:pack|pk)\b/i);
+  if (packMatch) {
+    return `${packMatch[1]} Pack`;
+  }
+
+  if (/tall\s*can|single\s*can|1\s*tall/i.test(raw)) {
+    return "1 Tall Can";
+  }
+
+  const volumeMatch = raw.match(/(\d+(?:\.\d+)?)\s*(ml|l)\b/i);
+  if (volumeMatch) {
+    const amount = volumeMatch[1];
+    const unit = volumeMatch[2].toLowerCase() === "l" ? "L" : "ml";
+    return `${amount}${unit}`;
+  }
+
+  return raw
+    .replace(/\s*[-–—]\s*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
 
 interface Props {
   sessionId: string | null;
   onSessionChange: (id: string | null) => void;
 }
 
-const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
+const ImportReviewQueue = ({ sessionId }: Props) => {
   const { toast } = useToast();
   const [drafts, setDrafts] = useState<ImportDraft[]>([]);
   const [stores, setStores] = useState<StoreInfo[]>([]);
@@ -88,6 +180,7 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
   const [importing, setImporting] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterMatch, setFilterMatch] = useState("all");
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
 
   useEffect(() => {
     supabase.from("stores").select("id, name").order("name").then(({ data }) => {
@@ -96,7 +189,11 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
   }, []);
 
   useEffect(() => {
-    if (!sessionId) { setDrafts([]); return; }
+    if (!sessionId) {
+      setDrafts([]);
+      return;
+    }
+
     setLoading(true);
     supabase
       .from("import_drafts")
@@ -105,66 +202,140 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
       .order("product_name")
       .then(({ data, error }) => {
         if (error) console.error(error);
-        // Normalize nullable fields from DB
-        const normalized = (data || []).map((d: any) => ({
-          ...d,
-          assigned_store_ids: d.assigned_store_ids || [],
-          price_action: d.price_action || "import_as_default",
-          image_action: d.image_action || "import_as_main",
-        }));
+
+        const normalized = (data || []).map((draft: any) => {
+          const normalizedVariant = normalizeVariantSize(draft.size || draft.variant);
+          return {
+            ...draft,
+            imported_image_url: resolveImportedImageUrl(draft.imported_image_url),
+            assigned_store_ids: draft.assigned_store_ids || [],
+            price_action: draft.price_action || "import_as_default",
+            image_action: draft.image_action || "import_as_main",
+            variant: normalizedVariant ?? draft.variant ?? null,
+            size: normalizedVariant ?? draft.size ?? null,
+          };
+        });
+
         setDrafts(normalized);
         setLoading(false);
       });
   }, [sessionId]);
 
   const filtered = useMemo(() => {
-    return drafts.filter(d => {
-      if (filterStatus !== "all" && d.review_status !== filterStatus) return false;
-      if (filterMatch !== "all" && d.match_status !== filterMatch) return false;
+    return drafts.filter((draft) => {
+      if (filterStatus !== "all" && draft.review_status !== filterStatus) return false;
+      if (filterMatch !== "all" && draft.match_status !== filterMatch) return false;
       return true;
     });
   }, [drafts, filterStatus, filterMatch]);
 
-  const stats = useMemo(() => ({
-    total: drafts.length,
-    pending: drafts.filter(d => d.review_status === "pending").length,
-    approved: drafts.filter(d => d.review_status === "approved").length,
-    rejected: drafts.filter(d => d.review_status === "rejected").length,
-    imported: drafts.filter(d => d.review_status === "imported").length,
-  }), [drafts]);
+  const stats = useMemo(
+    () => ({
+      total: drafts.length,
+      pending: drafts.filter((draft) => draft.review_status === "pending").length,
+      approved: drafts.filter((draft) => draft.review_status === "approved").length,
+      rejected: drafts.filter((draft) => draft.review_status === "rejected").length,
+      imported: drafts.filter((draft) => draft.review_status === "imported").length,
+    }),
+    [drafts],
+  );
 
   const updateDraftStatus = async (ids: string[], status: string) => {
     await supabase.from("import_drafts").update({ review_status: status }).in("id", ids);
-    setDrafts(prev => prev.map(d => ids.includes(d.id) ? { ...d, review_status: status } : d));
+    setDrafts((prev) => prev.map((draft) => (ids.includes(draft.id) ? { ...draft, review_status: status } : draft)));
     setSelectedIds(new Set());
   };
 
   const saveDraftEdit = async (draft: ImportDraft) => {
-    const { error } = await supabase.from("import_drafts").update({
-      product_name: draft.product_name,
-      brand: draft.brand,
-      category: draft.category,
-      description: draft.description,
-      imported_price: draft.imported_price,
-      variant: draft.variant,
-      size: draft.size,
-      assigned_store_ids: draft.assigned_store_ids,
-      price_action: draft.price_action,
-      image_action: draft.image_action,
-      review_notes: draft.review_notes,
-    }).eq("id", draft.id);
+    const normalizedVariant = normalizeVariantSize(draft.variant || draft.size);
+    const normalizedDraft = {
+      ...draft,
+      imported_image_url: resolveImportedImageUrl(draft.imported_image_url),
+      variant: normalizedVariant,
+      size: normalizedVariant,
+      assigned_store_ids: draft.assigned_store_ids || [],
+    };
+
+    const { error } = await supabase
+      .from("import_drafts")
+      .update({
+        product_name: normalizedDraft.product_name,
+        brand: normalizedDraft.brand,
+        category: normalizedDraft.category,
+        description: normalizedDraft.description,
+        imported_price: normalizedDraft.imported_price,
+        variant: normalizedDraft.variant,
+        size: normalizedDraft.size,
+        assigned_store_ids: normalizedDraft.assigned_store_ids,
+        price_action: normalizedDraft.price_action,
+        image_action: normalizedDraft.image_action,
+        review_notes: normalizedDraft.review_notes,
+      })
+      .eq("id", draft.id);
 
     if (error) {
       toast({ title: "Save failed", variant: "destructive" });
-    } else {
-      setDrafts(prev => prev.map(d => d.id === draft.id ? draft : d));
-      setEditDraft(null);
-      toast({ title: "Draft updated" });
+      return;
     }
+
+    setDrafts((prev) => prev.map((item) => (item.id === draft.id ? normalizedDraft : item)));
+    setEditDraft(null);
+    toast({ title: "Draft updated" });
+  };
+
+  const applyBulkEdit = async (values: BulkEditValues) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    const normalizedVariant = normalizeVariantSize(values.variantOrSize);
+    const updateData: Partial<ImportDraft> = {};
+
+    if (normalizedVariant) {
+      updateData.variant = normalizedVariant;
+      updateData.size = normalizedVariant;
+    }
+    if (values.category !== "no_change") {
+      updateData.category = values.category;
+    }
+    if (values.priceAction !== "no_change") {
+      updateData.price_action = values.priceAction;
+    }
+    if (values.imageAction !== "no_change") {
+      updateData.image_action = values.imageAction;
+    }
+    if (values.reviewNotes.trim()) {
+      updateData.review_notes = values.reviewNotes.trim();
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      toast({ title: "Nothing to apply", description: "Choose at least one bulk field first.", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase.from("import_drafts").update(updateData).in("id", ids);
+    if (error) {
+      toast({ title: "Bulk edit failed", variant: "destructive" });
+      return;
+    }
+
+    setDrafts((prev) =>
+      prev.map((draft) =>
+        ids.includes(draft.id)
+          ? {
+              ...draft,
+              ...updateData,
+              variant: updateData.variant ?? draft.variant,
+              size: updateData.size ?? draft.size,
+            }
+          : draft,
+      ),
+    );
+    setBulkEditOpen(false);
+    toast({ title: "Bulk edit applied", description: `Updated ${ids.length} selected listing(s).` });
   };
 
   const handleImportApproved = async () => {
-    const approved = drafts.filter(d => d.review_status === "approved");
+    const approved = drafts.filter((draft) => draft.review_status === "approved");
     if (approved.length === 0) {
       toast({ title: "No approved items to import", variant: "destructive" });
       return;
@@ -174,28 +345,23 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
     let imported = 0;
     let failed = 0;
     const errors: string[] = [];
-
-    // Get all stores for fallback assignment
-    const allStoreIds = stores.map(s => s.id);
+    const allStoreIds = stores.map((store) => store.id);
 
     for (const draft of approved) {
       try {
-        const category = CATEGORY_OPTIONS.includes(draft.category || "")
+        const category = CATEGORY_OPTIONS.includes((draft.category || "") as (typeof CATEGORY_OPTIONS)[number])
           ? (draft.category as "beer" | "wine" | "spirits" | "smokes")
           : "beer";
 
-        const storeIds = (draft.assigned_store_ids && draft.assigned_store_ids.length > 0)
-          ? draft.assigned_store_ids
-          : allStoreIds;
-
+        const storeIds = draft.assigned_store_ids?.length ? draft.assigned_store_ids : allStoreIds;
         if (storeIds.length === 0) {
           errors.push(`${draft.product_name}: No stores available`);
-          failed++;
+          failed += 1;
           continue;
         }
 
-        // Determine image URL
-        const imageUrl = draft.image_action !== "keep_current" ? (draft.imported_image_url || null) : null;
+        const normalizedVariant = normalizeVariantSize(draft.size || draft.variant);
+        const imageUrl = draft.image_action !== "keep_current" ? resolveImportedImageUrl(draft.imported_image_url) : null;
 
         for (const storeId of storeIds) {
           const { error } = await supabase.from("products").insert({
@@ -203,12 +369,13 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
             category,
             description: draft.description || null,
             price: draft.imported_price || 0,
-            size: draft.size || draft.variant || null,
+            size: normalizedVariant,
             image_url: imageUrl,
             store_id: storeId,
             in_stock: draft.availability !== "out_of_stock",
             is_hidden: false,
           });
+
           if (error) {
             console.error("Insert error for", draft.product_name, "store", storeId, error);
             throw error;
@@ -216,50 +383,52 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
         }
 
         await supabase.from("import_drafts").update({ review_status: "imported" }).eq("id", draft.id);
-        imported++;
+        imported += 1;
       } catch (err: any) {
         console.error("Import error for", draft.product_name, err);
         errors.push(`${draft.product_name}: ${err?.message || "Unknown error"}`);
-        failed++;
+        failed += 1;
       }
     }
 
-    // Update session counts
     if (sessionId) {
-      await supabase.from("import_sessions").update({
-        status: "completed",
-        imported_count: imported,
-        failed_count: failed,
-        approved_count: approved.length,
-        rejected_count: drafts.filter(d => d.review_status === "rejected").length,
-      }).eq("id", sessionId);
+      await supabase
+        .from("import_sessions")
+        .update({
+          status: "completed",
+          imported_count: imported,
+          failed_count: failed,
+          approved_count: approved.length,
+          rejected_count: drafts.filter((draft) => draft.review_status === "rejected").length,
+        })
+        .eq("id", sessionId);
     }
 
-    setDrafts(prev => prev.map(d =>
-      d.review_status === "approved" ? { ...d, review_status: "imported" } : d
-    ));
+    setDrafts((prev) => prev.map((draft) => (draft.review_status === "approved" ? { ...draft, review_status: "imported" } : draft)));
     setImporting(false);
     setConfirmImport(false);
 
     if (failed > 0) {
       console.error("Import errors:", errors);
       toast({
-        title: `Import complete with errors`,
+        title: "Import complete with errors",
         description: `${imported} imported, ${failed} failed. Check console for details.`,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Import complete",
-        description: `${imported} product(s) imported successfully`,
-      });
+      return;
     }
+
+    toast({
+      title: "Import complete",
+      description: `${imported} product(s) imported successfully`,
+    });
   };
 
   const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -284,16 +453,13 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
 
   return (
     <div className="space-y-4">
-      {/* Stats bar */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs h-6">{stats.total} total</Badge>
           <Badge className="text-[10px] h-5 bg-muted text-muted-foreground">{stats.pending} pending</Badge>
           <Badge className="text-[10px] h-5 bg-emerald-500/10 text-emerald-600 border-emerald-200">{stats.approved} approved</Badge>
           <Badge className="text-[10px] h-5 bg-destructive/10 text-destructive">{stats.rejected} rejected</Badge>
-          {stats.imported > 0 && (
-            <Badge className="text-[10px] h-5 bg-primary/10 text-primary">{stats.imported} imported</Badge>
-          )}
+          {stats.imported > 0 && <Badge className="text-[10px] h-5 bg-primary/10 text-primary">{stats.imported} imported</Badge>}
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Select value={filterMatch} onValueChange={setFilterMatch}>
@@ -318,10 +484,12 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
         </div>
       </div>
 
-      {/* Bulk actions */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-2 p-2.5 bg-muted/30 rounded-xl border border-border/40">
+        <div className="flex items-center gap-2 p-2.5 bg-muted/30 rounded-xl border border-border/40 flex-wrap">
           <Badge variant="secondary" className="text-xs">{selectedIds.size} selected</Badge>
+          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setBulkEditOpen(true)}>
+            <Edit3 className="h-3 w-3 mr-1" />Bulk Edit
+          </Button>
           <Button size="sm" variant="outline" className="h-7 text-[11px] text-emerald-600" onClick={() => updateDraftStatus(Array.from(selectedIds), "approved")}>
             <Check className="h-3 w-3 mr-1" />Approve
           </Button>
@@ -337,7 +505,6 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
         </div>
       )}
 
-      {/* Table */}
       <div className="border border-border/40 rounded-xl overflow-hidden bg-card shadow-sm">
         <Table>
           <TableHeader>
@@ -347,7 +514,7 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
                   checked={selectedIds.size === filtered.length && filtered.length > 0}
                   onCheckedChange={() => {
                     if (selectedIds.size === filtered.length) setSelectedIds(new Set());
-                    else setSelectedIds(new Set(filtered.map(d => d.id)));
+                    else setSelectedIds(new Set(filtered.map((draft) => draft.id)));
                   }}
                 />
               </TableHead>
@@ -369,25 +536,25 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map(draft => {
+              filtered.map((draft) => {
                 const matchBadge = MATCH_BADGES[draft.match_status] || MATCH_BADGES.new;
                 const reviewBadge = REVIEW_BADGES[draft.review_status] || REVIEW_BADGES.pending;
                 const isSelected = selectedIds.has(draft.id);
+                const imageUrl = resolveImportedImageUrl(draft.imported_image_url);
+                const variantLabel = normalizeVariantSize(draft.variant || draft.size);
 
                 return (
                   <TableRow
                     key={draft.id}
-                    className={`border-b border-border/30 transition-colors ${
-                      isSelected ? "bg-primary/[0.03]" : "hover:bg-muted/30"
-                    } ${draft.review_status === "rejected" ? "opacity-50" : ""}`}
+                    className={`border-b border-border/30 transition-colors ${isSelected ? "bg-primary/[0.03]" : "hover:bg-muted/30"} ${draft.review_status === "rejected" ? "opacity-50" : ""}`}
                   >
-                    <TableCell className="pl-4" onClick={e => e.stopPropagation()}>
+                    <TableCell className="pl-4" onClick={(event) => event.stopPropagation()}>
                       <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(draft.id)} />
                     </TableCell>
                     <TableCell className="pr-0">
                       <div className="h-9 w-9 rounded-lg border border-border/30 overflow-hidden bg-muted/20">
-                        {draft.imported_image_url ? (
-                          <img src={draft.imported_image_url} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" />
+                        {imageUrl ? (
+                          <img src={imageUrl} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center">
                             <ImageIcon className="h-3.5 w-3.5 text-muted-foreground/25" />
@@ -400,12 +567,10 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
                       {draft.brand && <p className="text-[11px] text-muted-foreground truncate">{draft.brand}</p>}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-[10px] h-5 capitalize font-normal">
-                        {draft.category || "—"}
-                      </Badge>
+                      <Badge variant="outline" className="text-[10px] h-5 capitalize font-normal">{draft.category || "—"}</Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs text-muted-foreground">{draft.variant || draft.size || "—"}</span>
+                      <span className="text-xs text-muted-foreground">{variantLabel || "—"}</span>
                     </TableCell>
                     <TableCell className="text-right">
                       {draft.imported_price != null ? (
@@ -415,32 +580,32 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`text-[10px] h-5 font-normal ${matchBadge.className}`}>
-                        {matchBadge.label}
-                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] h-5 font-normal ${matchBadge.className}`}>{matchBadge.label}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`text-[10px] h-5 font-normal ${reviewBadge.className}`}>
-                        {reviewBadge.label}
-                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] h-5 font-normal ${reviewBadge.className}`}>{reviewBadge.label}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600 hover:bg-emerald-500/10"
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-emerald-600 hover:bg-emerald-500/10"
                           onClick={() => updateDraftStatus([draft.id], "approved")}
                           disabled={draft.review_status === "imported"}
                         >
                           <Check className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
                           onClick={() => updateDraftStatus([draft.id], "rejected")}
                           disabled={draft.review_status === "imported"}
                         >
                           <X className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 hover:bg-muted/50"
-                          onClick={() => setEditDraft(draft)}
-                        >
+                        <Button size="icon" variant="ghost" className="h-7 w-7 hover:bg-muted/50" onClick={() => setEditDraft(draft)}>
                           <Edit3 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -453,7 +618,6 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
         </Table>
       </div>
 
-      {/* Import Button */}
       {stats.approved > 0 && (
         <div className="flex justify-end">
           <Button onClick={() => setConfirmImport(true)} className="gap-2">
@@ -462,7 +626,6 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
         </div>
       )}
 
-      {/* Edit Drawer */}
       <Sheet open={!!editDraft} onOpenChange={() => setEditDraft(null)}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           {editDraft && (
@@ -476,7 +639,16 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
         </SheetContent>
       </Sheet>
 
-      {/* Confirm Import Dialog */}
+      <Sheet open={bulkEditOpen} onOpenChange={setBulkEditOpen}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <BulkEditDraftForm
+            selectedCount={selectedIds.size}
+            onApply={applyBulkEdit}
+            onClose={() => setBulkEditOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+
       <AlertDialog open={confirmImport} onOpenChange={setConfirmImport}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -488,7 +660,14 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleImportApproved} disabled={importing}>
-              {importing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Importing...</> : "Import Now"}
+              {importing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                "Import Now"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -497,23 +676,145 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
   );
 };
 
-// Edit Draft Form
-function EditDraftForm({ draft, stores, onSave, onClose }: {
-  draft: ImportDraft;
-  stores: StoreInfo[];
-  onSave: (d: ImportDraft) => void;
+function BulkEditDraftForm({
+  selectedCount,
+  onApply,
+  onClose,
+}: {
+  selectedCount: number;
+  onApply: (values: BulkEditValues) => void;
   onClose: () => void;
 }) {
-  const [local, setLocal] = useState({ ...draft });
+  const [values, setValues] = useState<BulkEditValues>({
+    variantOrSize: "",
+    category: "no_change",
+    priceAction: "no_change",
+    imageAction: "no_change",
+    reviewNotes: "",
+  });
 
-  const update = (partial: Partial<ImportDraft>) => setLocal(prev => ({ ...prev, ...partial }));
+  const update = (partial: Partial<BulkEditValues>) => setValues((prev) => ({ ...prev, ...partial }));
+
+  return (
+    <div className="space-y-5 pt-4">
+      <SheetHeader>
+        <SheetTitle className="text-base">Bulk edit {selectedCount} selected listing(s)</SheetTitle>
+      </SheetHeader>
+
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Variant / Size</Label>
+          <Input
+            value={values.variantOrSize}
+            onChange={(event) => update({ variantOrSize: event.target.value })}
+            placeholder="e.g. 24 Pack or 750ml"
+            className="h-9"
+          />
+          <p className="text-[10px] text-muted-foreground">Applies the same normalized size label to every selected draft.</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {QUICK_SIZE_OPTIONS.map((option) => (
+            <Button key={option} type="button" variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => update({ variantOrSize: option })}>
+              {option}
+            </Button>
+          ))}
+        </div>
+
+        <Separator />
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Category</Label>
+          <Select value={values.category} onValueChange={(value) => update({ category: value })}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="no_change">No change</SelectItem>
+              {CATEGORY_OPTIONS.map((category) => (
+                <SelectItem key={category} value={category} className="capitalize">
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Price Action</Label>
+            <Select value={values.priceAction} onValueChange={(value) => update({ priceAction: value })}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="no_change">No change</SelectItem>
+                <SelectItem value="import_as_default">Import as default price</SelectItem>
+                <SelectItem value="import_as_store_price">Import as store-specific price</SelectItem>
+                <SelectItem value="no_overwrite">Don't overwrite if exists</SelectItem>
+                <SelectItem value="overwrite">Overwrite existing</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Image Action</Label>
+            <Select value={values.imageAction} onValueChange={(value) => update({ imageAction: value })}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="no_change">No change</SelectItem>
+                <SelectItem value="import_as_main">Import as main image</SelectItem>
+                <SelectItem value="replace_existing">Replace existing image</SelectItem>
+                <SelectItem value="keep_current">Keep current image</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Review Notes</Label>
+          <Input
+            value={values.reviewNotes}
+            onChange={(event) => update({ reviewNotes: event.target.value })}
+            className="h-9"
+            placeholder="Optional note for all selected drafts"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+        <Button onClick={() => onApply(values)} className="flex-1">Apply to Selected</Button>
+      </div>
+    </div>
+  );
+}
+
+function EditDraftForm({
+  draft,
+  stores,
+  onSave,
+  onClose,
+}: {
+  draft: ImportDraft;
+  stores: StoreInfo[];
+  onSave: (draft: ImportDraft) => void;
+  onClose: () => void;
+}) {
+  const [local, setLocal] = useState<ImportDraft>({
+    ...draft,
+    imported_image_url: resolveImportedImageUrl(draft.imported_image_url),
+  });
+
+  const update = (partial: Partial<ImportDraft>) => setLocal((prev) => ({ ...prev, ...partial }));
+
+  const updateVariantSize = (value: string) => {
+    const normalized = normalizeVariantSize(value);
+    update({
+      variant: normalized,
+      size: normalized,
+    });
+  };
 
   const toggleStore = (id: string) => {
     const current = local.assigned_store_ids || [];
     update({
-      assigned_store_ids: current.includes(id)
-        ? current.filter(s => s !== id)
-        : [...current, id],
+      assigned_store_ids: current.includes(id) ? current.filter((storeId) => storeId !== id) : [...current, id],
     });
   };
 
@@ -524,7 +825,7 @@ function EditDraftForm({ draft, stores, onSave, onClose }: {
       </SheetHeader>
 
       {local.imported_image_url && (
-        <div className="h-32 w-32 rounded-xl border border-border/30 overflow-hidden bg-white mx-auto">
+        <div className="h-32 w-32 rounded-xl border border-border/30 overflow-hidden bg-background mx-auto">
           <img src={local.imported_image_url} alt="" className="h-full w-full object-contain p-2" />
         </div>
       )}
@@ -532,19 +833,23 @@ function EditDraftForm({ draft, stores, onSave, onClose }: {
       <div className="space-y-3">
         <div className="space-y-1.5">
           <Label className="text-xs">Product Name</Label>
-          <Input value={local.product_name} onChange={e => update({ product_name: e.target.value })} className="h-9" />
+          <Input value={local.product_name} onChange={(event) => update({ product_name: event.target.value })} className="h-9" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Brand</Label>
-            <Input value={local.brand || ""} onChange={e => update({ brand: e.target.value })} className="h-9" />
+            <Input value={local.brand || ""} onChange={(event) => update({ brand: event.target.value })} className="h-9" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Category</Label>
-            <Select value={local.category || ""} onValueChange={v => update({ category: v })}>
+            <Select value={local.category || ""} onValueChange={(value) => update({ category: value })}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger>
               <SelectContent>
-                {CATEGORY_OPTIONS.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+                {CATEGORY_OPTIONS.map((category) => (
+                  <SelectItem key={category} value={category} className="capitalize">
+                    {category}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -552,11 +857,17 @@ function EditDraftForm({ draft, stores, onSave, onClose }: {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Price</Label>
-            <Input type="number" step="0.01" value={local.imported_price ?? ""} onChange={e => update({ imported_price: parseFloat(e.target.value) || null })} className="h-9" />
+            <Input
+              type="number"
+              step="0.01"
+              value={local.imported_price ?? ""}
+              onChange={(event) => update({ imported_price: parseFloat(event.target.value) || null })}
+              className="h-9"
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Variant / Size</Label>
-            <Input value={local.variant || local.size || ""} onChange={e => update({ variant: e.target.value })} className="h-9" />
+            <Input value={local.variant || local.size || ""} onChange={(event) => updateVariantSize(event.target.value)} className="h-9" />
           </div>
         </div>
 
@@ -564,7 +875,7 @@ function EditDraftForm({ draft, stores, onSave, onClose }: {
 
         <div className="space-y-1.5">
           <Label className="text-xs">Price Action</Label>
-          <Select value={local.price_action} onValueChange={v => update({ price_action: v })}>
+          <Select value={local.price_action} onValueChange={(value) => update({ price_action: value })}>
             <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="import_as_default">Import as default price</SelectItem>
@@ -577,7 +888,7 @@ function EditDraftForm({ draft, stores, onSave, onClose }: {
 
         <div className="space-y-1.5">
           <Label className="text-xs">Image Action</Label>
-          <Select value={local.image_action} onValueChange={v => update({ image_action: v })}>
+          <Select value={local.image_action} onValueChange={(value) => update({ image_action: value })}>
             <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="import_as_main">Import as main image</SelectItem>
@@ -593,13 +904,10 @@ function EditDraftForm({ draft, stores, onSave, onClose }: {
           <Label className="text-xs">Assign to Stores</Label>
           <p className="text-[10px] text-muted-foreground">Leave empty to assign to all stores</p>
           <div className="border border-border/40 rounded-xl max-h-40 overflow-y-auto">
-            {stores.map(s => (
-              <label key={s.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/30 cursor-pointer border-b border-border/20 last:border-0">
-                <Checkbox
-                  checked={local.assigned_store_ids?.includes(s.id) || false}
-                  onCheckedChange={() => toggleStore(s.id)}
-                />
-                <span className="text-sm">{s.name}</span>
+            {stores.map((store) => (
+              <label key={store.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/30 cursor-pointer border-b border-border/20 last:border-0">
+                <Checkbox checked={local.assigned_store_ids?.includes(store.id) || false} onCheckedChange={() => toggleStore(store.id)} />
+                <span className="text-sm">{store.name}</span>
               </label>
             ))}
           </div>
@@ -607,7 +915,12 @@ function EditDraftForm({ draft, stores, onSave, onClose }: {
 
         <div className="space-y-1.5">
           <Label className="text-xs">Review Notes</Label>
-          <Input value={local.review_notes || ""} onChange={e => update({ review_notes: e.target.value })} className="h-9" placeholder="Optional notes..." />
+          <Input
+            value={local.review_notes || ""}
+            onChange={(event) => update({ review_notes: event.target.value })}
+            className="h-9"
+            placeholder="Optional notes..."
+          />
         </div>
       </div>
 
