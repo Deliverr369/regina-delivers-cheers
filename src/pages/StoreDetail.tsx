@@ -228,7 +228,7 @@ const StoreDetail = () => {
     
     // If product has direct pack prices (like "750 mL", "1.14L"), use those directly
     if (productPackPrices.length > 0) {
-      const baseSizes = PACK_SIZES_BY_CATEGORY[category];
+      const baseSizes = PACK_SIZES_BY_CATEGORY[category] || [];
       const matchedFromBase = baseSizes.filter(size => 
         productPackPrices.some(pp => pp.pack_size === size.value)
       );
