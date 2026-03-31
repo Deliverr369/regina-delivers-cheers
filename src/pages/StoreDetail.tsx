@@ -69,6 +69,8 @@ const WINE_SUBCATEGORIES = [
 
 const getWineSubcategory = (productName: string): string => {
   const n = productName.toLowerCase();
+  // Canada VQA (must be checked before Canada)
+  if (["vintage ink", "pelee island", "pelee pink", "sumac ridge", "burrowing owl", "closson chase", "osoyoos larose", "black sage vineyard", "clos du soleil", "henry of pelham baco", "mission hill reserve", "black hills estate", "diabolica", "sandhill", "southbrook", "blue mountain gold label", "checkmate silent bishop", "wayne gretzky cabernet syrah"].some(k => n.includes(k)) || (n.includes("vqa") && !["canada"].some(() => false))) return "canada_vqa";
   // Canada
   if (["20 bees", "50th parallel", "andrès baby", "andres baby", "avenue sauvignon", "avenue syrah", "bask ", "bee & thistle", "bench 1775", "benjamin bridge", "black cellar", "bodacious", "cave spring", "copper moon", "girls' night out", "girls night out", "gray monk", "henry of pelham", "hochtaler", "honest john", "honest lot", "inniskillin", "jackson-triggs", "jackson triggs", "keep calm", "l'ambiance", "lakeview cellars", "lighthouse cab", "lighthouse sauv", "lola pinot", "magnotta", "mission hill", "mission ridge", "mt. boucharie", "mt. boucherie", "mt boucherie", "naked grape", "open smooth", "orofino", "peller", "prairie bee", "wayne gretzky", "weekday wine", "xoxo"].some(k => n.includes(k))) return "canada";
   // Australia
