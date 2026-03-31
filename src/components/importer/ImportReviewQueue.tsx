@@ -939,9 +939,9 @@ function EditDraftForm({
             <Select value={local.category || ""} onValueChange={(value) => update({ category: value })}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger>
               <SelectContent>
-                {CATEGORY_OPTIONS.map((category) => (
-                  <SelectItem key={category} value={category} className="capitalize">
-                    {category}
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat === "ciders_seltzers" ? "Ciders & Seltzers" : cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </SelectItem>
                 ))}
               </SelectContent>
