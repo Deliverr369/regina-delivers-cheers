@@ -134,6 +134,7 @@ const StoreDetail = () => {
   const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
+  const [wineSubcategory, setWineSubcategory] = useState<string>("all");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
