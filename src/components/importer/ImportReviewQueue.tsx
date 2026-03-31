@@ -166,10 +166,11 @@ const normalizeVariantSize = (value?: string | null) => {
 
 interface Props {
   sessionId: string | null;
+  sessionIds?: string[];
   onSessionChange: (id: string | null) => void;
 }
 
-const ImportReviewQueue = ({ sessionId }: Props) => {
+const ImportReviewQueue = ({ sessionId, sessionIds }: Props) => {
   const { toast } = useToast();
   const [drafts, setDrafts] = useState<ImportDraft[]>([]);
   const [stores, setStores] = useState<StoreInfo[]>([]);
