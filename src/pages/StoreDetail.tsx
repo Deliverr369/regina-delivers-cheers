@@ -214,7 +214,7 @@ const StoreDetail = () => {
               <SelectTrigger className="h-8 text-xs bg-background">
                 <SelectValue placeholder="Select size" />
               </SelectTrigger>
-              <SelectContent className="bg-background border border-border z-50" modal={false}>
+              <SelectContent className="bg-background border border-border z-50" position="popper" sideOffset={4}>
                 {getPackSizesForProduct(product).map((size) => {
                   const storedPrice = packPrices.find(bp => bp.product_id === product.id && bp.pack_size === size.value && !bp.is_hidden);
                   const sizePrice = storedPrice ? Number(storedPrice.price) : Number(product.price) * size.multiplier;
