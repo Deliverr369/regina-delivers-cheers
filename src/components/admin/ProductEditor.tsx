@@ -515,7 +515,7 @@ const ProductEditor = ({ productName, productCategory, onBack }: Props) => {
                   <h2 className="font-display text-xl font-bold text-foreground">{productInfo?.name || currentName}</h2>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <Badge variant="outline" className="capitalize text-xs">
-                      {productCategory === "beer" ? "🍺" : productCategory === "wine" ? "🍷" : productCategory === "spirits" ? "🥃" : "🚬"} {productCategory}
+                      {productCategory === "beer" ? "🍺" : productCategory === "wine" ? "🍷" : productCategory === "spirits" ? "🥃" : productCategory === "ciders_seltzers" ? "🍏" : "🚬"} {productCategory === "ciders_seltzers" ? "Ciders & Seltzers" : productCategory}
                     </Badge>
                     <Badge variant="secondary" className="text-[10px]">
                       {products.length}/{allStores.length} stores
