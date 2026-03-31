@@ -105,7 +105,14 @@ const ImportReviewQueue = ({ sessionId, onSessionChange }: Props) => {
       .order("product_name")
       .then(({ data, error }) => {
         if (error) console.error(error);
-        setDrafts((data as any[]) || []);
+        // Normalize nullable fields from DB
+        const normalized = (data || []).map((d: any) => ({
+          ...d,
+          assigned_store_ids: d.assigned_store_ids || [],
+          price_action: d.price_action || "import_as_default",
+          image_action: d.image_action || "import_as_main",
+        }));
+        setDrafts(normalized);
         setLoading(false);
       });
   }, [sessionId]);
