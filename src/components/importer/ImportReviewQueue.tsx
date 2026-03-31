@@ -100,7 +100,7 @@ const REVIEW_BADGES: Record<string, { label: string; className: string }> = {
   skipped: { label: "Skipped", className: "bg-muted text-muted-foreground" },
 };
 
-const CATEGORY_OPTIONS = ["beer", "wine", "spirits", "smokes"] as const;
+const CATEGORY_OPTIONS = ["beer", "wine", "spirits", "ciders_seltzers", "smokes"] as const;
 const QUICK_SIZE_OPTIONS = [
   "1 Tall Can",
   "4 Pack",
@@ -274,7 +274,7 @@ const ImportReviewQueue = ({ sessionId, sessionIds }: Props) => {
     for (const draft of draftsToImport) {
       try {
         const category = CATEGORY_OPTIONS.includes((draft.category || "") as (typeof CATEGORY_OPTIONS)[number])
-          ? (draft.category as "beer" | "wine" | "spirits" | "smokes")
+          ? (draft.category as "beer" | "wine" | "spirits" | "ciders_seltzers" | "smokes")
           : "beer";
 
         const normalizedName = draft.product_name.trim();
@@ -823,9 +823,9 @@ function BulkEditDraftForm({
             <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="no_change">No change</SelectItem>
-              {CATEGORY_OPTIONS.map((category) => (
-                <SelectItem key={category} value={category} className="capitalize">
-                  {category}
+              {CATEGORY_OPTIONS.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat === "ciders_seltzers" ? "Ciders & Seltzers" : cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -939,9 +939,9 @@ function EditDraftForm({
             <Select value={local.category || ""} onValueChange={(value) => update({ category: value })}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger>
               <SelectContent>
-                {CATEGORY_OPTIONS.map((category) => (
-                  <SelectItem key={category} value={category} className="capitalize">
-                    {category}
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat === "ciders_seltzers" ? "Ciders & Seltzers" : cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -232,6 +232,7 @@ const StoreDetail = () => {
     beer: products.filter((p) => p.category === "beer").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
     wine: products.filter((p) => p.category === "wine").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
     spirits: products.filter((p) => p.category === "spirits").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    ciders_seltzers: products.filter((p) => p.category === "ciders_seltzers").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
     smokes: products.filter((p) => p.category === "smokes").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
   };
 
@@ -469,6 +470,9 @@ const StoreDetail = () => {
                 )}
                 {availableCategories.includes("spirits") && (
                   <TabsTrigger value="spirits" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-violet-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🥃 Spirits ({productsByCategory.spirits.length})</TabsTrigger>
+                )}
+                {availableCategories.includes("ciders_seltzers") && (
+                  <TabsTrigger value="ciders_seltzers" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍏 Ciders & Seltzers ({productsByCategory.ciders_seltzers.length})</TabsTrigger>
                 )}
                 {availableCategories.includes("smokes") && (
                   <TabsTrigger value="smokes" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-slate-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>

@@ -52,6 +52,13 @@ const PACK_SIZES_BY_CATEGORY: Record<string, { value: string; label: string }[]>
     { value: "2-pack", label: "2-Pack" },
     { value: "case-6", label: "Case of 6" },
   ],
+  ciders_seltzers: [
+    { value: "single-can", label: "Single Can" },
+    { value: "4-pack", label: "4 Pack" },
+    { value: "6-pack", label: "6 Pack" },
+    { value: "12-pack", label: "12 Pack" },
+    { value: "24-pack", label: "24 Pack" },
+  ],
   smokes: [],
 };
 
@@ -508,7 +515,7 @@ const ProductEditor = ({ productName, productCategory, onBack }: Props) => {
                   <h2 className="font-display text-xl font-bold text-foreground">{productInfo?.name || currentName}</h2>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <Badge variant="outline" className="capitalize text-xs">
-                      {productCategory === "beer" ? "🍺" : productCategory === "wine" ? "🍷" : productCategory === "spirits" ? "🥃" : "🚬"} {productCategory}
+                      {productCategory === "beer" ? "🍺" : productCategory === "wine" ? "🍷" : productCategory === "spirits" ? "🥃" : productCategory === "ciders_seltzers" ? "🍏" : "🚬"} {productCategory === "ciders_seltzers" ? "Ciders & Seltzers" : productCategory}
                     </Badge>
                     <Badge variant="secondary" className="text-[10px]">
                       {products.length}/{allStores.length} stores
@@ -921,8 +928,8 @@ const ProductEditor = ({ productName, productCategory, onBack }: Props) => {
               <Select value={editForm.category} onValueChange={(v) => setEditForm(f => ({ ...f, category: v as ProductCategory }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(["beer", "wine", "spirits", "smokes"] as ProductCategory[]).map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
+                  {(["beer", "wine", "spirits", "ciders_seltzers", "smokes"] as ProductCategory[]).map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat === "ciders_seltzers" ? "Ciders & Seltzers" : cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
