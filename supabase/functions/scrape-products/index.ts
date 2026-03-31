@@ -120,12 +120,28 @@ Deno.serve(async (req) => {
     const html = scrapeData.data?.html || scrapeData.html || "";
     const links = scrapeData.data?.links || scrapeData.links || [];
 
+    const normalizeImageUrl = (value: string | null) => {
+      if (!value) return null;
+
+      let normalized = value.trim()
+        .replace(/%7Bwidth%7D/gi, "800")
+        .replace(/%7Bheight%7D/gi, "800")
+        .replace(/\{width\}/gi, "800")
+        .replace(/\{height\}/gi, "800");
+
+      if (normalized.startsWith("//")) normalized = `https:${normalized}`;
+      else if (normalized.startsWith("/")) normalized = `https://${domain}${normalized}`;
+      else if (!normalized.startsWith("http")) normalized = `https://${domain}/${normalized.replace(/^\/+/, "")}`;
+
+      return normalized;
+    };
+
     // Extract image URLs from the HTML to pass to the AI
     const imgMatches: string[] = [];
     const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
     let match;
     while ((match = imgRegex.exec(html)) !== null) {
-      const src = match[1];
+      const src = normalizeImageUrl(match[1]);
       if (src && !src.includes("data:image/svg") && !src.includes("pixel") && !src.includes("spacer")) {
         imgMatches.push(src);
       }
@@ -134,7 +150,10 @@ Deno.serve(async (req) => {
     // Also extract from srcset
     const srcsetRegex = /srcset=["']([^"']+)["']/gi;
     while ((match = srcsetRegex.exec(html)) !== null) {
-      const urls = match[1].split(",").map(s => s.trim().split(/\s+/)[0]).filter(Boolean);
+      const urls = match[1]
+        .split(",")
+        .map((part) => normalizeImageUrl(part.trim().split(/\s+/)[0]))
+        .filter(Boolean) as string[];
       imgMatches.push(...urls);
     }
 
@@ -229,14 +248,7 @@ ${html.substring(0, 8000)}`;
 
     console.log(`Extracted ${products.length} products`);
 
-    // Fix relative image URLs
-    const fixImageUrl = (imgUrl: string | null): string | null => {
-      if (!imgUrl) return null;
-      if (imgUrl.startsWith("//")) return `https:${imgUrl}`;
-      if (imgUrl.startsWith("/")) return `https://${domain}${imgUrl}`;
-      if (imgUrl.startsWith("http")) return imgUrl;
-      return `https://${domain}/${imgUrl}`;
-    };
+    const fixImageUrl = (imgUrl: string | null): string | null => normalizeImageUrl(imgUrl);
 
     // Fetch existing products for matching
     const { data: existingProducts } = await supabase
