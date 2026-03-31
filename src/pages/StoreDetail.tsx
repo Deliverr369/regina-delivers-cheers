@@ -209,25 +209,28 @@ const StoreDetail = () => {
 
         {getPackSizesForProduct(product).length > 0 && (
           <div className="mb-2.5">
-            <Select value={getSelectedPackSize(product)} onValueChange={(v) => setPackSize(product.id, v)}>
-              <SelectTrigger className="h-8 text-xs bg-background">
-                <SelectValue placeholder="Select size" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-border z-50" position="popper" sideOffset={4}>
+            <label className="sr-only" htmlFor={`size-${product.id}`}>
+              Select size for {product.name}
+            </label>
+            <div className="relative">
+              <select
+                id={`size-${product.id}`}
+                value={getSelectedPackSize(product)}
+                onChange={(e) => setPackSize(product.id, e.target.value)}
+                className="h-8 w-full appearance-none rounded-md border border-input bg-background px-3 pr-8 text-xs text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20"
+              >
                 {getPackSizesForProduct(product).map((size) => {
                   const storedPrice = packPrices.find(bp => bp.product_id === product.id && bp.pack_size === size.value && !bp.is_hidden);
                   const sizePrice = storedPrice ? Number(storedPrice.price) : Number(product.price) * size.multiplier;
                   return (
-                    <SelectItem key={size.value} value={size.value} className="text-xs">
-                      <span className="flex items-center justify-between gap-4 w-full">
-                        <span>{size.label}</span>
-                        <span className="text-primary font-semibold">${sizePrice.toFixed(2)}</span>
-                      </span>
-                    </SelectItem>
+                    <option key={size.value} value={size.value}>
+                      {size.label} — ${sizePrice.toFixed(2)}
+                    </option>
                   );
                 })}
-              </SelectContent>
-            </Select>
+              </select>
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted-foreground">⌄</span>
+            </div>
           </div>
         )}
 
