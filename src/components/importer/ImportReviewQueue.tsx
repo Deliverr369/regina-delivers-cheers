@@ -221,7 +221,7 @@ const ImportReviewQueue = ({ sessionId, sessionIds }: Props) => {
         setDrafts(normalized);
         setLoading(false);
       });
-  }, [sessionId]);
+  }, [sessionId, sessionIds]);
 
   const filtered = useMemo(() => {
     return drafts.filter((draft) => {
