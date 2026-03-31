@@ -77,6 +77,7 @@ const DashboardImporter = () => {
 
     const aggregate = { totalScanned: 0, new: 0, possible_match: 0, exact_match: 0 };
     let lastSessionId: string | null = null;
+    const collectedSessionIds: string[] = [];
 
     for (let i = 0; i < urls.length; i++) {
       const entry = urls[i];
