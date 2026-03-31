@@ -304,7 +304,7 @@ const DashboardImporter = () => {
         </TabsContent>
 
         <TabsContent value="review" className="mt-4">
-          <ImportReviewQueue sessionId={activeSessionId} onSessionChange={setActiveSessionId} />
+          <ImportReviewQueue sessionId={activeSessionId} sessionIds={activeSessionIds} onSessionChange={setActiveSessionId} />
         </TabsContent>
 
         <TabsContent value="history" className="mt-4">
