@@ -90,8 +90,7 @@ const StoreDetail = () => {
     },
   });
 
-  const productsWithPacks = products.filter(p => PACK_SIZES_BY_CATEGORY[p.category].length > 0);
-  const productIdsWithPacks = productsWithPacks.map(p => p.id);
+  const productIdsWithPacks = products.map(p => p.id);
   const { data: packPrices = [] } = useQuery<PackPrice[]>({
     queryKey: ["product_pack_prices", productIdsWithPacks],
     queryFn: async () => {
