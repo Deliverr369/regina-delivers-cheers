@@ -100,7 +100,7 @@ const REVIEW_BADGES: Record<string, { label: string; className: string }> = {
   skipped: { label: "Skipped", className: "bg-muted text-muted-foreground" },
 };
 
-const CATEGORY_OPTIONS = ["beer", "wine", "spirits", "smokes"] as const;
+const CATEGORY_OPTIONS = ["beer", "wine", "spirits", "ciders_seltzers", "smokes"] as const;
 const QUICK_SIZE_OPTIONS = [
   "1 Tall Can",
   "4 Pack",
