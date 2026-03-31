@@ -173,9 +173,24 @@ const StoreDetail = () => {
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ["products", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").eq("store_id", id).eq("in_stock", true);
-      if (error) throw error;
-      return data;
+      // Fetch all products in batches to avoid the 1000-row default limit
+      let allProducts: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("store_id", id!)
+          .eq("in_stock", true)
+          .range(from, from + batchSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allProducts = allProducts.concat(data);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      return allProducts;
     },
   });
 
