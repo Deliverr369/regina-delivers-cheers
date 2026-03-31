@@ -823,9 +823,9 @@ function BulkEditDraftForm({
             <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="no_change">No change</SelectItem>
-              {CATEGORY_OPTIONS.map((category) => (
-                <SelectItem key={category} value={category} className="capitalize">
-                  {category}
+              {CATEGORY_OPTIONS.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat === "ciders_seltzers" ? "Ciders & Seltzers" : cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </SelectItem>
               ))}
             </SelectContent>
