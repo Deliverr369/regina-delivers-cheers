@@ -100,7 +100,10 @@ const DashboardImporter = () => {
         aggregate.new += data.matchSummary?.new || 0;
         aggregate.possible_match += data.matchSummary?.possible_match || 0;
         aggregate.exact_match += data.matchSummary?.exact_match || 0;
-        lastSessionId = data.sessionId;
+        if (data.sessionId) {
+          lastSessionId = data.sessionId;
+          collectedSessionIds.push(data.sessionId);
+        }
       } catch (err: any) {
         console.error(`Scan error for URL ${i + 1}:`, err);
         setUrlStatus(i, "error", err.message || "Failed");
