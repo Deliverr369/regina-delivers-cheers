@@ -276,72 +276,88 @@ const StoreDetail = () => {
     toast({ title: "Added to cart", description: `${displayName} added` });
   };
 
-  const ProductCard = ({ product }: { product: typeof products[0] }) => (
-    <div className="group bg-card rounded-xl border border-border overflow-hidden card-hover">
-      <div className="aspect-square overflow-hidden bg-muted/30 relative">
-        <img
-          src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-        />
-        {product.size && (
-          <span className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm text-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border">
-            {product.size}
-          </span>
-        )}
-      </div>
-      <div className="p-3.5">
-        <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2 leading-snug">{product.name}</h4>
+  const ProductCard = ({ product }: { product: typeof products[0] }) => {
+    const sizes = getPackSizesForProduct(product);
+    const selectedSize = getSelectedPackSize(product);
+    const hasSizes = sizes.length > 0;
+    const hasMultipleSizes = sizes.length > 1;
 
-        {getPackSizesForProduct(product).length > 0 && (
-          <div className="mb-2.5">
-            <label className="sr-only" htmlFor={`size-${product.id}`}>
-              Select size for {product.name}
-            </label>
-            <div className="relative">
-              <select
-                id={`size-${product.id}`}
-                value={getSelectedPackSize(product)}
-                onChange={(e) => setPackSize(product.id, e.target.value)}
-                className="h-8 w-full appearance-none rounded-md border border-input bg-background px-3 pr-8 text-xs text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20"
-              >
-                {getPackSizesForProduct(product).map((size) => {
-                  const storedPrice = packPrices.find(bp => bp.product_id === product.id && bp.pack_size === size.value && !bp.is_hidden);
-                  const sizePrice = storedPrice ? Number(storedPrice.price) : Number(product.price) * size.multiplier;
-                  return (
-                    <option key={size.value} value={size.value}>
-                      {size.label} — ${sizePrice.toFixed(2)}
-                    </option>
-                  );
-                })}
-              </select>
-              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted-foreground">⌄</span>
-            </div>
-          </div>
-        )}
+    const getSizePrice = (sizeValue: string) => {
+      const storedPrice = packPrices.find(bp => bp.product_id === product.id && bp.pack_size === sizeValue && !bp.is_hidden);
+      const sizeObj = sizes.find(s => s.value === sizeValue);
+      return storedPrice ? Number(storedPrice.price) : Number(product.price) * (sizeObj?.multiplier || 1);
+    };
 
-        <p className="text-lg font-bold text-primary mb-3">${getDisplayPrice(product).toFixed(2)}</p>
+    return (
+      <div className="group bg-card rounded-xl border border-border overflow-hidden card-hover flex flex-col">
+        {/* Image */}
+        <div className="aspect-square overflow-hidden bg-muted/30 relative">
+          <img
+            src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+          />
+        </div>
 
-        <div className="flex items-center gap-2">
-          {getQuantity(product.id) > 0 ? (
-            <div className="flex items-center gap-1.5 flex-1">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(product.id, -1)}>
-                <Minus className="h-3.5 w-3.5" />
-              </Button>
-              <span className="font-medium w-7 text-center text-sm">{getQuantity(product.id)}</span>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(product.id, 1)}>
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ) : (
-            <Button className="flex-1 h-9 text-sm rounded-lg font-medium" onClick={() => handleAddToCart(product)}>
-              <ShoppingCart className="h-3.5 w-3.5 mr-1.5" /> Add
-            </Button>
+        {/* Content */}
+        <div className="p-3.5 flex flex-col flex-1 gap-2">
+          <h4 className="font-medium text-foreground text-sm line-clamp-2 leading-snug">{product.name}</h4>
+
+          {/* Size Selection */}
+          {hasSizes && !hasMultipleSizes && (
+            <span className="inline-flex items-center self-start text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/60 tracking-wide">
+              {sizes[0].label}
+            </span>
           )}
+
+          {hasMultipleSizes && (
+            <div className="flex flex-wrap gap-1.5">
+              {sizes.map((size) => {
+                const isSelected = selectedSize === size.value;
+                return (
+                  <button
+                    key={size.value}
+                    onClick={() => setPackSize(product.id, size.value)}
+                    className={`
+                      text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all duration-200
+                      ${isSelected
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground"
+                      }
+                    `}
+                  >
+                    {size.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Price */}
+          <p className="text-lg font-bold text-primary mt-auto">${getDisplayPrice(product).toFixed(2)}</p>
+
+          {/* Cart Controls */}
+          <div className="flex items-center gap-2">
+            {getQuantity(product.id) > 0 ? (
+              <div className="flex items-center gap-1.5 flex-1">
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQuantity(product.id, -1)}>
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
+                <span className="font-semibold w-7 text-center text-sm">{getQuantity(product.id)}</span>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQuantity(product.id, 1)}>
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Button className="flex-1 h-9 text-sm rounded-lg font-medium" onClick={() => handleAddToCart(product)}>
+                <ShoppingCart className="h-3.5 w-3.5 mr-1.5" /> Add
+              </Button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (storeLoading) {
     return (
