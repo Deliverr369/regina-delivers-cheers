@@ -89,6 +89,8 @@ const getWineSubcategory = (productName: string): string => {
   if (["gruber roschitz", "sattlerhof", "laurenz z", "grüner veltliner", "gruner veltliner", "johanneshof reinisch", "markus huber", "huber sparkling", "huber terrassen", "huber vision", "hiedler", "prieler", "blaufrankisch", "zweigelt"].some(k => n.includes(k))) return "austria";
   // Portugal
   if (["animus douro", "anjos de portugal", "aveleda", "blandy", "casal garcia", "catedral reserva dao", "julia kemper", "mateus rose", "quinta da aveleda", "silk & spice", "silk and spice", "sogrape gazela", "taylor 20 year", "taylor late bottled"].some(k => n.includes(k)) || n.includes("vinho verde") || n.includes("madeira") || n.includes("port") && (n.includes("taylor") || n.includes("tawny"))) return "portugal";
+  // South Africa
+  if (["beachhouse", "bellingham", "constantia uitsig", "glenelly", "inception deep layered", "jam jar sweet", "ken forrester", "kwv ", "nederburg", "the wolftrap", "two oceans", "vinecrafter", "wild olive chenin"].some(k => n.includes(k)) || n.includes("pinotage")) return "south_africa";
   // Argentina
   if (["malbec", "torront", "1884", "alamos", "alma negra", "argento", "catena", "clos de los siete", "cuma", "don david", "doña paula", "dona paula", "escorihuela", "finca las moras", "finca los primos", "graffigna", "kaiken", "la linda", "la posta", "layer cake malbec", "luigi bosca", "pascual toso", "piedra negra", "portillo", "santa julia", "tapiz", "the show malbec", "tilia", "trapiche", "trivento", "zuccardi"].some(k => n.includes(k))) return "argentina";
   return "other";
