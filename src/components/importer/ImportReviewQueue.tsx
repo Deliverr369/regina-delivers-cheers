@@ -314,8 +314,24 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
           }));
 
         if (rowsToInsert.length > 0) {
-          const { error: insertError } = await supabase.from("products").insert(rowsToInsert);
+          const { data: insertedProducts, error: insertError } = await supabase
+            .from("products")
+            .insert(rowsToInsert)
+            .select("id, store_id");
           if (insertError) throw insertError;
+
+          // Also create pack price entries so pricing shows up in the store assignment matrix
+          if (insertedProducts && insertedProducts.length > 0 && (draft.imported_price ?? 0) > 0) {
+            const packSize = normalizedVariant || "Single Bottle";
+            const packPriceRows = insertedProducts.map((p) => ({
+              product_id: p.id,
+              pack_size: packSize,
+              price: draft.imported_price ?? 0,
+              is_hidden: false,
+            }));
+            const { error: packError } = await supabase.from("product_pack_prices").insert(packPriceRows);
+            if (packError) console.error("Pack price insert error:", packError);
+          }
         }
 
         const { error: draftError } = await supabase
