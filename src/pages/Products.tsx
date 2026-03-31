@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, ChevronDown, Plus, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ const categories = [
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { addToCart } = useCart();
 
@@ -56,6 +57,39 @@ const Products = () => {
       return allProducts;
     },
   });
+
+  const { data: packPrices = [] } = useQuery({
+    queryKey: ["all-pack-prices"],
+    queryFn: async () => {
+      let allPrices: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("product_pack_prices")
+          .select("*")
+          .eq("is_hidden", false)
+          .range(from, from + batchSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allPrices = allPrices.concat(data);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      return allPrices;
+    },
+  });
+
+  // Map pack prices by product_id
+  const packPriceMap = useMemo(() => {
+    const map = new Map<string, any[]>();
+    packPrices.forEach((pp: any) => {
+      const list = map.get(pp.product_id) || [];
+      list.push(pp);
+      map.set(pp.product_id, list);
+    });
+    return map;
+  }, [packPrices]);
 
   // Deduplicate products by name+category, keeping lowest price
   const deduplicatedProducts = (() => {
@@ -103,11 +137,34 @@ const Products = () => {
     setSearchParams(newParams);
   };
 
+  const getProductSizes = (productId: string) => {
+    return packPriceMap.get(productId) || [];
+  };
+
+  const getSelectedPrice = (product: any) => {
+    const sizes = getProductSizes(product.id);
+    const selectedSize = selectedSizes[product.id];
+    if (selectedSize) {
+      const match = sizes.find((s: any) => s.pack_size === selectedSize);
+      if (match) return Number(match.price);
+    }
+    if (sizes.length > 0) return Number(sizes[0].price);
+    return Number(product.price);
+  };
+
+  const getSelectedSizeLabel = (product: any) => {
+    const sizes = getProductSizes(product.id);
+    if (sizes.length === 0) return null;
+    return selectedSizes[product.id] || sizes[0]?.pack_size;
+  };
+
   const handleAddToCart = (product: typeof products[0]) => {
+    const price = getSelectedPrice(product);
+    const sizeLabel = getSelectedSizeLabel(product);
     addToCart({
       id: product.id,
-      name: product.name,
-      price: Number(product.price),
+      name: sizeLabel ? `${product.name} (${sizeLabel})` : product.name,
+      price,
       image: product.image_url || "",
       storeId: product.stores?.id || "",
       storeName: product.stores?.name || "",
@@ -194,36 +251,67 @@ const Products = () => {
           {/* Products Grid */}
           {!isLoading && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {filteredProducts.map(({ product, storeCount }, index) => (
-                <div
-                  key={product.id}
-                  className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all animate-fade-in"
-                  style={{ animationDelay: `${index * 0.03}s` }}
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img 
-                      src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform" 
-                    />
-                  </div>
-                  <div className="p-3">
-                    <Badge variant="secondary" className="text-xs mb-2 capitalize">
-                      {product.category}
-                    </Badge>
-                    <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2">{product.name}</h4>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {storeCount > 1 ? `Available at ${storeCount} stores` : product.stores?.name}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-primary">${Number(product.price).toFixed(2)}</span>
-                      <Button size="sm" className="h-8 w-8 p-0" onClick={() => handleAddToCart(product)}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
+              {filteredProducts.map(({ product, storeCount }, index) => {
+                const sizes = getProductSizes(product.id);
+                const currentSize = selectedSizes[product.id] || sizes[0]?.pack_size;
+                const displayPrice = getSelectedPrice(product);
+
+                return (
+                  <div
+                    key={product.id}
+                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all animate-fade-in flex flex-col"
+                    style={{ animationDelay: `${index * 0.03}s` }}
+                  >
+                    <div className="aspect-square overflow-hidden">
+                      <img 
+                        src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover hover:scale-105 transition-transform" 
+                      />
+                    </div>
+                    <div className="p-3 flex flex-col flex-1">
+                      <Badge variant="secondary" className="text-xs mb-2 capitalize w-fit">
+                        {product.category}
+                      </Badge>
+                      <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2">{product.name}</h4>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        {storeCount > 1 ? `Available at ${storeCount} stores` : product.stores?.name}
+                      </p>
+                      
+                      {/* Size Selection Chips */}
+                      {sizes.length > 1 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {sizes.map((s: any) => (
+                            <button
+                              key={s.id}
+                              onClick={() => setSelectedSizes(prev => ({ ...prev, [product.id]: s.pack_size }))}
+                              className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
+                                currentSize === s.pack_size
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-muted text-muted-foreground border-border hover:border-primary/50"
+                              }`}
+                            >
+                              {s.pack_size}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {sizes.length === 1 && (
+                        <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full w-fit mb-2">
+                          {sizes[0].pack_size}
+                        </span>
+                      )}
+
+                      <div className="flex items-center justify-between mt-auto">
+                        <span className="font-bold text-primary">${displayPrice.toFixed(2)}</span>
+                        <Button size="sm" className="h-8 w-8 p-0" onClick={() => handleAddToCart(product)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
