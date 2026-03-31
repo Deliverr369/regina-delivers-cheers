@@ -65,8 +65,8 @@ const DashboardImporter = () => {
     setScanning(true);
     setTotalResults(null);
     setActiveSessionId(null);
-    // Reset statuses
-    setUrls(prev => prev.map(e => ({ ...e, status: e.url.trim() ? "idle" : "idle", error: undefined })));
+    setActiveSessionIds([]);
+    setUrls(prev => prev.map(e => ({ ...e, status: "idle", error: undefined })));
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
