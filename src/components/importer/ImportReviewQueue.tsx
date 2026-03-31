@@ -166,10 +166,11 @@ const normalizeVariantSize = (value?: string | null) => {
 
 interface Props {
   sessionId: string | null;
+  sessionIds?: string[];
   onSessionChange: (id: string | null) => void;
 }
 
-const ImportReviewQueue = ({ sessionId }: Props) => {
+const ImportReviewQueue = ({ sessionId, sessionIds }: Props) => {
   const { toast } = useToast();
   const [drafts, setDrafts] = useState<ImportDraft[]>([]);
   const [stores, setStores] = useState<StoreInfo[]>([]);
@@ -189,7 +190,8 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
   }, []);
 
   useEffect(() => {
-    if (!sessionId) {
+    const idsToFetch = sessionIds && sessionIds.length > 0 ? sessionIds : sessionId ? [sessionId] : [];
+    if (idsToFetch.length === 0) {
       setDrafts([]);
       return;
     }
@@ -198,7 +200,7 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
     supabase
       .from("import_drafts")
       .select("*")
-      .eq("session_id", sessionId)
+      .in("session_id", idsToFetch)
       .order("product_name")
       .then(({ data, error }) => {
         if (error) console.error(error);
@@ -219,7 +221,7 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
         setDrafts(normalized);
         setLoading(false);
       });
-  }, [sessionId]);
+  }, [sessionId, sessionIds]);
 
   const filtered = useMemo(() => {
     return drafts.filter((draft) => {

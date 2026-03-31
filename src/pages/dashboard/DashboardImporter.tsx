@@ -30,6 +30,7 @@ const DashboardImporter = () => {
   const [scanning, setScanning] = useState(false);
   const [currentScanIndex, setCurrentScanIndex] = useState<number | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionIds, setActiveSessionIds] = useState<string[]>([]);
   const [totalResults, setTotalResults] = useState<{ totalScanned: number; new: number; possible_match: number; exact_match: number } | null>(null);
   const [activeTab, setActiveTab] = useState("import");
 
@@ -64,8 +65,8 @@ const DashboardImporter = () => {
     setScanning(true);
     setTotalResults(null);
     setActiveSessionId(null);
-    // Reset statuses
-    setUrls(prev => prev.map(e => ({ ...e, status: e.url.trim() ? "idle" : "idle", error: undefined })));
+    setActiveSessionIds([]);
+    setUrls(prev => prev.map(e => ({ ...e, status: "idle", error: undefined })));
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -76,6 +77,7 @@ const DashboardImporter = () => {
 
     const aggregate = { totalScanned: 0, new: 0, possible_match: 0, exact_match: 0 };
     let lastSessionId: string | null = null;
+    const collectedSessionIds: string[] = [];
 
     for (let i = 0; i < urls.length; i++) {
       const entry = urls[i];
@@ -98,7 +100,10 @@ const DashboardImporter = () => {
         aggregate.new += data.matchSummary?.new || 0;
         aggregate.possible_match += data.matchSummary?.possible_match || 0;
         aggregate.exact_match += data.matchSummary?.exact_match || 0;
-        lastSessionId = data.sessionId;
+        if (data.sessionId) {
+          lastSessionId = data.sessionId;
+          collectedSessionIds.push(data.sessionId);
+        }
       } catch (err: any) {
         console.error(`Scan error for URL ${i + 1}:`, err);
         setUrlStatus(i, "error", err.message || "Failed");
@@ -107,6 +112,7 @@ const DashboardImporter = () => {
 
     setTotalResults(aggregate);
     if (lastSessionId) setActiveSessionId(lastSessionId);
+    setActiveSessionIds(collectedSessionIds);
     setCurrentScanIndex(null);
     setScanning(false);
 
@@ -298,7 +304,7 @@ const DashboardImporter = () => {
         </TabsContent>
 
         <TabsContent value="review" className="mt-4">
-          <ImportReviewQueue sessionId={activeSessionId} onSessionChange={setActiveSessionId} />
+          <ImportReviewQueue sessionId={activeSessionId} sessionIds={activeSessionIds} onSessionChange={setActiveSessionId} />
         </TabsContent>
 
         <TabsContent value="history" className="mt-4">
