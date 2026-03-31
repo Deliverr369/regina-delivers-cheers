@@ -240,10 +240,141 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
     [drafts],
   );
 
+  const syncSessionSummary = async (nextDrafts: ImportDraft[], failedCount = 0) => {
+    if (!sessionId) return;
+
+    const approvedCount = nextDrafts.filter((draft) => draft.review_status === "approved").length;
+    const importedCount = nextDrafts.filter((draft) => draft.review_status === "imported").length;
+    const rejectedCount = nextDrafts.filter((draft) => draft.review_status === "rejected").length;
+
+    await supabase
+      .from("import_sessions")
+      .update({
+        status: approvedCount > 0 ? "review" : importedCount + rejectedCount > 0 ? "completed" : "review",
+        approved_count: approvedCount,
+        imported_count: importedCount,
+        rejected_count: rejectedCount,
+        failed_count: failedCount,
+      })
+      .eq("id", sessionId);
+  };
+
+  const importDraftsToInventory = async (draftsToImport: ImportDraft[]) => {
+    const importedIds = new Set<string>();
+    const errors: string[] = [];
+    let imported = 0;
+    let failed = 0;
+
+    const availableStoreIds = stores.length
+      ? stores.map((store) => store.id)
+      : ((await supabase.from("stores").select("id")).data || []).map((store) => store.id);
+
+    for (const draft of draftsToImport) {
+      try {
+        const category = CATEGORY_OPTIONS.includes((draft.category || "") as (typeof CATEGORY_OPTIONS)[number])
+          ? (draft.category as "beer" | "wine" | "spirits" | "smokes")
+          : "beer";
+
+        const normalizedName = draft.product_name.trim();
+        const normalizedVariant = normalizeVariantSize(draft.size || draft.variant);
+        const imageUrl = draft.image_action !== "keep_current" ? resolveImportedImageUrl(draft.imported_image_url) : null;
+        const targetStoreIds = draft.assigned_store_ids?.length ? draft.assigned_store_ids : availableStoreIds;
+
+        if (targetStoreIds.length === 0) {
+          errors.push(`${draft.product_name}: No stores available`);
+          failed += 1;
+          continue;
+        }
+
+        let existingQuery = supabase
+          .from("products")
+          .select("store_id")
+          .in("store_id", targetStoreIds)
+          .eq("category", category)
+          .ilike("name", normalizedName);
+
+        existingQuery = normalizedVariant ? existingQuery.eq("size", normalizedVariant) : existingQuery.is("size", null);
+
+        const { data: existingRows, error: existingError } = await existingQuery;
+        if (existingError) throw existingError;
+
+        const existingStoreIds = new Set((existingRows || []).map((row) => row.store_id));
+        const rowsToInsert = targetStoreIds
+          .filter((storeId) => !existingStoreIds.has(storeId))
+          .map((store_id) => ({
+            name: normalizedName,
+            category,
+            description: draft.description || null,
+            price: draft.imported_price ?? 0,
+            size: normalizedVariant,
+            image_url: imageUrl,
+            store_id,
+            in_stock: draft.availability !== "out_of_stock",
+            is_hidden: false,
+          }));
+
+        if (rowsToInsert.length > 0) {
+          const { error: insertError } = await supabase.from("products").insert(rowsToInsert);
+          if (insertError) throw insertError;
+        }
+
+        const { error: draftError } = await supabase
+          .from("import_drafts")
+          .update({ review_status: "imported" })
+          .eq("id", draft.id);
+
+        if (draftError) throw draftError;
+
+        importedIds.add(draft.id);
+        imported += 1;
+      } catch (err: any) {
+        console.error("Import error for", draft.product_name, err);
+        errors.push(`${draft.product_name}: ${err?.message || "Unknown error"}`);
+        failed += 1;
+      }
+    }
+
+    return { importedIds, imported, failed, errors };
+  };
+
   const updateDraftStatus = async (ids: string[], status: string) => {
-    await supabase.from("import_drafts").update({ review_status: status }).in("id", ids);
-    setDrafts((prev) => prev.map((draft) => (ids.includes(draft.id) ? { ...draft, review_status: status } : draft)));
+    const { error } = await supabase.from("import_drafts").update({ review_status: status }).in("id", ids);
+    if (error) {
+      toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const nextDrafts = drafts.map((draft) => (ids.includes(draft.id) ? { ...draft, review_status: status } : draft));
+
+    if (status !== "approved") {
+      setDrafts(nextDrafts);
+      setSelectedIds(new Set());
+      await syncSessionSummary(nextDrafts);
+      return;
+    }
+
+    setImporting(true);
+    const approvalTargets = nextDrafts.filter((draft) => ids.includes(draft.id));
+    const result = await importDraftsToInventory(approvalTargets);
+    const finalDrafts = nextDrafts.map((draft) =>
+      result.importedIds.has(draft.id) ? { ...draft, review_status: "imported" } : draft,
+    );
+
+    setDrafts(finalDrafts);
     setSelectedIds(new Set());
+    setImporting(false);
+    await syncSessionSummary(finalDrafts, result.failed);
+
+    if (result.failed > 0) {
+      toast({
+        title: "Approved with errors",
+        description: `${result.imported} imported, ${result.failed} failed.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({ title: "Approved and imported", description: `${result.imported} product(s) added to inventory.` });
   };
 
   const saveDraftEdit = async (draft: ImportDraft) => {
@@ -342,77 +473,21 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
     }
 
     setImporting(true);
-    let imported = 0;
-    let failed = 0;
-    const errors: string[] = [];
-    const allStoreIds = stores.map((store) => store.id);
+    const result = await importDraftsToInventory(approved);
+    const nextDrafts = drafts.map((draft) =>
+      result.importedIds.has(draft.id) ? { ...draft, review_status: "imported" } : draft,
+    );
 
-    for (const draft of approved) {
-      try {
-        const category = CATEGORY_OPTIONS.includes((draft.category || "") as (typeof CATEGORY_OPTIONS)[number])
-          ? (draft.category as "beer" | "wine" | "spirits" | "smokes")
-          : "beer";
-
-        const storeIds = draft.assigned_store_ids?.length ? draft.assigned_store_ids : allStoreIds;
-        if (storeIds.length === 0) {
-          errors.push(`${draft.product_name}: No stores available`);
-          failed += 1;
-          continue;
-        }
-
-        const normalizedVariant = normalizeVariantSize(draft.size || draft.variant);
-        const imageUrl = draft.image_action !== "keep_current" ? resolveImportedImageUrl(draft.imported_image_url) : null;
-
-        for (const storeId of storeIds) {
-          const { error } = await supabase.from("products").insert({
-            name: draft.product_name,
-            category,
-            description: draft.description || null,
-            price: draft.imported_price || 0,
-            size: normalizedVariant,
-            image_url: imageUrl,
-            store_id: storeId,
-            in_stock: draft.availability !== "out_of_stock",
-            is_hidden: false,
-          });
-
-          if (error) {
-            console.error("Insert error for", draft.product_name, "store", storeId, error);
-            throw error;
-          }
-        }
-
-        await supabase.from("import_drafts").update({ review_status: "imported" }).eq("id", draft.id);
-        imported += 1;
-      } catch (err: any) {
-        console.error("Import error for", draft.product_name, err);
-        errors.push(`${draft.product_name}: ${err?.message || "Unknown error"}`);
-        failed += 1;
-      }
-    }
-
-    if (sessionId) {
-      await supabase
-        .from("import_sessions")
-        .update({
-          status: "completed",
-          imported_count: imported,
-          failed_count: failed,
-          approved_count: approved.length,
-          rejected_count: drafts.filter((draft) => draft.review_status === "rejected").length,
-        })
-        .eq("id", sessionId);
-    }
-
-    setDrafts((prev) => prev.map((draft) => (draft.review_status === "approved" ? { ...draft, review_status: "imported" } : draft)));
+    setDrafts(nextDrafts);
     setImporting(false);
     setConfirmImport(false);
+    await syncSessionSummary(nextDrafts, result.failed);
 
-    if (failed > 0) {
-      console.error("Import errors:", errors);
+    if (result.failed > 0) {
+      console.error("Import errors:", result.errors);
       toast({
         title: "Import complete with errors",
-        description: `${imported} imported, ${failed} failed. Check console for details.`,
+        description: `${result.imported} imported, ${result.failed} failed. Check console for details.`,
         variant: "destructive",
       });
       return;
@@ -420,7 +495,7 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
 
     toast({
       title: "Import complete",
-      description: `${imported} product(s) imported successfully`,
+      description: `${result.imported} product(s) imported successfully`,
     });
   };
 
@@ -491,7 +566,7 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
             <Edit3 className="h-3 w-3 mr-1" />Bulk Edit
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-[11px] text-emerald-600" onClick={() => updateDraftStatus(Array.from(selectedIds), "approved")}>
-            <Check className="h-3 w-3 mr-1" />Approve
+            <Check className="h-3 w-3 mr-1" />Approve + Import
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-[11px] text-destructive" onClick={() => updateDraftStatus(Array.from(selectedIds), "rejected")}>
             <X className="h-3 w-3 mr-1" />Reject
@@ -593,6 +668,7 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
                           className="h-7 w-7 text-emerald-600 hover:bg-emerald-500/10"
                           onClick={() => updateDraftStatus([draft.id], "approved")}
                           disabled={draft.review_status === "imported"}
+                          title="Approve and import"
                         >
                           <Check className="h-3.5 w-3.5" />
                         </Button>
@@ -621,7 +697,7 @@ const ImportReviewQueue = ({ sessionId }: Props) => {
       {stats.approved > 0 && (
         <div className="flex justify-end">
           <Button onClick={() => setConfirmImport(true)} className="gap-2">
-            Import {stats.approved} Approved Product(s)
+            Import Remaining {stats.approved} Approved Product(s)
           </Button>
         </div>
       )}
