@@ -14,6 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
+      import_drafts: {
+        Row: {
+          assigned_store_ids: string[] | null
+          availability: string | null
+          brand: string | null
+          category: string | null
+          compare_at_price: number | null
+          created_at: string
+          description: string | null
+          id: string
+          image_action: string | null
+          imported_image_url: string | null
+          imported_price: number | null
+          match_status: string
+          matched_product_id: string | null
+          price_action: string | null
+          product_name: string
+          review_notes: string | null
+          review_status: string
+          session_id: string
+          size: string | null
+          sku: string | null
+          source_url: string | null
+          updated_at: string
+          variant: string | null
+        }
+        Insert: {
+          assigned_store_ids?: string[] | null
+          availability?: string | null
+          brand?: string | null
+          category?: string | null
+          compare_at_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_action?: string | null
+          imported_image_url?: string | null
+          imported_price?: number | null
+          match_status?: string
+          matched_product_id?: string | null
+          price_action?: string | null
+          product_name: string
+          review_notes?: string | null
+          review_status?: string
+          session_id: string
+          size?: string | null
+          sku?: string | null
+          source_url?: string | null
+          updated_at?: string
+          variant?: string | null
+        }
+        Update: {
+          assigned_store_ids?: string[] | null
+          availability?: string | null
+          brand?: string | null
+          category?: string | null
+          compare_at_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_action?: string | null
+          imported_image_url?: string | null
+          imported_price?: number | null
+          match_status?: string
+          matched_product_id?: string | null
+          price_action?: string | null
+          product_name?: string
+          review_notes?: string | null
+          review_status?: string
+          session_id?: string
+          size?: string | null
+          sku?: string | null
+          source_url?: string | null
+          updated_at?: string
+          variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_drafts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "import_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_sessions: {
+        Row: {
+          approved_count: number | null
+          created_at: string
+          failed_count: number | null
+          id: string
+          import_type: string
+          imported_count: number | null
+          rejected_count: number | null
+          source_domain: string | null
+          source_name: string | null
+          source_url: string
+          status: string
+          total_scanned: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_count?: number | null
+          created_at?: string
+          failed_count?: number | null
+          id?: string
+          import_type?: string
+          imported_count?: number | null
+          rejected_count?: number | null
+          source_domain?: string | null
+          source_name?: string | null
+          source_url: string
+          status?: string
+          total_scanned?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_count?: number | null
+          created_at?: string
+          failed_count?: number | null
+          id?: string
+          import_type?: string
+          imported_count?: number | null
+          rejected_count?: number | null
+          source_domain?: string | null
+          source_name?: string | null
+          source_url?: string
+          status?: string
+          total_scanned?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string

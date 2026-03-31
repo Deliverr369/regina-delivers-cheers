@@ -29,6 +29,7 @@ import DashboardUsers from "./pages/dashboard/DashboardUsers";
 import DashboardBanners from "./pages/dashboard/DashboardBanners";
 import DashboardBulkImages from "./pages/dashboard/DashboardBulkImages";
 import DashboardInventory from "./pages/dashboard/DashboardInventory";
+import DashboardImporter from "./pages/dashboard/DashboardImporter";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
                 <Route path="banners" element={<DashboardBanners />} />
                 <Route path="bulk-images" element={<DashboardBulkImages />} />
                 <Route path="inventory" element={<DashboardInventory />} />
+                <Route path="importer" element={<DashboardImporter />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
