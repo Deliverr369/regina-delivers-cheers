@@ -104,12 +104,30 @@ const StoreDetail = () => {
   });
 
   const getAvailablePackSizes = (productId: string, category: keyof typeof PACK_SIZES_BY_CATEGORY) => {
-    const baseSizes = PACK_SIZES_BY_CATEGORY[category];
-    const productPackPrices = packPrices.filter(pp => pp.product_id === productId);
-    return baseSizes.filter(size => {
-      const packPrice = productPackPrices.find(pp => pp.pack_size === size.value);
-      return packPrice && !packPrice.is_hidden;
-    });
+    const productPackPrices = packPrices.filter(pp => pp.product_id === productId && !pp.is_hidden);
+    
+    // If product has direct pack prices (like "750 mL", "1.14L"), use those directly
+    if (productPackPrices.length > 0) {
+      const baseSizes = PACK_SIZES_BY_CATEGORY[category];
+      const matchedFromBase = baseSizes.filter(size => 
+        productPackPrices.some(pp => pp.pack_size === size.value)
+      );
+      
+      // Also include any pack prices that don't match predefined sizes (e.g. "750 mL", "1.14L", "1.75L")
+      const unmatchedPrices = productPackPrices.filter(pp => 
+        !baseSizes.some(s => s.value === pp.pack_size)
+      );
+      
+      const dynamicSizes = unmatchedPrices.map(pp => ({
+        value: pp.pack_size,
+        label: pp.pack_size,
+        multiplier: 1,
+      }));
+      
+      return [...matchedFromBase, ...dynamicSizes];
+    }
+    
+    return [];
   };
 
   const productsByCategory = {
