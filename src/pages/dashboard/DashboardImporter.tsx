@@ -112,6 +112,7 @@ const DashboardImporter = () => {
 
     setTotalResults(aggregate);
     if (lastSessionId) setActiveSessionId(lastSessionId);
+    setActiveSessionIds(collectedSessionIds);
     setCurrentScanIndex(null);
     setScanning(false);
 
