@@ -166,9 +166,19 @@ const StoreDetail = () => {
     queryKey: ["product_pack_prices", productIdsWithPacks],
     queryFn: async () => {
       if (productIdsWithPacks.length === 0) return [];
-      const { data, error } = await supabase.from("product_pack_prices").select("product_id, pack_size, price, is_hidden").in("product_id", productIdsWithPacks);
-      if (error) throw error;
-      return (data || []) as PackPrice[];
+      // Fetch all pack prices in batches to avoid the 1000-row default limit
+      const allPrices: PackPrice[] = [];
+      const batchSize = 200;
+      for (let i = 0; i < productIdsWithPacks.length; i += batchSize) {
+        const batch = productIdsWithPacks.slice(i, i + batchSize);
+        const { data, error } = await supabase
+          .from("product_pack_prices")
+          .select("product_id, pack_size, price, is_hidden")
+          .in("product_id", batch);
+        if (error) throw error;
+        if (data) allPrices.push(...(data as PackPrice[]));
+      }
+      return allPrices;
     },
     enabled: productIdsWithPacks.length > 0,
   });
