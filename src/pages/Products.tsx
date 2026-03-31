@@ -37,19 +37,22 @@ const Products = () => {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["all-products"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          stores (
-            id,
-            name
-          )
-        `)
-        .eq("in_stock", true);
-      
-      if (error) throw error;
-      return data;
+      let allProducts: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("products")
+          .select(`*, stores (id, name)`)
+          .eq("in_stock", true)
+          .range(from, from + batchSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allProducts = allProducts.concat(data);
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      return allProducts;
     },
   });
 
