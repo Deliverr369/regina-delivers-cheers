@@ -394,6 +394,19 @@ const StoreDetail = () => {
                 .filter(([category]) => availableCategories.includes(category))
                 .map(([category, items]) => (
                 <TabsContent key={category} value={category}>
+                  {category === "spirits" && items.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {SPIRITS_SUBCATEGORIES.map((sub) => {
+                        const count = sub.value === "all" ? items.length : items.filter(p => getSpiritsSubcategory(p.name) === sub.value).length;
+                        if (sub.value !== "all" && count === 0) return null;
+                        return (
+                          <Button key={sub.value} variant={spiritsSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setSpiritsSubcategory(sub.value)} className="rounded-full text-xs h-8">
+                            {sub.label} ({count})
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
                   {category === "smokes" && items.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-5">
                       {SMOKES_SUBCATEGORIES.map((sub) => {
@@ -409,7 +422,9 @@ const StoreDetail = () => {
                   )}
                   {items.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                      {(category === "smokes" && smokesSubcategory !== "all"
+                      {(category === "spirits" && spiritsSubcategory !== "all"
+                        ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
+                        : category === "smokes" && smokesSubcategory !== "all"
                         ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
                         : items
                       ).map((product) => (
