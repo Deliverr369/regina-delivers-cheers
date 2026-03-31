@@ -53,16 +53,34 @@ const Products = () => {
     },
   });
 
-  const filteredProducts = products
-    .filter((product) => {
+  // Deduplicate products by name+category, keeping lowest price
+  const deduplicatedProducts = (() => {
+    const map = new Map<string, { product: typeof products[0]; storeCount: number }>();
+    products.forEach((p) => {
+      const key = `${p.name.toLowerCase().trim()}::${p.category}`;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, { product: p, storeCount: 1 });
+      } else {
+        existing.storeCount++;
+        if (Number(p.price) < Number(existing.product.price)) {
+          existing.product = p;
+        }
+      }
+    });
+    return Array.from(map.values());
+  })();
+
+  const filteredProducts = deduplicatedProducts
+    .filter(({ product }) => {
       const matchesCategory = activeCategory === "all" || product.category === activeCategory;
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     })
     .sort((a, b) => {
-      if (sortBy === "price-low") return Number(a.price) - Number(b.price);
-      if (sortBy === "price-high") return Number(b.price) - Number(a.price);
-      return a.name.localeCompare(b.name);
+      if (sortBy === "price-low") return Number(a.product.price) - Number(b.product.price);
+      if (sortBy === "price-high") return Number(b.product.price) - Number(a.product.price);
+      return a.product.name.localeCompare(b.product.name);
     });
 
   const handleCategoryChange = (category: string) => {
