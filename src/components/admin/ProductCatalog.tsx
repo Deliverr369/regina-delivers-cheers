@@ -192,33 +192,31 @@ const ProductCatalog = ({ onEdit }: Props) => {
     <>
       <input ref={imageUploadRef} type="file" accept="image/*" className="hidden" onChange={handleGroupImageUpload} />
 
-      {/* Toolbar */}
-      <Card className="border-border/50 mb-5">
-        <CardContent className="py-3 px-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map(cat => (
-                    <SelectItem key={cat} value={cat}>{CATEGORY_EMOJI[cat]} {cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={() => setCreateOpen(true)} className="rounded-xl h-9 whitespace-nowrap">
-                <Plus className="h-4 w-4 mr-1.5" />Add Product
-              </Button>
-            </div>
+      {/* Category Tabs */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        {[{ value: "all", label: "All", emoji: "📦" }, ...categories.map(cat => ({ value: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1), emoji: CATEGORY_EMOJI[cat] }))].map(tab => (
+          <button
+            key={tab.value}
+            onClick={() => setCategoryFilter(tab.value)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              categoryFilter === tab.value
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            {tab.emoji} {tab.label}
+          </button>
+        ))}
+        <div className="ml-auto flex gap-2 items-center">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 w-[250px]" />
           </div>
-        </CardContent>
-      </Card>
+          <Button onClick={() => setCreateOpen(true)} className="rounded-xl h-9 whitespace-nowrap">
+            <Plus className="h-4 w-4 mr-1.5" />Add Product
+          </Button>
+        </div>
+      </div>
 
       {/* Stats */}
       <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
