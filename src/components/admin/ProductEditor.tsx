@@ -52,6 +52,13 @@ const PACK_SIZES_BY_CATEGORY: Record<string, { value: string; label: string }[]>
     { value: "2-pack", label: "2-Pack" },
     { value: "case-6", label: "Case of 6" },
   ],
+  ciders_seltzers: [
+    { value: "single-can", label: "Single Can" },
+    { value: "4-pack", label: "4 Pack" },
+    { value: "6-pack", label: "6 Pack" },
+    { value: "12-pack", label: "12 Pack" },
+    { value: "24-pack", label: "24 Pack" },
+  ],
   smokes: [],
 };
 
