@@ -157,7 +157,11 @@ const StoreDetail = () => {
   };
 
   const setPackSize = (productId: string, value: string) => {
+    const scrollY = window.scrollY;
     setSelectedPackSizes(prev => ({ ...prev, [productId]: value }));
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollY, behavior: "auto" });
+    });
   };
 
   const getDisplayPrice = (product: typeof products[0]) => {
