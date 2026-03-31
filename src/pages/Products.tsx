@@ -190,7 +190,7 @@ const Products = () => {
           {/* Products Grid */}
           {!isLoading && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map(({ product, storeCount }, index) => (
                 <div
                   key={product.id}
                   className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all animate-fade-in"
@@ -208,7 +208,9 @@ const Products = () => {
                       {product.category}
                     </Badge>
                     <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2">{product.name}</h4>
-                    <p className="text-xs text-muted-foreground mb-2">{product.stores?.name}</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {storeCount > 1 ? `Available at ${storeCount} stores` : product.stores?.name}
+                    </p>
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-primary">${Number(product.price).toFixed(2)}</span>
                       <Button size="sm" className="h-8 w-8 p-0" onClick={() => handleAddToCart(product)}>
