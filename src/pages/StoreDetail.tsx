@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-const PACK_SIZES_BY_CATEGORY = {
+const PACK_SIZES_BY_CATEGORY: Record<string, { value: string; label: string; multiplier: number }[]> = {
   beer: [
     { value: "1-tall", label: "1 Tall Can", multiplier: 1 },
     { value: "6-pack", label: "6 Pack", multiplier: 6 },
@@ -32,7 +32,14 @@ const PACK_SIZES_BY_CATEGORY = {
     { value: "2-pack", label: "2-Pack", multiplier: 2 },
     { value: "case-6", label: "Case of 6", multiplier: 6 },
   ],
-  smokes: [] as { value: string; label: string; multiplier: number }[],
+  ciders_seltzers: [
+    { value: "single", label: "Single", multiplier: 1 },
+    { value: "4-pack", label: "4 Pack", multiplier: 4 },
+    { value: "6-pack", label: "6 Pack", multiplier: 6 },
+    { value: "12-pack", label: "12 Pack", multiplier: 12 },
+    { value: "24-pack", label: "24 Pack", multiplier: 24 },
+  ],
+  smokes: [],
 };
 
 interface PackPrice {
@@ -221,7 +228,7 @@ const StoreDetail = () => {
     
     // If product has direct pack prices (like "750 mL", "1.14L"), use those directly
     if (productPackPrices.length > 0) {
-      const baseSizes = PACK_SIZES_BY_CATEGORY[category];
+      const baseSizes = PACK_SIZES_BY_CATEGORY[category] || [];
       const matchedFromBase = baseSizes.filter(size => 
         productPackPrices.some(pp => pp.pack_size === size.value)
       );
