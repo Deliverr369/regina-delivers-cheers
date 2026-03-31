@@ -31,7 +31,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify user is admin
     const supabase = createClient(supabaseUrl, supabaseKey);
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
@@ -92,7 +91,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Scrape with Firecrawl
+    // Scrape with Firecrawl - request both markdown AND html to capture images
     console.log("Scraping URL:", formattedUrl);
     const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
@@ -102,7 +101,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: ["markdown", "links"],
+        formats: ["markdown", "html", "links"],
         onlyMainContent: true,
       }),
     });
@@ -118,9 +117,31 @@ Deno.serve(async (req) => {
     }
 
     const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
+    const html = scrapeData.data?.html || scrapeData.html || "";
     const links = scrapeData.data?.links || scrapeData.links || [];
 
-    // Use Lovable AI to extract products from markdown
+    // Extract image URLs from the HTML to pass to the AI
+    const imgMatches: string[] = [];
+    const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+    let match;
+    while ((match = imgRegex.exec(html)) !== null) {
+      const src = match[1];
+      if (src && !src.includes("data:image/svg") && !src.includes("pixel") && !src.includes("spacer")) {
+        imgMatches.push(src);
+      }
+    }
+
+    // Also extract from srcset
+    const srcsetRegex = /srcset=["']([^"']+)["']/gi;
+    while ((match = srcsetRegex.exec(html)) !== null) {
+      const urls = match[1].split(",").map(s => s.trim().split(/\s+/)[0]).filter(Boolean);
+      imgMatches.push(...urls);
+    }
+
+    const uniqueImages = [...new Set(imgMatches)].slice(0, 100);
+    console.log(`Found ${uniqueImages.length} images in HTML`);
+
+    // Use Lovable AI to extract products
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableKey) {
       await supabase.from("import_sessions").update({ status: "failed" }).eq("id", session.id);
@@ -132,29 +153,45 @@ Deno.serve(async (req) => {
 
     const extractionPrompt = `You are a product data extractor for a liquor delivery website. Analyze the following webpage content and extract ALL product listings you can find.
 
-For each product, extract:
-- product_name: The full product name
-- brand: The brand name (e.g., Budweiser, Corona, Jack Daniels)
-- category: One of: beer, wine, spirits, smokes (best guess)
-- description: Brief description if available
-- image_url: Product image URL if found
-- price: Numeric price (just the number, no $ sign)
-- compare_at_price: Original/compare price if on sale
-- variant: Size/pack info like "24 Pack", "750ml", "1 Tall Can", "6 Pack"
-- size: Volume like "355ml", "750ml", "1L"
-- sku: SKU/product code if visible
-- availability: "in_stock" or "out_of_stock" if detectable
-- source_url: Product detail URL if found in the links
+CRITICAL RULES:
+1. Extract EVERY product you can find
+2. For image_url: Look carefully at the HTML content and image list below. Match product images by finding img tags near the product name or inside the same product card div. Use the FULL absolute URL. If the URL starts with // add https: prefix. If it starts with / add the base domain.
+3. For price: Extract numeric price without $ sign
+4. For variant/size: Look for text like "750ml", "1L", "1.14L", "375ml", "24 Pack", "12 Pack", "6 Pack", "Tall Can", "1 Tall Can", etc. Check both the product name AND nearby text.
+5. For category: classify as one of: beer, wine, spirits, smokes
+6. For brand: Extract the brand name (e.g., "Smirnoff", "Jack Daniels", "Budweiser")
 
-Return a JSON array of products. If no products found, return an empty array [].
-Only return valid JSON, no markdown formatting.
+For each product return this JSON structure:
+{
+  "product_name": "Full product name",
+  "brand": "Brand name",
+  "category": "beer|wine|spirits|smokes",
+  "description": "Brief description if available",
+  "image_url": "FULL absolute URL to product image",
+  "price": 29.99,
+  "compare_at_price": null,
+  "variant": "750ml or pack size like 24 Pack",
+  "size": "volume like 750ml, 1L, 355ml",
+  "sku": "SKU if visible",
+  "availability": "in_stock or out_of_stock",
+  "source_url": "product detail URL if found"
+}
 
-WEBPAGE CONTENT:
-${markdown.substring(0, 12000)}
+Return ONLY a valid JSON array. No markdown code fences. No explanation text.
 
-LINKS FOUND ON PAGE:
-${links.slice(0, 50).join("\n")}`;
+BASE DOMAIN: ${domain}
+BASE URL: ${formattedUrl}
 
+IMAGES FOUND ON PAGE:
+${uniqueImages.slice(0, 60).join("\n")}
+
+WEBPAGE CONTENT (MARKDOWN):
+${markdown.substring(0, 8000)}
+
+WEBPAGE HTML SNIPPET (for image matching):
+${html.substring(0, 8000)}`;
+
+    console.log("Calling AI for extraction...");
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -169,27 +206,37 @@ ${links.slice(0, 50).join("\n")}`;
     });
 
     if (!aiResponse.ok) {
-      console.error("AI extraction failed:", await aiResponse.text());
+      const errText = await aiResponse.text();
+      console.error("AI extraction failed:", errText);
       await supabase.from("import_sessions").update({ status: "failed" }).eq("id", session.id);
-      return new Response(JSON.stringify({ error: "AI extraction failed", sessionId: session.id }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "AI extraction failed", sessionId: session.id }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiData = await aiResponse.json();
     const content = aiData.choices?.[0]?.message?.content || "[]";
 
-    // Parse extracted products
     let products: any[] = [];
     try {
       const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       products = JSON.parse(cleaned);
       if (!Array.isArray(products)) products = [products];
     } catch (e) {
-      console.error("Failed to parse AI output:", content);
+      console.error("Failed to parse AI output:", content.substring(0, 500));
       products = [];
     }
+
+    console.log(`Extracted ${products.length} products`);
+
+    // Fix relative image URLs
+    const fixImageUrl = (imgUrl: string | null): string | null => {
+      if (!imgUrl) return null;
+      if (imgUrl.startsWith("//")) return `https:${imgUrl}`;
+      if (imgUrl.startsWith("/")) return `https://${domain}${imgUrl}`;
+      if (imgUrl.startsWith("http")) return imgUrl;
+      return `https://${domain}/${imgUrl}`;
+    };
 
     // Fetch existing products for matching
     const { data: existingProducts } = await supabase
@@ -197,7 +244,7 @@ ${links.slice(0, 50).join("\n")}`;
       .select("id, name, category, image_url")
       .limit(1000);
 
-    // Insert drafts with match detection
+    // Insert drafts
     const drafts = products.map((p: any) => {
       let matchStatus = "new";
       let matchedId: string | null = null;
@@ -211,7 +258,6 @@ ${links.slice(0, 50).join("\n")}`;
             matchedId = ep.id;
             break;
           }
-          // Word overlap check
           const pWords = nameClean.split(/\s+/);
           const eWords = epClean.split(/\s+/);
           const overlap = pWords.filter((w: string) => eWords.some((ew: string) => ew.includes(w) || w.includes(ew)));
@@ -222,10 +268,11 @@ ${links.slice(0, 50).join("\n")}`;
         }
       }
 
+      const imageUrl = fixImageUrl(p.image_url);
       const missingFields = [];
       if (!p.product_name) missingFields.push("name");
       if (!p.price && p.price !== 0) missingFields.push("price");
-      if (!p.image_url) missingFields.push("image");
+      if (!imageUrl) missingFields.push("image");
       if (missingFields.length > 0 && matchStatus === "new") {
         matchStatus = "missing_data";
       }
@@ -237,9 +284,9 @@ ${links.slice(0, 50).join("\n")}`;
         brand: p.brand || null,
         category: p.category || null,
         description: p.description || null,
-        imported_image_url: p.image_url || null,
-        imported_price: p.price ? parseFloat(p.price) : null,
-        compare_at_price: p.compare_at_price ? parseFloat(p.compare_at_price) : null,
+        imported_image_url: imageUrl,
+        imported_price: p.price ? parseFloat(String(p.price)) : null,
+        compare_at_price: p.compare_at_price ? parseFloat(String(p.compare_at_price)) : null,
         variant: p.variant || null,
         size: p.size || null,
         sku: p.sku || null,
@@ -257,7 +304,6 @@ ${links.slice(0, 50).join("\n")}`;
       }
     }
 
-    // Update session
     await supabase.from("import_sessions").update({
       status: "review",
       total_scanned: drafts.length,
