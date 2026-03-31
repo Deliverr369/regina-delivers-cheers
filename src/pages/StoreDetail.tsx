@@ -42,6 +42,37 @@ interface PackPrice {
   is_hidden: boolean;
 }
 
+const SPIRITS_SUBCATEGORIES = [
+  { value: "all", label: "All" },
+  { value: "vodka", label: "Vodka" },
+  { value: "whisky", label: "Whisky" },
+  { value: "rum", label: "Rum" },
+  { value: "tequila", label: "Tequila" },
+  { value: "gin", label: "Gin" },
+  { value: "brandy", label: "Brandy & Cognac" },
+  { value: "liqueur", label: "Liqueurs" },
+  { value: "other", label: "Other" },
+];
+
+const getSpiritsSubcategory = (productName: string): string => {
+  const n = productName.toLowerCase();
+  // Rum
+  if (/\brum\b/.test(n) || ["bacardi", "captain morgan", "appleton", "havana club", "flor de cana", "kraken", "malibu", "gosling", "diplomatico", "el dorado", "mount gay", "lamb's", "lambs", "brugal", "bumbu", "cachaça", "cruzan", "don papa", "angostura", "coconut cartel", "blue chair bay", "dead man", "old j spiced", "last mountain spice", "sailor jerry", "screech", "lemon hart"].some(k => n.includes(k))) return "rum";
+  // Tequila & Mezcal
+  if (/\btequila\b|\bmezcal\b|\bsotol\b/.test(n) || ["1800 ", "jose cuervo", "patron", "don julio", "casamigos", "espolon", "hornitos", "cazadores", "el jimador", "cabo wabo", "clase azul", "grand mayan", "don fulano", "adictivo", "adicitvo", "familia camerena", "nodo", "elevacion", "olmeca", "agavero", "la gritona", "tequileño", "tequileno", "pisco", "400 conejos", "bozal", "sauza", "tres agaves", "tres generaciones", "margarita"].some(k => n.includes(k))) return "tequila";
+  // Gin
+  if (/\bgin\b/.test(n) || ["hendrick", "beefeater", "bombay", "tanqueray", "gordon", "aviation", "empress", "botanist", "last mountain grann", "patent 5", "lucky bastard gambit", "georgian bay gin", "founders gin", "ungava", "hayman", "bruichladdich the botanist"].some(k => n.includes(k))) return "gin";
+  // Vodka
+  if (/\bvodka\b/.test(n) || ["smirnoff", "absolut", "grey goose", "ketel one", "belvedere", "ciroc", "finlandia", "stolichnaya", "stoli ", "titos", "tito's", "banff ice", "alberta pure", "crystal head", "iceberg", "co-op vodka", "moskovskaya", "khortytsa", "luksusowa", "lb premium", "lb premum", "highwood pure", "northern keep", "new amsterdam pink whitney", "alibi vodka", "wyborowa", "lucky bastard dill", "lucky bastard vanilla", "lucky bastard x co-op 90th anniversary vanilla", "last mountain premium", "last mountain sweet tea", "pink whitney", "prairie", "polar ice"].some(k => n.includes(k))) return "vodka";
+  // Whisky
+  if (/whisk|bourbon|scotch|\brye\b/.test(n) || ["alberta premium", "alberta springs", "crown royal", "canadian club", "five star", "forty creek", "gibson", "j.p. wiser", "j.p wiser", "wisers", "jack daniel", "jim beam", "johnnie walker", "makers mark", "maker's mark", "jameson", "glenfiddich", "glenmorangie", "macallan", "lagavulin", "laphroaig", "ardbeg", "bowmore", "highland park", "oban", "monkey shoulder", "chivas", "bushmills", "bulleit", "fireball", "elijah craig", "evan williams", "gentleman jack", "old forester", "old tub", "bearface", "caribou crossing", "centennial", "cedar ridge", "compass box", "dewars", "dewar's", "glen grant", "glendalough", "glendronach", "j&b rare", "kilbeggan", "nikka", "old pulteney", "pendleton", "pike creek", "paul john", "aberlour", "aberfeldy", "auchentoshan", "balvenie", "basil hayden", "islay mist", "grant's", "grants", "meaghers 1878", "lot 40", "sortilege", "tin cup", "seagram", "woodford", "wild turkey", "sazerac", "royal salute", "red breast", "redbreast", "rittenhouse", "russells", "green spot", "yellow spot", "red spot", "proper twelve", "proper no twelve", "mcclelland", "glenlivet", "silk tassel", "yukon jack", "power's gold", "rabbit hole", "suntory", "traveller blend"].some(k => n.includes(k))) return "whisky";
+  // Brandy & Cognac
+  if (/\bbrandy\b|\bcognac\b/.test(n) || ["hennessy", "courvoisier", "metaxa", "d'eaubonne", "remy martin"].some(k => n.includes(k))) return "brandy";
+  // Liqueurs
+  if (/liqueur|liquor|\bcream\b|schnapps|amaretto|\bamaro\b/.test(n) || ["baileys", "bailey's", "kahlua", "disaronno", "frangelico", "chambord", "cointreau", "drambuie", "jagermeister", "campari", "aperol", "sambuca", "ouzo", "goldschlager", "hpnotiq", "limoncello", "triple sec", "bols ", "chartreuse", "peppermint", "dr mcgillicuddy", "dr. mcgillicuddy", "creme de", "crème de", "paralyzer", "carolans", "o'darby", "ceilis", "grand marnier", "absinthe", "baja rosa", "alize", "cynar", "luxardo", "giffard", "benedictine", "fernet", "montenegro", "nonino", "lucano", "averna", "pimm", "st-germain", "st germain", "southern comfort", "kamora", "jaya chai", "golden pear", "cabot trail", "georgian bay caramel", "lb distillers", "mcguinness", "mcguiness", "meaghers triple", "shanky's whip", "sour puss", "peychaud", "st. george bruto", "zwack", "pierre ferrand", "perfect shot", "twisted shotz"].some(k => n.includes(k))) return "liqueur";
+  return "other";
+};
+
 const SMOKES_SUBCATEGORIES = [
   { value: "all", label: "All" },
   { value: "cigarettes", label: "Cigarettes" },
@@ -70,7 +101,7 @@ const StoreDetail = () => {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
-
+  const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
@@ -363,6 +394,19 @@ const StoreDetail = () => {
                 .filter(([category]) => availableCategories.includes(category))
                 .map(([category, items]) => (
                 <TabsContent key={category} value={category}>
+                  {category === "spirits" && items.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {SPIRITS_SUBCATEGORIES.map((sub) => {
+                        const count = sub.value === "all" ? items.length : items.filter(p => getSpiritsSubcategory(p.name) === sub.value).length;
+                        if (sub.value !== "all" && count === 0) return null;
+                        return (
+                          <Button key={sub.value} variant={spiritsSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setSpiritsSubcategory(sub.value)} className="rounded-full text-xs h-8">
+                            {sub.label} ({count})
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
                   {category === "smokes" && items.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-5">
                       {SMOKES_SUBCATEGORIES.map((sub) => {
@@ -378,7 +422,9 @@ const StoreDetail = () => {
                   )}
                   {items.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                      {(category === "smokes" && smokesSubcategory !== "all"
+                      {(category === "spirits" && spiritsSubcategory !== "all"
+                        ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
+                        : category === "smokes" && smokesSubcategory !== "all"
                         ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
                         : items
                       ).map((product) => (
