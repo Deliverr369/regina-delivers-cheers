@@ -440,6 +440,19 @@ const StoreDetail = () => {
                       })}
                     </div>
                   )}
+                  {category === "wine" && items.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {WINE_SUBCATEGORIES.map((sub) => {
+                        const count = sub.value === "all" ? items.length : items.filter(p => getWineSubcategory(p.name) === sub.value).length;
+                        if (sub.value !== "all" && count === 0) return null;
+                        return (
+                          <Button key={sub.value} variant={wineSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setWineSubcategory(sub.value)} className="rounded-full text-xs h-8">
+                            {sub.label} ({count})
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
                   {category === "smokes" && items.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-5">
                       {SMOKES_SUBCATEGORIES.map((sub) => {
