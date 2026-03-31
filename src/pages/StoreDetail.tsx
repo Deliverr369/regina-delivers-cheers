@@ -468,7 +468,9 @@ const StoreDetail = () => {
                   )}
                   {items.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                      {(category === "spirits" && spiritsSubcategory !== "all"
+                      {(category === "wine" && wineSubcategory !== "all"
+                        ? items.filter(p => getWineSubcategory(p.name) === wineSubcategory)
+                        : category === "spirits" && spiritsSubcategory !== "all"
                         ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
                         : category === "smokes" && smokesSubcategory !== "all"
                         ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
