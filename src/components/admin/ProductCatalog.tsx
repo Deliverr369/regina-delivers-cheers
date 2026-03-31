@@ -72,12 +72,28 @@ const ProductCatalog = ({ onEdit }: Props) => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [productsRes, storesRes, packsRes] = await Promise.all([
-      supabase.from("products").select("id, name, category, image_url, store_id, in_stock, is_hidden, description").order("name"),
+    
+    // Fetch all products in batches to avoid the 1000-row limit
+    let allProducts: Product[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, category, image_url, store_id, in_stock, is_hidden, description")
+        .order("name")
+        .range(from, from + batchSize - 1);
+      if (error || !data || data.length === 0) break;
+      allProducts = allProducts.concat(data as Product[]);
+      if (data.length < batchSize) break;
+      from += batchSize;
+    }
+
+    const [storesRes, packsRes] = await Promise.all([
       supabase.from("stores").select("id, name").order("name"),
       supabase.from("product_pack_prices").select("product_id"),
     ]);
-    setProducts((productsRes.data as Product[]) || []);
+    setProducts(allProducts);
     setStores(storesRes.data || []);
     const counts: Record<string, number> = {};
     (packsRes.data || []).forEach((pp: any) => {
