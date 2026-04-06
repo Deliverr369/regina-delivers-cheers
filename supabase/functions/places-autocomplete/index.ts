@@ -35,13 +35,8 @@ serve(async (req) => {
       const res = await fetch(url);
       const data = await res.json();
 
-      if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-        return new Response(JSON.stringify({ error: data.error_message || data.status, status: data.status, predictions: [] }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ predictions: data.predictions || [], status: data.status }), {
+      // Return raw status for debugging
+      return new Response(JSON.stringify({ predictions: data.predictions || [], apiStatus: data.status, errorMessage: data.error_message || null }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
