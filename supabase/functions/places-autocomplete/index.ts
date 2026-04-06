@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -13,6 +13,7 @@ serve(async (req) => {
 
   const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
   if (!GOOGLE_MAPS_API_KEY) {
+    console.error("GOOGLE_MAPS_API_KEY is missing");
     return new Response(
       JSON.stringify({ error: "GOOGLE_MAPS_API_KEY not configured" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -29,20 +30,19 @@ serve(async (req) => {
         });
       }
 
-      const params = new URLSearchParams({
-        input,
-        key: GOOGLE_MAPS_API_KEY,
-        components: "country:ca",
-        types: "address",
-        location: "50.4452,-104.6189",
-        radius: "30000",
-        strictbounds: "true",
-      });
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}&components=country:ca&types=address&location=50.4452%2C-104.6189&radius=50000`;
 
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`
-      );
+      console.log("Calling Places API for input:", input);
+      const res = await fetch(url);
       const data = await res.json();
+      console.log("Places API status:", data.status, "predictions:", data.predictions?.length || 0);
+
+      if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+        console.error("Places API error:", data.status, data.error_message);
+        return new Response(JSON.stringify({ error: data.error_message || data.status, predictions: [] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       return new Response(JSON.stringify({ predictions: data.predictions || [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -57,15 +57,9 @@ serve(async (req) => {
         });
       }
 
-      const params = new URLSearchParams({
-        place_id: placeId,
-        key: GOOGLE_MAPS_API_KEY,
-        fields: "address_components,formatted_address",
-      });
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&key=${GOOGLE_MAPS_API_KEY}&fields=address_components,formatted_address`;
 
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?${params}`
-      );
+      const res = await fetch(url);
       const data = await res.json();
 
       const result = data.result;
