@@ -32,19 +32,16 @@ serve(async (req) => {
 
       const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}&components=country:ca&types=address&location=50.4452%2C-104.6189&radius=50000`;
 
-      console.log("Calling Places API for input:", input);
       const res = await fetch(url);
       const data = await res.json();
-      console.log("Places API status:", data.status, "predictions:", data.predictions?.length || 0);
 
       if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-        console.error("Places API error:", data.status, data.error_message);
-        return new Response(JSON.stringify({ error: data.error_message || data.status, predictions: [] }), {
+        return new Response(JSON.stringify({ error: data.error_message || data.status, status: data.status, predictions: [] }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      return new Response(JSON.stringify({ predictions: data.predictions || [] }), {
+      return new Response(JSON.stringify({ predictions: data.predictions || [], status: data.status }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
