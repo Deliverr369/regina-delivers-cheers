@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+interface Prediction {
+  place_id: string;
+  description: string;
+}
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -33,9 +38,83 @@ const Checkout = () => {
   });
   const [cityError, setCityError] = useState<string | null>(null);
 
+  // Autocomplete state
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSelectingPlace, setIsSelectingPlace] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const searchAddress = useCallback(async (input: string) => {
+    if (input.length < 3) {
+      setPredictions([]);
+      setShowDropdown(false);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("places-autocomplete", {
+        body: { action: "autocomplete", input },
+      });
+      if (!error && data?.predictions) {
+        setPredictions(data.predictions);
+        setShowDropdown(data.predictions.length > 0);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const selectPlace = async (prediction: Prediction) => {
+    setIsSelectingPlace(true);
+    setShowDropdown(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("places-autocomplete", {
+        body: { action: "details", placeId: prediction.place_id },
+      });
+      if (!error && data) {
+        setFormData((prev) => ({
+          ...prev,
+          address: data.address || prev.address,
+          city: data.city || prev.city,
+          postalCode: data.postalCode || prev.postalCode,
+        }));
+        if (data.city && data.city.toLowerCase() !== "regina") {
+          setCityError("We only deliver within Regina.");
+        } else {
+          setCityError(null);
+        }
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setIsSelectingPlace(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "address") {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => searchAddress(value), 350);
+    }
+
     if (name === "city") {
       setCityError(value.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
     }
@@ -146,13 +225,49 @@ const Checkout = () => {
                     Delivery Address
                   </h2>
                   <div className="space-y-3">
-                    <div>
+                    <div className="relative" ref={dropdownRef}>
                       <Label className="text-sm">Street Address</Label>
                       <div className="relative mt-1">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input name="address" value={formData.address} onChange={handleChange} className="pl-10 h-10" placeholder="123 Main St" required />
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                        <Input
+                          name="address"
+                          value={formData.address}
+                          onChange={handleChange}
+                          className="pl-10 h-10"
+                          placeholder="Start typing your address..."
+                          required
+                          autoComplete="off"
+                        />
+                        {isSearching && (
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+                        )}
                       </div>
+
+                      {/* Autocomplete dropdown */}
+                      {showDropdown && predictions.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-xl overflow-hidden">
+                          {predictions.map((p) => (
+                            <button
+                              key={p.place_id}
+                              type="button"
+                              onClick={() => selectPlace(p)}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-secondary/60 transition-colors border-b border-border last:border-b-0"
+                            >
+                              <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <span className="text-sm text-foreground truncate">{p.description}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
+
+                    {isSelectingPlace && (
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Loading address details...
+                      </div>
+                    )}
+
                     <div className="grid sm:grid-cols-2 gap-3">
                       <div>
                         <Label className="text-sm">City</Label>
