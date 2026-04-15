@@ -43,9 +43,6 @@ const Header = () => {
             <Link to="/stores" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
               Stores
             </Link>
-            <Link to="/products" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
-              Products
-            </Link>
             <Link to="/how-it-works" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
               How It Works
             </Link>
@@ -141,7 +138,6 @@ const Header = () => {
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
             {[
               { to: "/stores", label: "Browse Stores" },
-              { to: "/products", label: "Products" },
               { to: "/how-it-works", label: "How It Works" },
             ].map((link) => (
               <Link
