@@ -142,14 +142,14 @@ const Stores = () => {
                   className="group bg-card rounded-2xl overflow-hidden border border-border card-hover"
                 >
                   {/* Image/Logo */}
-                  <div className="relative h-40 overflow-hidden bg-gradient-to-br from-secondary/80 to-muted/60 flex items-center justify-center p-8">
+                  <div className="relative h-44 overflow-hidden bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center">
                     <img
                       src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
                       alt={store.name}
                       className={`transition-transform duration-500 group-hover:scale-105 ${
                         store.image_url?.includes('.png')
-                          ? 'max-h-20 max-w-[60%] object-contain drop-shadow-md'
-                          : 'w-full h-full object-cover rounded-xl'
+                          ? 'max-h-24 max-w-[55%] object-contain'
+                          : 'w-full h-full object-cover'
                       }`}
                     />
                     <div className="absolute top-3 left-3 flex gap-2">
