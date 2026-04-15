@@ -67,8 +67,8 @@ const Footer = () => {
             <ul className="space-y-3">
               {[
                 { icon: MapPin, text: "Regina, SK" },
-                { icon: Phone, text: "(306) 555-0123" },
-                { icon: Mail, text: "hello@deliverr.ca" },
+                { icon: Phone, text: "(306) 533-3333" },
+                { icon: Mail, text: "support@deliverr.ca" },
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-2.5 text-background/50 text-sm">
                   <item.icon className="h-4 w-4 text-primary shrink-0" />
