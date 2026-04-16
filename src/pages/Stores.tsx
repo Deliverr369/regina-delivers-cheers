@@ -23,9 +23,21 @@ const sortOptions = [
 ];
 
 const Stores = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+
+  useEffect(() => {
+    const paramAddress = searchParams.get("address");
+    const savedAddress = localStorage.getItem("delivery_address");
+    const addr = paramAddress || savedAddress || "";
+    setDeliveryAddress(addr);
+    if (paramAddress && !savedAddress) {
+      localStorage.setItem("delivery_address", paramAddress);
+    }
+  }, [searchParams]);
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["stores"],
