@@ -250,12 +250,16 @@ const StoreDetail = () => {
     return [];
   };
 
-  const has24Pack = (productId: string) => packPrices.some(pp => pp.product_id === productId && /^24[\s-]?(pack|cans?|bottles?)$/i.test(pp.pack_size.trim()) && !pp.is_hidden);
+  const is24PackSize = (s: string) => /^24[\s-]?(pack|cans?|bottles?)$/i.test(s.trim());
+  const has24Pack = (product: typeof products[0]) => {
+    if (product.size && is24PackSize(product.size)) return true;
+    return packPrices.some(pp => pp.product_id === product.id && is24PackSize(pp.pack_size) && !pp.is_hidden);
+  };
 
   const productsByCategory = {
     beer: products.filter((p) => p.category === "beer").sort((a, b) => {
-      const a24 = has24Pack(a.id) ? 0 : 1;
-      const b24 = has24Pack(b.id) ? 0 : 1;
+      const a24 = has24Pack(a) ? 0 : 1;
+      const b24 = has24Pack(b) ? 0 : 1;
       if (a24 !== b24) return a24 - b24;
       return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
     }),
