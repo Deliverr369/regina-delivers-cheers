@@ -208,10 +208,6 @@ const Stores = () => {
                       {store.name}
                     </h3>
                     
-                    <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span className="text-sm truncate">{store.address}</span>
-                    </div>
 
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                       <div className="flex items-center gap-1.5">
