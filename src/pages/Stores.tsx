@@ -73,6 +73,29 @@ const Stores = () => {
       <Header />
       
       <main className="pt-20 pb-16">
+        {/* Delivery Address Banner */}
+        {deliveryAddress && (
+          <div className="bg-primary/10 border-b border-primary/20">
+            <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-muted-foreground">Delivering to:</span>
+                <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => {
+                  setDeliveryAddress("");
+                  localStorage.removeItem("delivery_address");
+                }}
+              >
+                Change
+              </Button>
+            </div>
+          </div>
+        )}
         {/* Page Header */}
         <div className="bg-secondary/50 border-b border-border">
           <div className="container mx-auto px-4 py-8 md:py-10">
