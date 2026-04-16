@@ -1,16 +1,39 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, ArrowRight, Star, Shield, Clock, Truck } from "lucide-react";
+import { ArrowRight, Star, Shield, Clock, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const HeroSection = () => {
   const [address, setAddress] = useState("");
+  const [isRegina, setIsRegina] = useState<boolean | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const handleSelect = (selectedAddress: string, regina: boolean) => {
+    setIsRegina(regina);
+    if (!regina) {
+      setAddressError("Sorry, we only deliver within Regina, SK.");
+    } else {
+      setAddressError(null);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/stores${address.trim() ? `?address=${encodeURIComponent(address)}` : ""}`);
+    if (!address.trim()) {
+      navigate("/stores");
+      return;
+    }
+    if (isRegina === false) {
+      setAddressError("Sorry, we only deliver within Regina, SK.");
+      return;
+    }
+    if (isRegina === null) {
+      setAddressError("Please select an address from the suggestions.");
+      return;
+    }
+    navigate(`/stores?address=${encodeURIComponent(address)}`);
   };
 
   const stats = [
@@ -21,27 +44,21 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1597290282695-edc43d0e7129?q=80&w=2070&auto=format&fit=crop')`,
         }}
       />
-      
-      {/* Overlay */}
       <div className="absolute inset-0 hero-overlay" />
 
-      {/* Content */}
       <div className="relative z-10 container mx-auto px-4 pt-20 pb-12">
         <div className="max-w-3xl mx-auto text-center">
-          {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-md px-4 py-2 rounded-full mb-8 border border-primary/30">
             <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
             <span className="text-white/90 text-sm font-medium">Now delivering in Regina</span>
           </div>
 
-          {/* Main Heading */}
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-5 leading-[1.1]">
             Beer, Wine & Spirits
             <span className="block text-primary">Delivered Fast</span>
@@ -51,27 +68,33 @@ const HeroSection = () => {
             Order from Regina's top liquor stores and get it delivered to your door in under 60 minutes — at store prices.
           </p>
 
-          {/* Address Input */}
           <form onSubmit={handleSubmit} className="max-w-lg mx-auto mb-12">
-            <div className="flex items-center bg-white rounded-full overflow-hidden shadow-2xl shadow-black/20">
-              <div className="flex items-center gap-2 px-5 flex-1">
-                <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
-                <Input
-                  type="text"
-                  placeholder="Enter your delivery address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="border-0 bg-transparent focus-visible:ring-0 text-foreground placeholder:text-muted-foreground py-6 text-base"
-                />
-              </div>
-              <Button type="submit" size="lg" className="rounded-full m-1.5 px-8 h-12 text-base font-semibold gap-2">
+            <div className="flex items-center bg-white rounded-full overflow-visible shadow-2xl shadow-black/20 relative">
+              <AddressAutocomplete
+                value={address}
+                onChange={(val) => {
+                  setAddress(val);
+                  setIsRegina(null);
+                  setAddressError(null);
+                }}
+                onSelect={handleSelect}
+                placeholder="Enter your delivery address"
+                className="flex-1"
+                inputClassName="border-0 bg-transparent focus-visible:ring-0 text-foreground placeholder:text-muted-foreground py-6 text-base rounded-full"
+                error={addressError}
+              />
+              <Button
+                type="submit"
+                size="lg"
+                className="rounded-full m-1.5 px-8 h-12 text-base font-semibold gap-2 shrink-0"
+                disabled={isRegina === false}
+              >
                 Order Now
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </form>
 
-          {/* Stats Row */}
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-12">
             {stats.map((stat, i) => (
               <div key={i} className="text-center">
@@ -84,7 +107,6 @@ const HeroSection = () => {
             ))}
           </div>
 
-          {/* Testimonials */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-8 border-t border-white/10">
             {[
               { text: "Fast and reliable every time. Great selection and always at store prices!", author: "Ronald M." },
