@@ -250,8 +250,15 @@ const StoreDetail = () => {
     return [];
   };
 
+  const has24Pack = (productId: string) => packPrices.some(pp => pp.product_id === productId && pp.pack_size === "24-pack" && !pp.is_hidden);
+
   const productsByCategory = {
-    beer: products.filter((p) => p.category === "beer").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    beer: products.filter((p) => p.category === "beer").sort((a, b) => {
+      const a24 = has24Pack(a.id) ? 0 : 1;
+      const b24 = has24Pack(b.id) ? 0 : 1;
+      if (a24 !== b24) return a24 - b24;
+      return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
+    }),
     wine: products.filter((p) => p.category === "wine").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
     spirits: products.filter((p) => p.category === "spirits").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
     ciders_seltzers: products.filter((p) => p.category === "ciders_seltzers").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
