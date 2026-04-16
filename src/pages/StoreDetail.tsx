@@ -258,8 +258,8 @@ const StoreDetail = () => {
 
   const productsByCategory = {
     beer: products.filter((p) => p.category === "beer").sort((a, b) => {
-      const a24 = has24Pack(a.id) ? 0 : 1;
-      const b24 = has24Pack(b.id) ? 0 : 1;
+      const a24 = has24Pack(a) ? 0 : 1;
+      const b24 = has24Pack(b) ? 0 : 1;
       if (a24 !== b24) return a24 - b24;
       return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
     }),
