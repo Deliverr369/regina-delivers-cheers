@@ -461,7 +461,7 @@ const StoreDetail = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-white/70 text-sm">
-                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{store.address}</span>
+                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />Nearby Location</span>
                     <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{store.hours}</span>
                   </div>
                 </div>
