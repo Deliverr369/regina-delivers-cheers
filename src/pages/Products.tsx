@@ -80,13 +80,22 @@ const Products = () => {
     },
   });
 
-  // Map pack prices by product_id
+  // Extract leading numeric pack count for sorting (e.g. "24 Cans" -> 24, "750ml" -> 750)
+  const getPackSortValue = (packSize: string): number => {
+    const match = String(packSize || "").match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  // Map pack prices by product_id, sorted largest -> smallest
   const packPriceMap = useMemo(() => {
     const map = new Map<string, any[]>();
     packPrices.forEach((pp: any) => {
       const list = map.get(pp.product_id) || [];
       list.push(pp);
       map.set(pp.product_id, list);
+    });
+    map.forEach((list) => {
+      list.sort((a, b) => getPackSortValue(b.pack_size) - getPackSortValue(a.pack_size));
     });
     return map;
   }, [packPrices]);

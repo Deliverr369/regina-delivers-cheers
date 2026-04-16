@@ -223,17 +223,20 @@ const StoreDetail = () => {
     enabled: productIdsWithPacks.length > 0,
   });
 
+  const getPackSortValue = (packSize: string): number => {
+    const match = String(packSize || "").match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
   const getAvailablePackSizes = (productId: string, category: keyof typeof PACK_SIZES_BY_CATEGORY) => {
     const productPackPrices = packPrices.filter(pp => pp.product_id === productId && !pp.is_hidden);
     
-    // If product has direct pack prices (like "750 mL", "1.14L"), use those directly
     if (productPackPrices.length > 0) {
       const baseSizes = PACK_SIZES_BY_CATEGORY[category] || [];
       const matchedFromBase = baseSizes.filter(size => 
         productPackPrices.some(pp => pp.pack_size === size.value)
       );
       
-      // Also include any pack prices that don't match predefined sizes (e.g. "750 mL", "1.14L", "1.75L")
       const unmatchedPrices = productPackPrices.filter(pp => 
         !baseSizes.some(s => s.value === pp.pack_size)
       );
@@ -244,7 +247,10 @@ const StoreDetail = () => {
         multiplier: 1,
       }));
       
-      return [...matchedFromBase, ...dynamicSizes];
+      // Always sort largest -> smallest (24, 18, 15, 8, 6, 1)
+      return [...matchedFromBase, ...dynamicSizes].sort(
+        (a, b) => getPackSortValue(b.value) - getPackSortValue(a.value)
+      );
     }
     
     return [];
