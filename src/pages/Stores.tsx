@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, Star, Clock, Search, Filter, ChevronDown, Truck, Store } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,21 @@ const sortOptions = [
 ];
 
 const Stores = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+
+  useEffect(() => {
+    const paramAddress = searchParams.get("address");
+    const savedAddress = localStorage.getItem("delivery_address");
+    const addr = paramAddress || savedAddress || "";
+    setDeliveryAddress(addr);
+    if (paramAddress && !savedAddress) {
+      localStorage.setItem("delivery_address", paramAddress);
+    }
+  }, [searchParams]);
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["stores"],
@@ -61,6 +73,29 @@ const Stores = () => {
       <Header />
       
       <main className="pt-20 pb-16">
+        {/* Delivery Address Banner */}
+        {deliveryAddress && (
+          <div className="bg-primary/10 border-b border-primary/20">
+            <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-muted-foreground">Delivering to:</span>
+                <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => {
+                  setDeliveryAddress("");
+                  localStorage.removeItem("delivery_address");
+                }}
+              >
+                Change
+              </Button>
+            </div>
+          </div>
+        )}
         {/* Page Header */}
         <div className="bg-secondary/50 border-b border-border">
           <div className="container mx-auto px-4 py-8 md:py-10">

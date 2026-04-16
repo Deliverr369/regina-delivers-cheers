@@ -33,6 +33,7 @@ const HeroSection = () => {
       setAddressError("Please select an address from the suggestions.");
       return;
     }
+    localStorage.setItem("delivery_address", address);
     navigate(`/stores?address=${encodeURIComponent(address)}`);
   };
 
