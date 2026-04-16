@@ -194,12 +194,6 @@ const Stores = () => {
                         <Badge variant="secondary" className="text-xs font-medium bg-background/90 backdrop-blur-sm">Closed</Badge>
                       )}
                     </div>
-                    {Number(store.delivery_fee) === 0 && (
-                      <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-medium shadow-sm">
-                        <Truck className="h-3 w-3 mr-1" />
-                        Free Delivery
-                      </Badge>
-                    )}
                   </div>
 
                   {/* Content */}
@@ -221,9 +215,6 @@ const Stores = () => {
                           <Clock className="h-3.5 w-3.5" />
                           {store.delivery_time}
                         </span>
-                        {Number(store.delivery_fee) > 0 && (
-                          <span className="font-medium">${Number(store.delivery_fee).toFixed(2)}</span>
-                        )}
                       </div>
                     </div>
                   </div>
