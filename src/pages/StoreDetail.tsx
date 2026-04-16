@@ -250,7 +250,7 @@ const StoreDetail = () => {
     return [];
   };
 
-  const has24Pack = (productId: string) => packPrices.some(pp => pp.product_id === productId && pp.pack_size === "24-pack" && !pp.is_hidden);
+  const has24Pack = (productId: string) => packPrices.some(pp => pp.product_id === productId && /^24[\s-]?(pack|cans?|bottles?)$/i.test(pp.pack_size.trim()) && !pp.is_hidden);
 
   const productsByCategory = {
     beer: products.filter((p) => p.category === "beer").sort((a, b) => {
