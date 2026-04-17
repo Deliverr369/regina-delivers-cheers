@@ -27,6 +27,7 @@ interface ExistingProduct {
   name: string;
   category: string;
   store_id: string;
+  image_url: string | null;
 }
 
 const DashboardBulkImages = () => {
@@ -37,8 +38,22 @@ const DashboardBulkImages = () => {
   const [assigning, setAssigning] = useState(false);
 
   const fetchProducts = useCallback(async () => {
-    const { data } = await supabase.from("products").select("id, name, category, store_id").order("name");
-    if (data) setProducts(data);
+    // Batch through pagination to bypass 1000-row limit
+    const all: ExistingProduct[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, category, store_id, image_url")
+        .order("name")
+        .range(from, from + pageSize - 1);
+      if (error || !data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    setProducts(all);
   }, []);
 
   const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +82,13 @@ const DashboardBulkImages = () => {
 
   const identifyAll = async () => {
     setProcessing(true);
-    const uniqueProducts = Array.from(new Map(products.map((p) => [p.name, { name: p.name, category: p.category }])).values());
+    // Only consider products that already have an image as "covered"
+    const productsWithImages = products.filter((p) => p.image_url && p.image_url.trim() !== "");
+    const uniqueProducts = Array.from(
+      new Map(productsWithImages.map((p) => [p.name.toLowerCase(), { name: p.name, category: p.category }])).values()
+    );
+    const coveredNames = new Set(productsWithImages.map((p) => p.name.toLowerCase()));
+
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
       if (img.status !== "pending") continue;
@@ -77,7 +98,12 @@ const DashboardBulkImages = () => {
         const { data, error } = await supabase.functions.invoke("identify-product", { body: { imageBase64: base64, existingProducts: uniqueProducts } });
         if (error) throw error;
         if (data.error) throw new Error(data.error);
-        setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "identified", result: data } : im)));
+        // Skip if this product already has an image in the DB
+        if (data.product_name && coveredNames.has(data.product_name.toLowerCase())) {
+          setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "error", error: "Already has image — skipped" } : im)));
+        } else {
+          setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "identified", result: data } : im)));
+        }
       } catch (err: any) {
         setImages((prev) => prev.map((im) => (im.id === img.id ? { ...im, status: "error", error: err.message } : im)));
       }
