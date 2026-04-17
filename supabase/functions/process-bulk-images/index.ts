@@ -97,7 +97,14 @@ async function processOneJob(job: any, products: any[], coveredNames: Set<string
   const { data: blob, error: dlErr } = await supabase.storage.from(BUCKET).download(job.storage_path);
   if (dlErr || !blob) throw new Error(`download failed: ${dlErr?.message}`);
   const buf = await blob.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+  // Chunked base64 conversion to avoid "Maximum call stack size exceeded" on large images
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[]);
+  }
+  const base64 = btoa(binary);
 
   // Identify
   const uniqueProducts = Array.from(
