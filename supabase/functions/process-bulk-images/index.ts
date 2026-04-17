@@ -87,7 +87,10 @@ async function syncStorageToJobs() {
   let synced = 0;
   for (let i = 0; i < newJobs.length; i += 500) {
     const chunk = newJobs.slice(i, i + 500);
-    const { error: insErr } = await supabase.from("bulk_image_jobs").insert(chunk);
+    // Use upsert with ignoreDuplicates so existing storage_paths don't throw 23505
+    const { error: insErr } = await supabase
+      .from("bulk_image_jobs")
+      .upsert(chunk, { onConflict: "storage_path", ignoreDuplicates: true });
     if (insErr) console.error("insert jobs error", insErr);
     else synced += chunk.length;
   }
