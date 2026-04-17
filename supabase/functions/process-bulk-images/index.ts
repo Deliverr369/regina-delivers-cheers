@@ -46,33 +46,52 @@ async function dedupeWatchFolder(files: any[]) {
   return toDelete.length;
 }
 
+async function listAllWatchedFiles() {
+  const all: any[] = [];
+  const PAGE = 1000;
+  let offset = 0;
+  while (true) {
+    const { data, error } = await supabase.storage.from(BUCKET).list(WATCH_FOLDER, { limit: PAGE, offset });
+    if (error) { console.error("list error", error); break; }
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < PAGE) break;
+    offset += PAGE;
+    if (offset > 50000) break;
+  }
+  return all;
+}
+
 async function syncStorageToJobs() {
-  // List all files in the watched folder and create pending jobs for new ones
-  const { data: files, error } = await supabase.storage.from(BUCKET).list(WATCH_FOLDER, { limit: 1000 });
-  if (error) { console.error("list error", error); return { synced: 0, deduped: 0 }; }
-  if (!files || files.length === 0) return { synced: 0, deduped: 0 };
+  const files = await listAllWatchedFiles();
+  if (files.length === 0) return { synced: 0, deduped: 0 };
 
-  // Step 1: Remove duplicate files (same content uploaded multiple times)
   const deduped = await dedupeWatchFolder(files);
-  const liveFiles = deduped > 0
-    ? ((await supabase.storage.from(BUCKET).list(WATCH_FOLDER, { limit: 1000 })).data || [])
-    : files;
+  const liveFiles = deduped > 0 ? await listAllWatchedFiles() : files;
 
-  const paths = liveFiles.filter((f: any) => f.name && !f.name.endsWith("/")).map((f: any) => `${WATCH_FOLDER}/${f.name}`);
+  const validFiles = liveFiles.filter((f: any) => f.name && !f.name.endsWith("/"));
+  const paths = validFiles.map((f: any) => `${WATCH_FOLDER}/${f.name}`);
   if (paths.length === 0) return { synced: 0, deduped };
 
-  const { data: existing } = await supabase.from("bulk_image_jobs").select("storage_path").in("storage_path", paths);
-  const existingSet = new Set((existing || []).map((r: any) => r.storage_path));
+  const existingSet = new Set<string>();
+  for (let i = 0; i < paths.length; i += 500) {
+    const batch = paths.slice(i, i + 500);
+    const { data: existing } = await supabase.from("bulk_image_jobs").select("storage_path").in("storage_path", batch);
+    (existing || []).forEach((r: any) => existingSet.add(r.storage_path));
+  }
 
-  const newJobs = liveFiles
-    .filter((f: any) => f.name && !existingSet.has(`${WATCH_FOLDER}/${f.name}`))
+  const newJobs = validFiles
+    .filter((f: any) => !existingSet.has(`${WATCH_FOLDER}/${f.name}`))
     .map((f: any) => ({ storage_path: `${WATCH_FOLDER}/${f.name}`, file_name: f.name, status: "pending" }));
 
-  if (newJobs.length > 0) {
-    const { error: insErr } = await supabase.from("bulk_image_jobs").insert(newJobs);
+  let synced = 0;
+  for (let i = 0; i < newJobs.length; i += 500) {
+    const chunk = newJobs.slice(i, i + 500);
+    const { error: insErr } = await supabase.from("bulk_image_jobs").insert(chunk);
     if (insErr) console.error("insert jobs error", insErr);
+    else synced += chunk.length;
   }
-  return { synced: newJobs.length, deduped };
+  return { synced, deduped };
 }
 
 async function fetchAllProducts() {

@@ -28,17 +28,32 @@ const WATCH_FOLDER = "bulk-auto";
 const DashboardAutoImages = () => {
   const { toast } = useToast();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const fetchJobs = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("bulk_image_jobs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
-    if (!error && data) setJobs(data as Job[]);
+    const PAGE = 1000;
+    let from = 0;
+    const all: Job[] = [];
+    let count = 0;
+    while (true) {
+      const { data, error, count: c } = await supabase
+        .from("bulk_image_jobs")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+      if (error || !data) break;
+      if (typeof c === "number") count = c;
+      all.push(...(data as Job[]));
+      if (data.length < PAGE) break;
+      from += PAGE;
+      if (from > 20000) break;
+    }
+    setJobs(all);
+    setTotalCount(count || all.length);
     setLoading(false);
   }, []);
 
@@ -124,7 +139,7 @@ const DashboardAutoImages = () => {
 
       {/* Progress bar */}
       {(() => {
-        const total = jobs.length;
+        const total = totalCount || jobs.length;
         const finished = counts.assigned + counts.skipped + counts.error;
         const remaining = counts.pending + counts.processing;
         const pct = total > 0 ? Math.round((finished / total) * 100) : 0;
@@ -137,24 +152,24 @@ const DashboardAutoImages = () => {
                   {isWorking ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      Processing... {remaining} image{remaining !== 1 ? "s" : ""} remaining
+                      Processing... {remaining.toLocaleString()} image{remaining !== 1 ? "s" : ""} remaining
                     </>
                   ) : total > 0 ? (
                     <>
                       <Check className="h-4 w-4 text-emerald-600" />
-                      All caught up — {finished} processed
+                      All caught up — {finished.toLocaleString()} processed
                     </>
                   ) : (
                     <>No jobs yet</>
                   )}
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {finished} / {total} ({pct}%)
+                  {finished.toLocaleString()} / {total.toLocaleString()} ({pct}%)
                 </span>
               </div>
               <Progress value={pct} className="h-2" />
               <p className="text-[11px] text-muted-foreground">
-                Auto-runs every minute in the background. Safe to close this tab.
+                Auto-runs every minute in the background. Safe to close this tab. Processes ~5 images per minute.
               </p>
             </CardContent>
           </Card>
@@ -199,6 +214,12 @@ const DashboardAutoImages = () => {
       </Card>
 
       {/* Jobs list */}
+      {!loading && jobs.length > 500 && !showAll && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+          <span>Showing first 500 of {jobs.length.toLocaleString()} jobs (newest first) for performance.</span>
+          <Button variant="ghost" size="sm" onClick={() => setShowAll(true)} className="h-7 text-xs">Show all</Button>
+        </div>
+      )}
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : jobs.length === 0 ? (
@@ -208,7 +229,7 @@ const DashboardAutoImages = () => {
         </CardContent></Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-          {jobs.map((job) => (
+          {(showAll ? jobs : jobs.slice(0, 500)).map((job) => (
             <Card key={job.id} className="overflow-hidden border-border/50 hover:shadow-md transition-shadow">
               <div className="relative aspect-square bg-muted/50">
                 {job.final_image_url ? (
