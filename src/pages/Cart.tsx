@@ -10,9 +10,17 @@ const Cart = () => {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
 
   const subtotal = getCartTotal();
-  const deliveryFee = subtotal > 50 ? 0 : 4.99;
+  const storeName = cartItems[0]?.storeName || "";
+  const getDeliveryFee = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes("costco")) return 20;
+    if (n.includes("superstore")) return 15;
+    return 7;
+  };
+  const deliveryFee = cartItems.length > 0 ? getDeliveryFee(storeName) : 0;
+  const convenienceFee = subtotal * 0.12;
   const tax = subtotal * 0.11;
-  const total = subtotal + deliveryFee + tax;
+  const total = subtotal + deliveryFee + convenienceFee + tax;
 
   if (cartItems.length === 0) {
     return (
