@@ -1,4 +1,4 @@
-import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus, Boxes, Globe } from "lucide-react";
+import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus, Boxes, Globe, Sparkles } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +34,7 @@ const contentMenu = [
   { title: "Users", url: "/dashboard/users", icon: Users },
   { title: "Promo Banners", url: "/dashboard/banners", icon: Megaphone },
   { title: "Bulk Images", url: "/dashboard/bulk-images", icon: ImagePlus },
+  { title: "Auto Images", url: "/dashboard/auto-images", icon: Sparkles },
 ];
 
 export function DashboardSidebar() {

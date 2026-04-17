@@ -28,6 +28,7 @@ import DashboardStoreHours from "./pages/dashboard/DashboardStoreHours";
 import DashboardUsers from "./pages/dashboard/DashboardUsers";
 import DashboardBanners from "./pages/dashboard/DashboardBanners";
 import DashboardBulkImages from "./pages/dashboard/DashboardBulkImages";
+import DashboardAutoImages from "./pages/dashboard/DashboardAutoImages";
 import DashboardInventory from "./pages/dashboard/DashboardInventory";
 import DashboardImporter from "./pages/dashboard/DashboardImporter";
 
@@ -66,6 +67,7 @@ const App = () => (
                 <Route path="users" element={<DashboardUsers />} />
                 <Route path="banners" element={<DashboardBanners />} />
                 <Route path="bulk-images" element={<DashboardBulkImages />} />
+                <Route path="auto-images" element={<DashboardAutoImages />} />
                 <Route path="inventory" element={<DashboardInventory />} />
                 <Route path="importer" element={<DashboardImporter />} />
               </Route>
