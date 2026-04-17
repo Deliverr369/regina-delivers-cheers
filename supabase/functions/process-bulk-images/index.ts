@@ -246,7 +246,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ synced, processed: pending.length, success, failed }), {
+    return new Response(JSON.stringify({ synced, deduped, processed: pending.length, success, failed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
