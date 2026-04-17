@@ -134,7 +134,6 @@ async function processOneJob(job: any, products: any[], coveredNames: Set<string
   const { data: blob, error: dlErr } = await supabase.storage.from(BUCKET).download(job.storage_path);
   if (dlErr || !blob) throw new Error(`download failed: ${dlErr?.message}`);
   const buf = await blob.arrayBuffer();
-  // Chunked base64 conversion to avoid "Maximum call stack size exceeded" on large images
   const bytes = new Uint8Array(buf);
   let binary = "";
   const CHUNK = 0x8000;
@@ -148,9 +147,10 @@ async function processOneJob(job: any, products: any[], coveredNames: Set<string
     new Map(products.filter((p) => p.image_url).map((p) => [p.name.toLowerCase(), { name: p.name, category: p.category }])).values()
   );
   const result = await identifyImage(base64, uniqueProducts);
+  const idName = (result.product_name || "").trim().toLowerCase();
 
-  // Skip if already has image
-  if (result.product_name && coveredNames.has(result.product_name.toLowerCase())) {
+  // SKIP: any product with this name already has an image in the database
+  if (idName && coveredNames.has(idName)) {
     await supabase.from("bulk_image_jobs").update({
       status: "skipped",
       identified_name: result.product_name,
@@ -158,50 +158,54 @@ async function processOneJob(job: any, products: any[], coveredNames: Set<string
       identified_size: result.size || null,
       is_existing: result.is_existing,
       confidence: result.confidence,
-      error_message: "Already has image",
+      error_message: "Product already has image in database",
       processed_at: new Date().toISOString(),
     }).eq("id", job.id);
-    // Move to processed/ to remove from watch folder
     await supabase.storage.from(BUCKET).move(job.storage_path, `bulk-processed/${job.file_name}`).catch(() => {});
     return;
   }
 
   // Upload final image to products folder
   const ext = job.file_name.split(".").pop() || "jpg";
-  const cleanName = result.product_name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const cleanName = idName.replace(/[^a-z0-9]+/g, "-") || "product";
   const finalPath = `products/${cleanName}-${Date.now()}.${ext}`;
   const { error: copyErr } = await supabase.storage.from(BUCKET).copy(job.storage_path, finalPath);
   if (copyErr) throw new Error(`copy failed: ${copyErr.message}`);
   const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(finalPath);
 
   let productIds: string[] = [];
-  if (result.is_existing) {
-    const matching = products.filter((p) => p.name.toLowerCase() === result.product_name.toLowerCase());
-    if (matching.length > 0) {
-      productIds = matching.map((p) => p.id);
-      await supabase.from("products").update({ image_url: urlData.publicUrl }).in("id", productIds);
-    }
-  } else {
-    // Auto-create new product across all stores EXCEPT 7-Eleven
-    const { data: allStores } = await supabase.from("stores").select("id, name");
-    const eligibleStoreIds = (allStores || [])
-      .filter((s: any) => !/7[-\s]?eleven|seven[-\s]?eleven/i.test(s.name || ""))
-      .map((s: any) => s.id);
 
-    if (eligibleStoreIds.length === 0) throw new Error("No eligible stores found");
+  // Find ALL existing products with this name (any store), regardless of image
+  const matchingExisting = products.filter((p) => p.name.toLowerCase() === idName);
+  const storeIdsWithProduct = new Set(matchingExisting.map((p) => p.store_id));
 
-    const newProducts = eligibleStoreIds.map((storeId: string) => ({
+  // 1) For existing matches WITHOUT image → attach the image
+  const needsImage = matchingExisting.filter((p) => !p.image_url || !p.image_url.trim());
+  if (needsImage.length > 0) {
+    const ids = needsImage.map((p) => p.id);
+    await supabase.from("products").update({ image_url: urlData.publicUrl }).in("id", ids);
+    productIds.push(...ids);
+  }
+
+  // 2) Create the product in stores that DON'T have it yet (excluding 7-Eleven)
+  const { data: allStores } = await supabase.from("stores").select("id, name");
+  const eligibleStores = (allStores || []).filter(
+    (s: any) => !/7[-\s]?eleven|seven[-\s]?eleven/i.test(s.name || "") && !storeIdsWithProduct.has(s.id)
+  );
+
+  if (eligibleStores.length > 0) {
+    const newProducts = eligibleStores.map((s: any) => ({
       name: result.product_name,
       category: result.category,
       size: result.size || null,
       price: 0,
-      store_id: storeId,
+      store_id: s.id,
       image_url: urlData.publicUrl,
       in_stock: true,
     }));
     const { data: inserted, error: insErr } = await supabase.from("products").insert(newProducts).select("id");
     if (insErr) throw new Error(`product insert failed: ${insErr.message}`);
-    productIds = (inserted || []).map((r: any) => r.id);
+    productIds.push(...(inserted || []).map((r: any) => r.id));
   }
 
   await supabase.from("bulk_image_jobs").update({
@@ -209,14 +213,13 @@ async function processOneJob(job: any, products: any[], coveredNames: Set<string
     identified_name: result.product_name,
     identified_category: result.category,
     identified_size: result.size || null,
-    is_existing: result.is_existing,
+    is_existing: matchingExisting.length > 0,
     confidence: result.confidence,
     final_image_url: urlData.publicUrl,
     product_ids: productIds,
     processed_at: new Date().toISOString(),
   }).eq("id", job.id);
 
-  // Move source out of watch folder
   await supabase.storage.from(BUCKET).move(job.storage_path, `bulk-processed/${job.file_name}`).catch(() => {});
 }
 
