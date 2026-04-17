@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      bulk_image_jobs: {
+        Row: {
+          attempts: number
+          confidence: string | null
+          created_at: string
+          error_message: string | null
+          file_name: string
+          final_image_url: string | null
+          id: string
+          identified_category: string | null
+          identified_name: string | null
+          identified_size: string | null
+          is_existing: boolean | null
+          processed_at: string | null
+          product_ids: string[] | null
+          status: string
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          confidence?: string | null
+          created_at?: string
+          error_message?: string | null
+          file_name: string
+          final_image_url?: string | null
+          id?: string
+          identified_category?: string | null
+          identified_name?: string | null
+          identified_size?: string | null
+          is_existing?: boolean | null
+          processed_at?: string | null
+          product_ids?: string[] | null
+          status?: string
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          confidence?: string | null
+          created_at?: string
+          error_message?: string | null
+          file_name?: string
+          final_image_url?: string | null
+          id?: string
+          identified_category?: string | null
+          identified_name?: string | null
+          identified_size?: string | null
+          is_existing?: boolean | null
+          processed_at?: string | null
+          product_ids?: string[] | null
+          status?: string
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       import_drafts: {
         Row: {
           assigned_store_ids: string[] | null
