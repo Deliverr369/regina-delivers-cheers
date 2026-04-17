@@ -219,6 +219,7 @@ const Checkout = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-muted-foreground text-sm"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
                     <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>{deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}</span></div>
+                    <div className="flex justify-between text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span>${convenienceFee.toFixed(2)}</span></div>
                     <div className="flex justify-between text-muted-foreground text-sm"><span>Tax</span><span>${tax.toFixed(2)}</span></div>
                     <Separator />
                     <div className="flex justify-between font-bold text-foreground"><span>Total</span><span>${total.toFixed(2)}</span></div>
