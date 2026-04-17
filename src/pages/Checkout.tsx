@@ -23,7 +23,14 @@ const Checkout = () => {
   const [error, setError] = useState<string | null>(null);
 
   const subtotal = getCartTotal();
-  const deliveryFee = subtotal > 50 ? 0 : 4.99;
+  const storeName = cartItems[0]?.storeName || "";
+  const getDeliveryFee = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes("costco")) return 20;
+    if (n.includes("superstore")) return 15;
+    return 7;
+  };
+  const deliveryFee = getDeliveryFee(storeName);
   const convenienceFee = subtotal * 0.12;
   const tax = subtotal * 0.11;
   const total = subtotal + deliveryFee + convenienceFee + tax;
