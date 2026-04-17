@@ -24,8 +24,9 @@ const Checkout = () => {
 
   const subtotal = getCartTotal();
   const deliveryFee = subtotal > 50 ? 0 : 4.99;
+  const convenienceFee = subtotal * 0.12;
   const tax = subtotal * 0.11;
-  const total = subtotal + deliveryFee + tax;
+  const total = subtotal + deliveryFee + convenienceFee + tax;
 
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: user?.email || "", phone: "",
