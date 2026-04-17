@@ -182,13 +182,25 @@ async function processOneJob(job: any, products: any[], coveredNames: Set<string
       await supabase.from("products").update({ image_url: urlData.publicUrl }).in("id", productIds);
     }
   } else {
-    const storeIds = [...new Set(products.map((p) => p.store_id))];
-    const newProducts = storeIds.map((storeId) => ({
+    // Auto-create new product across all stores EXCEPT 7-Eleven
+    const { data: allStores } = await supabase.from("stores").select("id, name");
+    const eligibleStoreIds = (allStores || [])
+      .filter((s: any) => !/7[-\s]?eleven|seven[-\s]?eleven/i.test(s.name || ""))
+      .map((s: any) => s.id);
+
+    if (eligibleStoreIds.length === 0) throw new Error("No eligible stores found");
+
+    const newProducts = eligibleStoreIds.map((storeId: string) => ({
       name: result.product_name,
       category: result.category,
-      price: 0, store_id: storeId, image_url: urlData.publicUrl, in_stock: true,
+      size: result.size || null,
+      price: 0,
+      store_id: storeId,
+      image_url: urlData.publicUrl,
+      in_stock: true,
     }));
-    const { data: inserted } = await supabase.from("products").insert(newProducts).select("id");
+    const { data: inserted, error: insErr } = await supabase.from("products").insert(newProducts).select("id");
+    if (insErr) throw new Error(`product insert failed: ${insErr.message}`);
     productIds = (inserted || []).map((r: any) => r.id);
   }
 
