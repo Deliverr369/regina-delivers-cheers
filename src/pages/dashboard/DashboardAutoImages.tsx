@@ -229,7 +229,7 @@ const DashboardAutoImages = () => {
         </CardContent></Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-          {jobs.map((job) => (
+          {(showAll ? jobs : jobs.slice(0, 500)).map((job) => (
             <Card key={job.id} className="overflow-hidden border-border/50 hover:shadow-md transition-shadow">
               <div className="relative aspect-square bg-muted/50">
                 {job.final_image_url ? (
