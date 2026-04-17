@@ -3,6 +3,7 @@ import { Upload, Loader2, Check, X, ImagePlus, RefreshCw, Folder, Sparkles } fro
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -120,6 +121,45 @@ const DashboardAutoImages = () => {
           Run Now
         </Button>
       </div>
+
+      {/* Progress bar */}
+      {(() => {
+        const total = jobs.length;
+        const finished = counts.assigned + counts.skipped + counts.error;
+        const remaining = counts.pending + counts.processing;
+        const pct = total > 0 ? Math.round((finished / total) * 100) : 0;
+        const isWorking = remaining > 0;
+        return (
+          <Card className="border-border/50">
+            <CardContent className="pt-5 pb-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-foreground flex items-center gap-2">
+                  {isWorking ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      Processing... {remaining} image{remaining !== 1 ? "s" : ""} remaining
+                    </>
+                  ) : total > 0 ? (
+                    <>
+                      <Check className="h-4 w-4 text-emerald-600" />
+                      All caught up — {finished} processed
+                    </>
+                  ) : (
+                    <>No jobs yet</>
+                  )}
+                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {finished} / {total} ({pct}%)
+                </span>
+              </div>
+              <Progress value={pct} className="h-2" />
+              <p className="text-[11px] text-muted-foreground">
+                Auto-runs every minute in the background. Safe to close this tab.
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
