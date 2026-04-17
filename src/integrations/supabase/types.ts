@@ -211,6 +211,8 @@ export type Database = {
       order_items: {
         Row: {
           created_at: string
+          estimated_price: number | null
+          final_price: number | null
           id: string
           order_id: string
           price: number
@@ -220,6 +222,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          estimated_price?: number | null
+          final_price?: number | null
           id?: string
           order_id: string
           price: number
@@ -229,6 +233,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          estimated_price?: number | null
+          final_price?: number | null
           id?: string
           order_id?: string
           price?: number
@@ -253,18 +259,76 @@ export type Database = {
           },
         ]
       }
+      order_price_adjustments: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          field: string
+          id: string
+          new_value: number | null
+          old_value: number | null
+          order_id: string
+          order_item_id: string | null
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          new_value?: number | null
+          old_value?: number | null
+          order_id: string
+          order_item_id?: string | null
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          new_value?: number | null
+          old_value?: number | null
+          order_id?: string
+          order_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_price_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_price_adjustments_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          authorized_amount: number | null
+          convenience_fee: number | null
           created_at: string
           delivery_address: string
           delivery_city: string | null
           delivery_fee: number | null
           delivery_instructions: string | null
           delivery_postal_code: string | null
+          estimated_subtotal: number | null
+          estimated_total: number | null
+          final_confirmed_at: string | null
+          final_confirmed_by: string | null
+          final_subtotal: number | null
+          final_total: number | null
           id: string
           payment_method: string | null
+          payment_status: string | null
           status: Database["public"]["Enums"]["order_status"] | null
           store_id: string | null
+          stripe_payment_intent_id: string | null
           subtotal: number
           tax: number
           total: number
@@ -272,16 +336,26 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          authorized_amount?: number | null
+          convenience_fee?: number | null
           created_at?: string
           delivery_address: string
           delivery_city?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_postal_code?: string | null
+          estimated_subtotal?: number | null
+          estimated_total?: number | null
+          final_confirmed_at?: string | null
+          final_confirmed_by?: string | null
+          final_subtotal?: number | null
+          final_total?: number | null
           id?: string
           payment_method?: string | null
+          payment_status?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           store_id?: string | null
+          stripe_payment_intent_id?: string | null
           subtotal: number
           tax: number
           total: number
@@ -289,16 +363,26 @@ export type Database = {
           user_id: string
         }
         Update: {
+          authorized_amount?: number | null
+          convenience_fee?: number | null
           created_at?: string
           delivery_address?: string
           delivery_city?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_postal_code?: string | null
+          estimated_subtotal?: number | null
+          estimated_total?: number | null
+          final_confirmed_at?: string | null
+          final_confirmed_by?: string | null
+          final_subtotal?: number | null
+          final_total?: number | null
           id?: string
           payment_method?: string | null
+          payment_status?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           store_id?: string | null
+          stripe_payment_intent_id?: string | null
           subtotal?: number
           tax?: number
           total?: number
