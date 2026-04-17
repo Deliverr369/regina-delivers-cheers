@@ -139,7 +139,7 @@ const DashboardAutoImages = () => {
 
       {/* Progress bar */}
       {(() => {
-        const total = jobs.length;
+        const total = totalCount || jobs.length;
         const finished = counts.assigned + counts.skipped + counts.error;
         const remaining = counts.pending + counts.processing;
         const pct = total > 0 ? Math.round((finished / total) * 100) : 0;
@@ -152,24 +152,24 @@ const DashboardAutoImages = () => {
                   {isWorking ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      Processing... {remaining} image{remaining !== 1 ? "s" : ""} remaining
+                      Processing... {remaining.toLocaleString()} image{remaining !== 1 ? "s" : ""} remaining
                     </>
                   ) : total > 0 ? (
                     <>
                       <Check className="h-4 w-4 text-emerald-600" />
-                      All caught up — {finished} processed
+                      All caught up — {finished.toLocaleString()} processed
                     </>
                   ) : (
                     <>No jobs yet</>
                   )}
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {finished} / {total} ({pct}%)
+                  {finished.toLocaleString()} / {total.toLocaleString()} ({pct}%)
                 </span>
               </div>
               <Progress value={pct} className="h-2" />
               <p className="text-[11px] text-muted-foreground">
-                Auto-runs every minute in the background. Safe to close this tab.
+                Auto-runs every minute in the background. Safe to close this tab. Processes ~5 images per minute.
               </p>
             </CardContent>
           </Card>
@@ -214,6 +214,12 @@ const DashboardAutoImages = () => {
       </Card>
 
       {/* Jobs list */}
+      {!loading && jobs.length > 500 && !showAll && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+          <span>Showing first 500 of {jobs.length.toLocaleString()} jobs (newest first) for performance.</span>
+          <Button variant="ghost" size="sm" onClick={() => setShowAll(true)} className="h-7 text-xs">Show all</Button>
+        </div>
+      )}
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : jobs.length === 0 ? (
