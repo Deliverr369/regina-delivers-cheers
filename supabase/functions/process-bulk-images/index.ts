@@ -211,7 +211,7 @@ async function processOneJob(job: any, products: any[], coveredNames: Set<string
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const synced = await syncStorageToJobs();
+    const { synced, deduped } = await syncStorageToJobs();
 
     const { data: pending } = await supabase
       .from("bulk_image_jobs")
@@ -222,7 +222,7 @@ serve(async (req) => {
       .limit(BATCH_SIZE);
 
     if (!pending || pending.length === 0) {
-      return new Response(JSON.stringify({ synced, processed: 0, message: "no pending jobs" }), {
+      return new Response(JSON.stringify({ synced, deduped, processed: 0, message: "no pending jobs" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
