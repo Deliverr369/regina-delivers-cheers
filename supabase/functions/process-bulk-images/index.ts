@@ -15,27 +15,64 @@ const BATCH_SIZE = 5; // process up to 5 per invocation to stay under timeout
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+async function dedupeWatchFolder(files: any[]) {
+  // Group by content fingerprint: prefer ETag (md5), fall back to size+mimetype
+  const groups = new Map<string, any[]>();
+  for (const f of files) {
+    if (!f.name || f.name.endsWith("/")) continue;
+    const meta = f.metadata || {};
+    const key = meta.eTag || meta.etag || `size:${meta.size || 0}:mime:${meta.mimetype || ""}`;
+    if (!key || key === "size:0:mime:") continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(f);
+  }
+
+  const toDelete: string[] = [];
+  for (const [, group] of groups) {
+    if (group.length < 2) continue;
+    // Keep the oldest, delete the rest
+    group.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+    for (let i = 1; i < group.length; i++) toDelete.push(`${WATCH_FOLDER}/${group[i].name}`);
+  }
+
+  if (toDelete.length > 0) {
+    console.log(`Deduping ${toDelete.length} duplicate file(s)`);
+    for (let i = 0; i < toDelete.length; i += 100) {
+      const batch = toDelete.slice(i, i + 100);
+      await supabase.storage.from(BUCKET).remove(batch).catch((e) => console.error("dedupe remove error", e));
+      await supabase.from("bulk_image_jobs").delete().in("storage_path", batch).neq("status", "assigned");
+    }
+  }
+  return toDelete.length;
+}
+
 async function syncStorageToJobs() {
   // List all files in the watched folder and create pending jobs for new ones
   const { data: files, error } = await supabase.storage.from(BUCKET).list(WATCH_FOLDER, { limit: 1000 });
-  if (error) { console.error("list error", error); return 0; }
-  if (!files || files.length === 0) return 0;
+  if (error) { console.error("list error", error); return { synced: 0, deduped: 0 }; }
+  if (!files || files.length === 0) return { synced: 0, deduped: 0 };
 
-  const paths = files.filter((f) => f.name && !f.name.endsWith("/")).map((f) => `${WATCH_FOLDER}/${f.name}`);
-  if (paths.length === 0) return 0;
+  // Step 1: Remove duplicate files (same content uploaded multiple times)
+  const deduped = await dedupeWatchFolder(files);
+  const liveFiles = deduped > 0
+    ? ((await supabase.storage.from(BUCKET).list(WATCH_FOLDER, { limit: 1000 })).data || [])
+    : files;
+
+  const paths = liveFiles.filter((f: any) => f.name && !f.name.endsWith("/")).map((f: any) => `${WATCH_FOLDER}/${f.name}`);
+  if (paths.length === 0) return { synced: 0, deduped };
 
   const { data: existing } = await supabase.from("bulk_image_jobs").select("storage_path").in("storage_path", paths);
   const existingSet = new Set((existing || []).map((r: any) => r.storage_path));
 
-  const newJobs = files
-    .filter((f) => f.name && !existingSet.has(`${WATCH_FOLDER}/${f.name}`))
-    .map((f) => ({ storage_path: `${WATCH_FOLDER}/${f.name}`, file_name: f.name, status: "pending" }));
+  const newJobs = liveFiles
+    .filter((f: any) => f.name && !existingSet.has(`${WATCH_FOLDER}/${f.name}`))
+    .map((f: any) => ({ storage_path: `${WATCH_FOLDER}/${f.name}`, file_name: f.name, status: "pending" }));
 
   if (newJobs.length > 0) {
     const { error: insErr } = await supabase.from("bulk_image_jobs").insert(newJobs);
     if (insErr) console.error("insert jobs error", insErr);
   }
-  return newJobs.length;
+  return { synced: newJobs.length, deduped };
 }
 
 async function fetchAllProducts() {
