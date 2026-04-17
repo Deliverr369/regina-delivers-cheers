@@ -106,16 +106,12 @@ const Cart = () => {
                 <h2 className="font-display text-lg font-bold text-foreground mb-5">Order Summary</h2>
                 <div className="space-y-3 mb-5">
                   <div className="flex justify-between text-muted-foreground text-sm"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>{deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}</span></div>
+                  <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>${deliveryFee.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span>${convenienceFee.toFixed(2)}</span></div>
                   <div className="flex justify-between text-muted-foreground text-sm"><span>Tax (GST + PST)</span><span>${tax.toFixed(2)}</span></div>
                   <Separator />
                   <div className="flex justify-between font-bold text-foreground text-base"><span>Total</span><span>${total.toFixed(2)}</span></div>
                 </div>
-                {subtotal < 50 && (
-                  <p className="text-xs text-muted-foreground mb-4 bg-primary/5 p-2.5 rounded-lg">
-                    Add ${(50 - subtotal).toFixed(2)} more for free delivery!
-                  </p>
-                )}
                 <Link to="/checkout">
                   <Button className="w-full gap-2 rounded-full font-semibold" size="lg">
                     Checkout <ArrowRight className="h-4 w-4" />
