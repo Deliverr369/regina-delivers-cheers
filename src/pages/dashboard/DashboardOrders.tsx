@@ -204,6 +204,13 @@ const DashboardOrders = () => {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmFinalPriceDrawer
+        orderId={confirmOrderId}
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onCaptured={fetchOrders}
+      />
     </div>
   );
 };
