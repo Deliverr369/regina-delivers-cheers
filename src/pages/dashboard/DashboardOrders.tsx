@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, Search, Filter } from "lucide-react";
+import { ShoppingCart, Search, Filter, DollarSign } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
+import { ConfirmFinalPriceDrawer } from "@/components/dashboard/ConfirmFinalPriceDrawer";
 
 type OrderStatus = Database["public"]["Enums"]["order_status"];
 
@@ -22,6 +24,11 @@ interface Order {
   delivery_city: string | null;
   payment_method: string | null;
   created_at: string;
+  payment_status: string | null;
+  authorized_amount: number | null;
+  estimated_total: number | null;
+  final_total: number | null;
+  stripe_payment_intent_id: string | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -39,6 +46,8 @@ const DashboardOrders = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -154,13 +163,24 @@ const DashboardOrders = () => {
                       {new Date(order.created_at).toLocaleString()} · {order.payment_method || "card"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <div className="text-right">
-                      <p className="font-bold text-foreground">${Number(order.total).toFixed(2)}</p>
+                      <p className="font-bold text-foreground">${Number(order.final_total ?? order.total).toFixed(2)}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        Sub ${Number(order.subtotal).toFixed(2)} + Tax ${Number(order.tax).toFixed(2)}
+                        {order.authorized_amount ? `Auth $${Number(order.authorized_amount).toFixed(2)}` : `Sub $${Number(order.subtotal).toFixed(2)}`} · {order.payment_status || "pending"}
                       </p>
                     </div>
+                    {order.stripe_payment_intent_id && order.payment_status !== "captured" && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-9"
+                        onClick={() => { setConfirmOrderId(order.id); setConfirmOpen(true); }}
+                      >
+                        <DollarSign className="h-3.5 w-3.5 mr-1" />
+                        Confirm & Capture
+                      </Button>
+                    )}
                     <Select
                       value={order.status || "pending"}
                       onValueChange={(val) => updateStatus(order.id, val as OrderStatus)}
