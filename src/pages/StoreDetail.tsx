@@ -256,7 +256,7 @@ const StoreDetail = () => {
     return [];
   };
 
-  const is24PackSize = (s: string) => /^24[\s-]?(pack|cans?|bottles?)$/i.test(s.trim());
+  const is24PackSize = (s: string) => /^\s*24\s*[-x]?\s*(pack|cans?|bottles?|btls?|ct|count)?\s*$/i.test(s.trim());
   const has24Pack = (product: typeof products[0]) => {
     if (product.size && is24PackSize(product.size)) return true;
     return packPrices.some(pp => pp.product_id === product.id && is24PackSize(pp.pack_size) && !pp.is_hidden);
