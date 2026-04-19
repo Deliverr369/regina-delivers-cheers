@@ -293,19 +293,6 @@ const StoreDetail = () => {
     smokes: products.filter((p) => p.category === "smokes").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
   };
 
-  const sortByLargestPack = (a: typeof products[0], b: typeof products[0]) => {
-    const diff = getMaxPackCount(b) - getMaxPackCount(a);
-    if (diff !== 0) return diff;
-    return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
-  };
-
-  const productsByCategory = {
-    beer: products.filter((p) => p.category === "beer").sort(sortByLargestPack),
-    wine: products.filter((p) => p.category === "wine").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-    spirits: products.filter((p) => p.category === "spirits").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-    ciders_seltzers: products.filter((p) => p.category === "ciders_seltzers").sort(sortByLargestPack),
-    smokes: products.filter((p) => p.category === "smokes").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-  };
 
   const availableCategories = Object.entries(productsByCategory).filter(([_, items]) => items.length > 0).map(([cat]) => cat);
   const defaultCategory = availableCategories.length > 0 ? availableCategories[0] : "beer";
