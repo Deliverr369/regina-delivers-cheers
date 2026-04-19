@@ -584,20 +584,33 @@ const StoreDetail = () => {
                       })}
                     </div>
                   )}
-                  {items.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                      {(category === "wine" && wineSubcategory !== "all"
-                        ? items.filter(p => getWineSubcategory(p.name) === wineSubcategory)
-                        : category === "spirits" && spiritsSubcategory !== "all"
-                        ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
-                        : category === "smokes" && smokesSubcategory !== "all"
-                        ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
-                        : items
-                      ).map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                      ))}
-                    </div>
-                  ) : (
+                  {items.length > 0 ? (() => {
+                    const q = searchQuery.trim().toLowerCase();
+                    let displayItems = category === "wine" && wineSubcategory !== "all"
+                      ? items.filter(p => getWineSubcategory(p.name) === wineSubcategory)
+                      : category === "spirits" && spiritsSubcategory !== "all"
+                      ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
+                      : category === "smokes" && smokesSubcategory !== "all"
+                      ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
+                      : items;
+                    if (q) {
+                      displayItems = displayItems.filter(p =>
+                        p.name.toLowerCase().includes(q) ||
+                        (p.description?.toLowerCase().includes(q) ?? false)
+                      );
+                    }
+                    return displayItems.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                        {displayItems.map((product) => (
+                          <ProductCard key={product.id} product={product} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground text-sm">
+                        {q ? `No products match "${searchQuery}"` : "No products available in this category"}
+                      </div>
+                    );
+                  })() : (
                     <div className="text-center py-12 text-muted-foreground text-sm">
                       No products available in this category
                     </div>
