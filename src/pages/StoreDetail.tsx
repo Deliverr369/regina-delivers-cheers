@@ -258,22 +258,34 @@ const StoreDetail = () => {
     return [];
   };
 
-  const is24PackSize = (s: string) => /^\s*24\s*[-x]?\s*(pack|cans?|bottles?|btls?|ct|count)?\s*$/i.test(s.trim());
-  const has24Pack = (product: typeof products[0]) => {
-    if (product.size && is24PackSize(product.size)) return true;
-    return packPrices.some(pp => pp.product_id === product.id && is24PackSize(pp.pack_size) && !pp.is_hidden);
+  const getMaxPackCount = (product: typeof products[0]) => {
+    let max = 0;
+    const consider = (s: string | null | undefined) => {
+      if (!s) return;
+      const m = String(s).match(/(\d+(?:\.\d+)?)/);
+      if (m) {
+        const n = parseFloat(m[1]);
+        if (n > max) max = n;
+      }
+    };
+    consider(product.size);
+    packPrices.forEach(pp => {
+      if (pp.product_id === product.id && !pp.is_hidden) consider(pp.pack_size);
+    });
+    return max;
+  };
+
+  const sortByLargestPack = (a: typeof products[0], b: typeof products[0]) => {
+    const diff = getMaxPackCount(b) - getMaxPackCount(a);
+    if (diff !== 0) return diff;
+    return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
   };
 
   const productsByCategory = {
-    beer: products.filter((p) => p.category === "beer").sort((a, b) => {
-      const a24 = has24Pack(a) ? 0 : 1;
-      const b24 = has24Pack(b) ? 0 : 1;
-      if (a24 !== b24) return a24 - b24;
-      return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
-    }),
+    beer: products.filter((p) => p.category === "beer").sort(sortByLargestPack),
     wine: products.filter((p) => p.category === "wine").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
     spirits: products.filter((p) => p.category === "spirits").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-    ciders_seltzers: products.filter((p) => p.category === "ciders_seltzers").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    ciders_seltzers: products.filter((p) => p.category === "ciders_seltzers").sort(sortByLargestPack),
     smokes: products.filter((p) => p.category === "smokes").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
   };
 
