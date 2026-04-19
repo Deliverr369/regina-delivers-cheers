@@ -631,6 +631,21 @@ export type Database = {
         }
         Relationships: []
       }
+      wine_import_staging: {
+        Row: {
+          name: string
+          price: number | null
+        }
+        Insert: {
+          name: string
+          price?: number | null
+        }
+        Update: {
+          name?: string
+          price?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
