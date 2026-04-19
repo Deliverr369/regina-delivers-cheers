@@ -262,7 +262,11 @@ const StoreDetail = () => {
     let max = 0;
     const consider = (s: string | null | undefined) => {
       if (!s) return;
-      const m = String(s).match(/(\d+(?:\.\d+)?)/);
+      // Only count pack-style strings: "24 Cans", "12 Bottles", "6-pack", "1 Tall Can"
+      // Skip pure volume sizes like "355ml", "750ml", "1.14L", "3L"
+      const str = String(s).trim();
+      if (!/can|bottle|btl|pack|tall/i.test(str)) return;
+      const m = str.match(/(\d+(?:\.\d+)?)/);
       if (m) {
         const n = parseFloat(m[1]);
         if (n > max) max = n;
@@ -273,6 +277,20 @@ const StoreDetail = () => {
       if (pp.product_id === product.id && !pp.is_hidden) consider(pp.pack_size);
     });
     return max;
+  };
+
+  const sortByLargestPack = (a: typeof products[0], b: typeof products[0]) => {
+    const diff = getMaxPackCount(b) - getMaxPackCount(a);
+    if (diff !== 0) return diff;
+    return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
+  };
+
+  const productsByCategory = {
+    beer: products.filter((p) => p.category === "beer").sort(sortByLargestPack),
+    wine: products.filter((p) => p.category === "wine").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    spirits: products.filter((p) => p.category === "spirits").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
+    ciders_seltzers: products.filter((p) => p.category === "ciders_seltzers").sort(sortByLargestPack),
+    smokes: products.filter((p) => p.category === "smokes").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
   };
 
   const sortByLargestPack = (a: typeof products[0], b: typeof products[0]) => {
