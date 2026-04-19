@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Truck, Phone } from "lucide-react";
+import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Truck, Phone, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
@@ -168,6 +169,7 @@ const StoreDetail = () => {
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const [wineSubcategory, setWineSubcategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
@@ -500,6 +502,27 @@ const StoreDetail = () => {
             </div>
           ) : (
             <Tabs defaultValue={defaultCategory} className="w-full">
+              {/* Search bar */}
+              <div className="relative max-w-xl mx-auto mb-5">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products in this store..."
+                  className="pl-10 pr-10 h-11 rounded-full bg-card border-border shadow-sm"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
               <TabsList className="mb-6 w-full justify-center overflow-x-auto h-auto p-1.5 gap-1 bg-muted/50 rounded-xl">
                 {availableCategories.includes("beer") && (
                   <TabsTrigger value="beer" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
@@ -561,20 +584,33 @@ const StoreDetail = () => {
                       })}
                     </div>
                   )}
-                  {items.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                      {(category === "wine" && wineSubcategory !== "all"
-                        ? items.filter(p => getWineSubcategory(p.name) === wineSubcategory)
-                        : category === "spirits" && spiritsSubcategory !== "all"
-                        ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
-                        : category === "smokes" && smokesSubcategory !== "all"
-                        ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
-                        : items
-                      ).map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                      ))}
-                    </div>
-                  ) : (
+                  {items.length > 0 ? (() => {
+                    const q = searchQuery.trim().toLowerCase();
+                    let displayItems = category === "wine" && wineSubcategory !== "all"
+                      ? items.filter(p => getWineSubcategory(p.name) === wineSubcategory)
+                      : category === "spirits" && spiritsSubcategory !== "all"
+                      ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
+                      : category === "smokes" && smokesSubcategory !== "all"
+                      ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
+                      : items;
+                    if (q) {
+                      displayItems = displayItems.filter(p =>
+                        p.name.toLowerCase().includes(q) ||
+                        (p.description?.toLowerCase().includes(q) ?? false)
+                      );
+                    }
+                    return displayItems.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                        {displayItems.map((product) => (
+                          <ProductCard key={product.id} product={product} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground text-sm">
+                        {q ? `No products match "${searchQuery}"` : "No products available in this category"}
+                      </div>
+                    );
+                  })() : (
                     <div className="text-center py-12 text-muted-foreground text-sm">
                       No products available in this category
                     </div>
