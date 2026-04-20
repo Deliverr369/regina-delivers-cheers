@@ -249,8 +249,24 @@ Deno.serve(async (req) => {
     let updated = 0;
 
     for (const product of products) {
-      const query = `${product.name} ${product.size ?? ""}`.trim();
-      const hits = await searchSite(domain, query, firecrawlKey);
+      // Build a clean search query: brand + descriptor words, no pack/size noise
+      const cleanName = product.name
+        .replace(/\b\d+\s*(?:pk|pack|cans?|bottles?)\b/gi, "")
+        .replace(/\b\d+(?:\.\d+)?\s*(?:ml|l|oz)\b/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      const query = cleanName || product.name;
+
+      let hits = await searchSite(domain, query, firecrawlKey);
+
+      // Brand-only fallback: try just the first 1-2 words if nothing came back
+      if (hits.length === 0) {
+        const brand = tokenize(product.name).slice(0, 2).join(" ");
+        if (brand && brand !== normalize(query)) {
+          hits = await searchSite(domain, brand, firecrawlKey);
+        }
+      }
+
       if (hits.length === 0) {
         results.push({ id: product.id, name: product.name, status: "no_candidates" });
         continue;
