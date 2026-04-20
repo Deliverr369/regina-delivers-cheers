@@ -11,6 +11,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SuperstoreRequestForm from "@/components/SuperstoreRequestForm";
+
+const SUPERSTORE_ID = "25e9b4a8-850a-4d26-9aad-54c9eb2f183a";
 
 const PACK_SIZES_BY_CATEGORY: Record<string, { value: string; label: string; multiplier: number }[]> = {
   beer: [
@@ -513,7 +516,9 @@ const StoreDetail = () => {
 
         {/* Products */}
         <div className="container mx-auto px-4 py-6">
-          {productsLoading ? (
+          {id === SUPERSTORE_ID ? (
+            <SuperstoreRequestForm storeId={store.id} storeName={store.name} />
+          ) : productsLoading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -638,6 +643,7 @@ const StoreDetail = () => {
           )}
         </div>
       </main>
+
 
       <Footer />
     </div>
