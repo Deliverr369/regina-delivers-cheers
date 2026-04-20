@@ -319,6 +319,7 @@ const Checkout = () => {
                 savedCards={savedCards}
                 selectedCardId={selectedCardId}
                 setSelectedCardId={setSelectedCardId}
+                clientSecret={clientSecret}
               />
             </Elements>
           ) : (
@@ -348,6 +349,7 @@ interface CheckoutBodyProps extends PaymentFormProps {
   savedCards: SavedCard[];
   selectedCardId: string | "new";
   setSelectedCardId: (v: string | "new") => void;
+  clientSecret: string;
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
