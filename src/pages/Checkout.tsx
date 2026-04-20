@@ -293,7 +293,7 @@ const Checkout = () => {
               <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
             </div>
           ) : clientSecret && elementsOptions ? (
-            <Elements stripe={stripePromise} options={elementsOptions}>
+            <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
               <CheckoutBody
                 formData={formData}
                 setFormData={setFormData}
@@ -316,6 +316,9 @@ const Checkout = () => {
                 setError={setError}
                 paymentIntentId={paymentIntentId}
                 onSuccess={handleSuccess}
+                savedCards={savedCards}
+                selectedCardId={selectedCardId}
+                setSelectedCardId={setSelectedCardId}
               />
             </Elements>
           ) : (
@@ -342,6 +345,9 @@ interface CheckoutBodyProps extends PaymentFormProps {
   setTipPreset: (v: number | "custom" | null) => void;
   customTip: string;
   setCustomTip: (v: string) => void;
+  savedCards: SavedCard[];
+  selectedCardId: string | "new";
+  setSelectedCardId: (v: string | "new") => void;
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
