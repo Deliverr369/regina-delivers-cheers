@@ -28,6 +28,15 @@ const Stores = () => {
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "takeout">("liquor");
+
+  const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
+
+  const tabs = [
+    { id: "liquor" as const, label: "Liquor stores", emoji: "🍷" },
+    { id: "smoke" as const, label: "Smoke and Vape", emoji: "🚬" },
+    { id: "takeout" as const, label: "Takeout", emoji: "🍔" },
+  ];
 
   useEffect(() => {
     const paramAddress = searchParams.get("address");
