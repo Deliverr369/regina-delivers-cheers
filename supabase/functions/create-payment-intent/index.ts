@@ -32,9 +32,11 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const user = userData.user;
 
     const body = await req.json();
     const estimatedTotal = Number(body?.estimated_total);
+    const selectedPaymentMethodId: string | undefined = body?.payment_method_id;
     if (!Number.isFinite(estimatedTotal) || estimatedTotal <= 0) {
       return new Response(JSON.stringify({ error: "Invalid estimated_total" }), {
         status: 400,
@@ -42,27 +44,64 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Authorize estimated_total + 30% buffer (in cents)
     const authorizedAmountCents = Math.round(estimatedTotal * 1.3 * 100);
-
     const stripe = createStripeClient("sandbox");
-    const intent = await stripe.paymentIntents.create({
+
+    // Service-role client to update profiles (bypass RLS quirks)
+    const adminSupabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Ensure Stripe customer exists for this user
+    const { data: profile } = await adminSupabase
+      .from("profiles")
+      .select("stripe_customer_id, full_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    let customerId = profile?.stripe_customer_id as string | null;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email || profile?.email || undefined,
+        name: profile?.full_name || undefined,
+        metadata: { user_id: user.id },
+      });
+      customerId = customer.id;
+      await adminSupabase
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id);
+    }
+
+    const intentParams: any = {
       amount: authorizedAmountCents,
       currency: "cad",
       capture_method: "manual",
-      automatic_payment_methods: { enabled: true },
+      customer: customerId,
+      setup_future_usage: "off_session",
       metadata: {
-        user_id: userData.user.id,
+        user_id: user.id,
         estimated_total: String(estimatedTotal),
         buffer_pct: "30",
       },
-    });
+    };
+
+    if (selectedPaymentMethodId) {
+      intentParams.payment_method = selectedPaymentMethodId;
+      intentParams.payment_method_types = ["card"];
+    } else {
+      intentParams.automatic_payment_methods = { enabled: true };
+    }
+
+    const intent = await stripe.paymentIntents.create(intentParams);
 
     return new Response(
       JSON.stringify({
         client_secret: intent.client_secret,
         payment_intent_id: intent.id,
         authorized_amount: authorizedAmountCents / 100,
+        customer_id: customerId,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
