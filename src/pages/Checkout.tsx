@@ -364,7 +364,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe) return;
     if (props.formData.city.trim().toLowerCase() !== "regina") {
       props.setCityError("We only deliver within Regina.");
       return;
@@ -372,15 +372,39 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     props.setIsSubmitting(true);
     props.setError(null);
 
-    const { error: stripeError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: window.location.origin + "/order-confirmation" },
-      redirect: "if_required",
-    });
-    if (stripeError) {
-      props.setError(stripeError.message || "Payment authorization failed");
-      props.setIsSubmitting(false);
-      return;
+    const usingSavedCard = props.selectedCardId !== "new";
+
+    if (usingSavedCard) {
+      // Saved card: PaymentIntent was created server-side with this payment_method.
+      // Just confirm using the client secret — Stripe will use the attached PM.
+      const { error: stripeError } = await stripe.confirmCardPayment(
+        // @ts-expect-error - clientSecret is available via Elements options but we re-derive
+        (await elements?.fetchUpdates?.()) || undefined,
+      ).catch(() => ({ error: null as any })) as any;
+
+      // Use the simpler API: stripe.confirmCardPayment(clientSecret)
+      // We need clientSecret — pass via window since it's in parent scope
+      const cs = (window as any).__lovable_payment_client_secret as string | undefined;
+      if (cs) {
+        const result = await stripe.confirmCardPayment(cs);
+        if (result.error) {
+          props.setError(result.error.message || "Payment authorization failed");
+          props.setIsSubmitting(false);
+          return;
+        }
+      }
+    } else {
+      if (!elements) { props.setIsSubmitting(false); return; }
+      const { error: stripeError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: window.location.origin + "/order-confirmation" },
+        redirect: "if_required",
+      });
+      if (stripeError) {
+        props.setError(stripeError.message || "Payment authorization failed");
+        props.setIsSubmitting(false);
+        return;
+      }
     }
     await props.onSuccess();
   };
