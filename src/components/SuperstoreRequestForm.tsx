@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, ShoppingCart, ArrowRight, ArrowLeft, Check } from "lucide-react";
 
 interface RequestItem {
@@ -29,6 +31,61 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
   const [items, setItems] = useState<RequestItem[]>([]);
   const [step, setStep] = useState<Step>("name");
   const [draft, setDraft] = useState<RequestItem>({ name: "", size: "", quantity: 1 });
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Fetch all unique product names from the database for autocomplete
+  const { data: allProductNames = [] } = useQuery({
+    queryKey: ["all-product-names"],
+    queryFn: async () => {
+      const names = new Set<string>();
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("name")
+          .range(from, from + batchSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        data.forEach((p) => p.name && names.add(p.name));
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      return Array.from(names).sort();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const suggestions = useMemo(() => {
+    const q = draft.name.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const startsWith: string[] = [];
+    const contains: string[] = [];
+    for (const name of allProductNames) {
+      const lower = name.toLowerCase();
+      if (lower.startsWith(q)) startsWith.push(name);
+      else if (lower.includes(q)) contains.push(name);
+      if (startsWith.length >= 8) break;
+    }
+    return [...startsWith, ...contains].slice(0, 8);
+  }, [draft.name, allProductNames]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const pickSuggestion = (name: string) => {
+    setDraft((d) => ({ ...d, name }));
+    setShowSuggestions(false);
+  };
 
   const resetDraft = () => setDraft({ name: "", size: "", quantity: 1 });
 
@@ -136,16 +193,48 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
             <Label htmlFor="item-name" className="text-base font-semibold">
               What liquor item do you want from {storeName}?
             </Label>
-            <Input
-              id="item-name"
-              autoFocus
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && handleNext()}
-              placeholder="e.g. Crown Royal, Bud Light, Yellow Tail Shiraz"
-              className="h-12 text-base"
-            />
-            <p className="text-xs text-muted-foreground">Type the brand and product name as you'd ask the cashier.</p>
+            <div className="relative" ref={suggestionsRef}>
+              <Input
+                id="item-name"
+                autoFocus
+                value={draft.name}
+                onChange={(e) => {
+                  setDraft({ ...draft, name: e.target.value });
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (showSuggestions && suggestions.length > 0) {
+                      pickSuggestion(suggestions[0]);
+                    } else {
+                      handleNext();
+                    }
+                  } else if (e.key === "Escape") {
+                    setShowSuggestions(false);
+                  }
+                }}
+                placeholder="e.g. Crown Royal, Bud Light, Yellow Tail Shiraz"
+                className="h-12 text-base"
+                autoComplete="off"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-20 left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
+                  {suggestions.map((s) => (
+                    <button
+                      type="button"
+                      key={s}
+                      onClick={() => pickSuggestion(s)}
+                      className="w-full text-left px-4 py-2.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">Start typing — we'll suggest matching products from our catalog.</p>
           </div>
         )}
 
