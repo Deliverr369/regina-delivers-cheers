@@ -14,6 +14,7 @@ interface RequestItem {
   name: string;
   size: string;
   quantity: number;
+  image_url?: string | null;
 }
 
 interface SuperstoreRequestFormProps {
@@ -90,12 +91,12 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const pickSuggestion = (name: string) => {
-    setDraft((d) => ({ ...d, name }));
+  const pickSuggestion = (name: string, image_url: string | null) => {
+    setDraft((d) => ({ ...d, name, image_url }));
     setShowSuggestions(false);
   };
 
-  const resetDraft = () => setDraft({ name: "", size: "", quantity: 1 });
+  const resetDraft = () => setDraft({ name: "", size: "", quantity: 1, image_url: null });
 
   const handleNext = () => {
     if (step === "name") {
@@ -152,7 +153,7 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
           id: `request-${Date.now()}-${idx}-${i}`,
           name: displayName,
           price: 0, // Admin will confirm final price after fulfillment
-          image: "",
+          image: item.image_url || "",
           storeId,
           storeName,
         });
@@ -215,7 +216,7 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
                   if (e.key === "Enter") {
                     e.preventDefault();
                     if (showSuggestions && suggestions.length > 0) {
-                      pickSuggestion(suggestions[0].name);
+                      pickSuggestion(suggestions[0].name, suggestions[0].image_url);
                     } else {
                       handleNext();
                     }
@@ -233,7 +234,7 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
                     <button
                       type="button"
                       key={s.name}
-                      onClick={() => pickSuggestion(s.name)}
+                      onClick={() => pickSuggestion(s.name, s.image_url)}
                       className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0"
                     >
                       <div className="h-10 w-10 flex-shrink-0 rounded-md bg-muted overflow-hidden flex items-center justify-center">
