@@ -28,6 +28,15 @@ const Stores = () => {
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "takeout">("liquor");
+
+  const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
+
+  const tabs = [
+    { id: "liquor" as const, label: "Liquor stores", emoji: "🍷" },
+    { id: "smoke" as const, label: "Smoke and Vape", emoji: "🚬" },
+    { id: "takeout" as const, label: "Takeout", emoji: "🍔" },
+  ];
 
   useEffect(() => {
     const paramAddress = searchParams.get("address");
@@ -52,7 +61,13 @@ const Stores = () => {
     },
   });
 
-  const filteredStores = stores
+  const tabFilteredStores = stores.filter((store) => {
+    if (activeTab === "smoke") return store.id === SEVEN_ELEVEN_ID;
+    if (activeTab === "takeout") return false;
+    return store.id !== SEVEN_ELEVEN_ID;
+  });
+
+  const filteredStores = tabFilteredStores
     .filter((store) =>
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.address.toLowerCase().includes(searchQuery.toLowerCase())
@@ -96,14 +111,44 @@ const Stores = () => {
             </div>
           </div>
         )}
+        {/* Category Tabs */}
+        <div className="bg-background border-b border-border">
+          <div className="container mx-auto px-4">
+            <div className="flex items-end justify-center gap-8 sm:gap-16 overflow-x-auto">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`relative flex flex-col items-center gap-2 pt-4 pb-3 min-w-[90px] transition-colors ${
+                      isActive ? "text-primary" : "text-foreground hover:text-primary/80"
+                    }`}
+                  >
+                    <span className="text-4xl leading-none" aria-hidden>{tab.emoji}</span>
+                    <span className="font-display font-bold text-base whitespace-nowrap">{tab.label}</span>
+                    {isActive && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-16 bg-primary rounded-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Page Header */}
         <div className="bg-secondary/50 border-b border-border">
           <div className="container mx-auto px-4 py-8 md:py-10">
             <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-1.5">
-              Liquor Stores in Regina
+              {activeTab === "liquor" && "Liquor Stores in Regina"}
+              {activeTab === "smoke" && "Smoke and Vape in Regina"}
+              {activeTab === "takeout" && "Takeout in Regina"}
             </h1>
             <p className="text-muted-foreground">
-              Browse and order from {stores.length} local stores
+              {activeTab === "takeout"
+                ? "Coming soon — restaurant takeout delivery"
+                : `Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "store" : "stores"}`}
             </p>
           </div>
         </div>
