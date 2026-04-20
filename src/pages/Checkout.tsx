@@ -86,9 +86,12 @@ const Checkout = () => {
 
   const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax + tip;
 
-  const [formData, setFormData] = useState<FormData>({
-    firstName: "", lastName: "", email: user?.email || "", phone: "",
-    address: "", city: "Regina", postalCode: "", deliveryInstructions: "",
+  const [formData, setFormData] = useState<FormData>(() => {
+    const savedAddress = typeof window !== "undefined" ? localStorage.getItem("delivery_address") || "" : "";
+    return {
+      firstName: "", lastName: "", email: user?.email || "", phone: "",
+      address: savedAddress, city: "Regina", postalCode: "", deliveryInstructions: "",
+    };
   });
   const [cityError, setCityError] = useState<string | null>(null);
 
