@@ -31,6 +31,61 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
   const [items, setItems] = useState<RequestItem[]>([]);
   const [step, setStep] = useState<Step>("name");
   const [draft, setDraft] = useState<RequestItem>({ name: "", size: "", quantity: 1 });
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Fetch all unique product names from the database for autocomplete
+  const { data: allProductNames = [] } = useQuery({
+    queryKey: ["all-product-names"],
+    queryFn: async () => {
+      const names = new Set<string>();
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("name")
+          .range(from, from + batchSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        data.forEach((p) => p.name && names.add(p.name));
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      return Array.from(names).sort();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const suggestions = useMemo(() => {
+    const q = draft.name.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const startsWith: string[] = [];
+    const contains: string[] = [];
+    for (const name of allProductNames) {
+      const lower = name.toLowerCase();
+      if (lower.startsWith(q)) startsWith.push(name);
+      else if (lower.includes(q)) contains.push(name);
+      if (startsWith.length >= 8) break;
+    }
+    return [...startsWith, ...contains].slice(0, 8);
+  }, [draft.name, allProductNames]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const pickSuggestion = (name: string) => {
+    setDraft((d) => ({ ...d, name }));
+    setShowSuggestions(false);
+  };
 
   const resetDraft = () => setDraft({ name: "", size: "", quantity: 1 });
 
