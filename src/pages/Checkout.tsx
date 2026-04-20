@@ -375,23 +375,13 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     const usingSavedCard = props.selectedCardId !== "new";
 
     if (usingSavedCard) {
-      // Saved card: PaymentIntent was created server-side with this payment_method.
-      // Just confirm using the client secret — Stripe will use the attached PM.
-      const { error: stripeError } = await stripe.confirmCardPayment(
-        // @ts-expect-error - clientSecret is available via Elements options but we re-derive
-        (await elements?.fetchUpdates?.()) || undefined,
-      ).catch(() => ({ error: null as any })) as any;
-
-      // Use the simpler API: stripe.confirmCardPayment(clientSecret)
-      // We need clientSecret — pass via window since it's in parent scope
-      const cs = (window as any).__lovable_payment_client_secret as string | undefined;
-      if (cs) {
-        const result = await stripe.confirmCardPayment(cs);
-        if (result.error) {
-          props.setError(result.error.message || "Payment authorization failed");
-          props.setIsSubmitting(false);
-          return;
-        }
+      // PaymentIntent was created with the saved payment_method already attached.
+      // Confirm it directly using the client secret.
+      const result = await stripe.confirmCardPayment(props.clientSecret);
+      if (result.error) {
+        props.setError(result.error.message || "Payment authorization failed");
+        props.setIsSubmitting(false);
+        return;
       }
     } else {
       if (!elements) { props.setIsSubmitting(false); return; }
