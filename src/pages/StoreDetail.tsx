@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Truck, Phone, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -206,12 +206,17 @@ const StoreDetail = () => {
     },
   });
 
-  const productIdsWithPacks = products.map(p => p.id);
+  // Stable query key based on store id + product count (not array of ids — that recreates each render)
+  const productIdsWithPacks = useMemo(() => products.map(p => p.id), [products]);
+  const productIdsKey = useMemo(
+    () => productIdsWithPacks.length > 0 ? `${id}:${productIdsWithPacks.length}` : "",
+    [id, productIdsWithPacks.length]
+  );
+
   const { data: packPrices = [] } = useQuery<PackPrice[]>({
-    queryKey: ["product_pack_prices", productIdsWithPacks],
+    queryKey: ["product_pack_prices", productIdsKey],
     queryFn: async () => {
       if (productIdsWithPacks.length === 0) return [];
-      // Fetch all pack prices in batches to avoid the 1000-row default limit
       const allPrices: PackPrice[] = [];
       const batchSize = 200;
       for (let i = 0; i < productIdsWithPacks.length; i += batchSize) {
@@ -226,7 +231,19 @@ const StoreDetail = () => {
       return allPrices;
     },
     enabled: productIdsWithPacks.length > 0,
+    staleTime: 60_000,
   });
+
+  // Index packs by product_id once → O(1) lookup instead of O(N) filter per product
+  const packsByProductId = useMemo(() => {
+    const map = new Map<string, PackPrice[]>();
+    for (const pp of packPrices) {
+      const arr = map.get(pp.product_id);
+      if (arr) arr.push(pp);
+      else map.set(pp.product_id, [pp]);
+    }
+    return map;
+  }, [packPrices]);
 
   const getPackSortValue = (packSize: string): number => {
     const match = String(packSize || "").match(/(\d+(?:\.\d+)?)/);
@@ -234,67 +251,82 @@ const StoreDetail = () => {
   };
 
   const getAvailablePackSizes = (productId: string, category: keyof typeof PACK_SIZES_BY_CATEGORY) => {
-    const productPackPrices = packPrices.filter(pp => pp.product_id === productId && !pp.is_hidden);
-    
-    if (productPackPrices.length > 0) {
-      const baseSizes = PACK_SIZES_BY_CATEGORY[category] || [];
-      const matchedFromBase = baseSizes.filter(size => 
-        productPackPrices.some(pp => pp.pack_size === size.value)
-      );
-      
-      const unmatchedPrices = productPackPrices.filter(pp => 
-        !baseSizes.some(s => s.value === pp.pack_size)
-      );
-      
-      const dynamicSizes = unmatchedPrices.map(pp => ({
-        value: pp.pack_size,
-        label: pp.pack_size,
-        multiplier: 1,
-      }));
-      
-      // Always sort largest -> smallest (24, 18, 15, 8, 6, 1)
-      return [...matchedFromBase, ...dynamicSizes].sort(
-        (a, b) => getPackSortValue(b.value) - getPackSortValue(a.value)
-      );
-    }
-    
-    return [];
+    const all = packsByProductId.get(productId);
+    if (!all || all.length === 0) return [];
+    const productPackPrices = all.filter(pp => !pp.is_hidden);
+    if (productPackPrices.length === 0) return [];
+
+    const baseSizes = PACK_SIZES_BY_CATEGORY[category] || [];
+    const matchedFromBase = baseSizes.filter(size =>
+      productPackPrices.some(pp => pp.pack_size === size.value)
+    );
+    const unmatchedPrices = productPackPrices.filter(pp =>
+      !baseSizes.some(s => s.value === pp.pack_size)
+    );
+    const dynamicSizes = unmatchedPrices.map(pp => ({
+      value: pp.pack_size,
+      label: pp.pack_size,
+      multiplier: 1,
+    }));
+    return [...matchedFromBase, ...dynamicSizes].sort(
+      (a, b) => getPackSortValue(b.value) - getPackSortValue(a.value)
+    );
   };
 
-  const getMaxPackCount = (product: typeof products[0]) => {
-    let max = 0;
-    const consider = (s: string | null | undefined) => {
-      if (!s) return;
-      // Only count pack-style strings: "24 Cans", "12 Bottles", "6-pack", "1 Tall Can"
-      // Skip pure volume sizes like "355ml", "750ml", "1.14L", "3L"
+  // Pre-compute max pack count per product once for sorting (avoids O(N×M) on every render)
+  const maxPackCountByProductId = useMemo(() => {
+    const map = new Map<string, number>();
+    const considerStr = (current: number, s: string | null | undefined) => {
+      if (!s) return current;
       const str = String(s).trim();
-      if (!/can|bottle|btl|pack|tall/i.test(str)) return;
+      if (!/can|bottle|btl|pack|tall/i.test(str)) return current;
       const m = str.match(/(\d+(?:\.\d+)?)/);
-      if (m) {
-        const n = parseFloat(m[1]);
-        if (n > max) max = n;
-      }
+      if (!m) return current;
+      const n = parseFloat(m[1]);
+      return n > current ? n : current;
     };
-    consider(product.size);
-    packPrices.forEach(pp => {
-      if (pp.product_id === product.id && !pp.is_hidden) consider(pp.pack_size);
-    });
-    return max;
-  };
+    for (const p of products) {
+      let max = considerStr(0, p.size);
+      const packs = packsByProductId.get(p.id);
+      if (packs) {
+        for (const pp of packs) {
+          if (!pp.is_hidden) max = considerStr(max, pp.pack_size);
+        }
+      }
+      map.set(p.id, max);
+    }
+    return map;
+  }, [products, packsByProductId]);
 
-  const sortByLargestPack = (a: typeof products[0], b: typeof products[0]) => {
-    const diff = getMaxPackCount(b) - getMaxPackCount(a);
-    if (diff !== 0) return diff;
-    return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
-  };
+  const productsByCategory = useMemo(() => {
+    const sortByLargestPack = (a: typeof products[0], b: typeof products[0]) => {
+      const diff = (maxPackCountByProductId.get(b.id) ?? 0) - (maxPackCountByProductId.get(a.id) ?? 0);
+      if (diff !== 0) return diff;
+      return ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
+    };
+    const sortByOrder = (a: typeof products[0], b: typeof products[0]) =>
+      ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name);
 
-  const productsByCategory = {
-    beer: products.filter((p) => p.category === "beer").sort(sortByLargestPack),
-    wine: products.filter((p) => p.category === "wine").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-    spirits: products.filter((p) => p.category === "spirits").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-    ciders_seltzers: products.filter((p) => p.category === "ciders_seltzers").sort(sortByLargestPack),
-    smokes: products.filter((p) => p.category === "smokes").sort((a, b) => ((a as any).display_order ?? 0) - ((b as any).display_order ?? 0) || a.name.localeCompare(b.name)),
-  };
+    const beer: typeof products = [];
+    const wine: typeof products = [];
+    const spirits: typeof products = [];
+    const ciders_seltzers: typeof products = [];
+    const smokes: typeof products = [];
+    for (const p of products) {
+      if (p.category === "beer") beer.push(p);
+      else if (p.category === "wine") wine.push(p);
+      else if (p.category === "spirits") spirits.push(p);
+      else if (p.category === "ciders_seltzers") ciders_seltzers.push(p);
+      else if (p.category === "smokes") smokes.push(p);
+    }
+    return {
+      beer: beer.sort(sortByLargestPack),
+      wine: wine.sort(sortByOrder),
+      spirits: spirits.sort(sortByOrder),
+      ciders_seltzers: ciders_seltzers.sort(sortByLargestPack),
+      smokes: smokes.sort(sortByOrder),
+    };
+  }, [products, maxPackCountByProductId]);
 
 
   const availableCategories = Object.entries(productsByCategory).filter(([_, items]) => items.length > 0).map(([cat]) => cat);
