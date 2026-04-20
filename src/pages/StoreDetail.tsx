@@ -596,6 +596,9 @@ const StoreDetail = () => {
                 {availableCategories.includes("smokes") && (
                   <TabsTrigger value="smokes" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-slate-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>
                 )}
+                {availableCategories.includes("convenience") && (
+                  <TabsTrigger value="convenience" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🛒 Convenience ({productsByCategory.convenience.length})</TabsTrigger>
+                )}
               </TabsList>
 
               {Object.entries(productsByCategory)
