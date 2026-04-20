@@ -172,6 +172,7 @@ const StoreDetail = () => {
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const [wineSubcategory, setWineSubcategory] = useState<string>("all");
+  const [convenienceSubcategory, setConvenienceSubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
@@ -644,6 +645,25 @@ const StoreDetail = () => {
                       })}
                     </div>
                   )}
+                  {category === "convenience" && items.length > 0 && (() => {
+                    const subs = Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[];
+                    if (subs.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        <Button variant={convenienceSubcategory === "all" ? "default" : "outline"} size="sm" onClick={() => setConvenienceSubcategory("all")} className="rounded-full text-xs h-8">
+                          All ({items.length})
+                        </Button>
+                        {subs.map((sub) => {
+                          const count = items.filter(p => (p as any).subcategory === sub).length;
+                          return (
+                            <Button key={sub} variant={convenienceSubcategory === sub ? "default" : "outline"} size="sm" onClick={() => setConvenienceSubcategory(sub)} className="rounded-full text-xs h-8">
+                              {sub} ({count})
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                   {items.length > 0 ? (() => {
                     const q = searchQuery.trim().toLowerCase();
                     let displayItems = category === "wine" && wineSubcategory !== "all"
@@ -652,6 +672,8 @@ const StoreDetail = () => {
                       ? items.filter(p => getSpiritsSubcategory(p.name) === spiritsSubcategory)
                       : category === "smokes" && smokesSubcategory !== "all"
                       ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
+                      : category === "convenience" && convenienceSubcategory !== "all"
+                      ? items.filter(p => (p as any).subcategory === convenienceSubcategory)
                       : items;
                     if (q) {
                       displayItems = displayItems.filter(p =>
