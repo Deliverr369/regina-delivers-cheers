@@ -26,8 +26,22 @@ function normalize(s: string): string {
     .trim();
 }
 
+// Stop words and packaging words that shouldn't count toward match score
+const STOP = new Set([
+  "the","and","with","for","from","pack","cans","can","bottle","bottles","btl","btls",
+  "case","cases","tall","tallboy","tallboys","slim","sleek","stubby","ml","mls","ltr",
+  "litre","liter","l","oz","x","of","pk","ea","each","new","limited","edition",
+]);
+
 function tokenize(s: string, minLen = 2): string[] {
-  return normalize(s).split(" ").filter((t) => t.length > minLen);
+  return normalize(s).split(" ")
+    .filter((t) => t.length > minLen && !STOP.has(t) && !/^\d+$/.test(t));
+}
+
+// Brand/keyword tokens (preserve numbers like "1792", "100", "7")
+function keywordTokens(s: string): string[] {
+  return normalize(s).split(" ")
+    .filter((t) => t.length >= 2 && !STOP.has(t));
 }
 
 // Extract a numeric volume in mL and a pack count from a string like
@@ -52,16 +66,36 @@ function parseSize(s: string): { ml?: number; pack?: number } {
 }
 
 function scoreCandidate(product: ProductRow, hit: MapHit): number {
-  const haystack = `${hit.title ?? ""} ${hit.description ?? ""} ${hit.url}`;
+  const haystack = `${hit.title ?? ""} ${hit.description ?? ""} ${hit.url.replace(/[-_/]/g, " ")}`;
   const productText = `${product.name} ${product.size ?? ""}`;
+
+  // Token overlap on meaningful words (excluding packaging stop-words)
   const productTokens = new Set(tokenize(productText));
   const hayTokens = new Set(tokenize(haystack));
-  if (productTokens.size === 0) return 0;
   let overlap = 0;
   for (const t of productTokens) if (hayTokens.has(t)) overlap++;
-  let score = overlap / productTokens.size; // 0..1
+  let score = productTokens.size > 0 ? overlap / productTokens.size : 0; // 0..1
 
-  // Size match bonus / penalty
+  // Bonus for keyword (incl. number) matches like "1792", "100", "7"
+  const pKeys = new Set(keywordTokens(productText));
+  const hKeys = new Set(keywordTokens(haystack));
+  let keyHits = 0;
+  for (const t of pKeys) if (hKeys.has(t)) keyHits++;
+  score += Math.min(keyHits, 4) * 0.05;
+
+  // Strong bonus if the FIRST word of the product name (usually the brand) appears
+  const firstWord = tokenize(product.name)[0];
+  if (firstWord && hayTokens.has(firstWord)) score += 0.25;
+
+  // Bigram bonus: e.g. "smirnoff ice", "twisted tea", "bud light"
+  const pTokensArr = tokenize(product.name);
+  const hayNorm = ` ${normalize(haystack)} `;
+  for (let i = 0; i < pTokensArr.length - 1; i++) {
+    const bg = ` ${pTokensArr[i]} ${pTokensArr[i + 1]} `;
+    if (hayNorm.includes(bg)) score += 0.2;
+  }
+
+  // Size match bonus / penalty (volume in mL)
   const ps = parseSize(productText);
   const hs = parseSize(haystack);
   if (ps.ml && hs.ml) {
@@ -69,14 +103,18 @@ function scoreCandidate(product: ProductRow, hit: MapHit): number {
     else if (Math.abs(ps.ml - hs.ml) / ps.ml < 0.05) score += 0.2;
     else score -= 0.25;
   }
+  // Pack match: same pack is a big win, mismatch is a soft penalty (some sites only list one pack size)
   if (ps.pack && hs.pack) {
-    if (ps.pack === hs.pack) score += 0.3;
-    else score -= 0.2;
+    if (ps.pack === hs.pack) score += 0.4;
+    else if (Math.abs(ps.pack - hs.pack) <= 1) score -= 0.05;
+    else score -= 0.15;
+  } else if (ps.pack && !hs.pack) {
+    // Don't penalize — site may not advertise pack count in title
   }
 
   // Penalize obvious deposit / non-product pages
   if (/deposit\s+for/i.test(hit.title ?? "")) score -= 1;
-  if (/\/(deposit|gift|policies|pages|blogs)/i.test(hit.url)) score -= 0.5;
+  if (/\/(deposit|gift|policies|pages|blogs|collections\/?$)/i.test(hit.url)) score -= 0.5;
 
   return score;
 }
@@ -211,8 +249,24 @@ Deno.serve(async (req) => {
     let updated = 0;
 
     for (const product of products) {
-      const query = `${product.name} ${product.size ?? ""}`.trim();
-      const hits = await searchSite(domain, query, firecrawlKey);
+      // Build a clean search query: brand + descriptor words, no pack/size noise
+      const cleanName = product.name
+        .replace(/\b\d+\s*(?:pk|pack|cans?|bottles?)\b/gi, "")
+        .replace(/\b\d+(?:\.\d+)?\s*(?:ml|l|oz)\b/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      const query = cleanName || product.name;
+
+      let hits = await searchSite(domain, query, firecrawlKey);
+
+      // Brand-only fallback: try just the first 1-2 words if nothing came back
+      if (hits.length === 0) {
+        const brand = tokenize(product.name).slice(0, 2).join(" ");
+        if (brand && brand !== normalize(query)) {
+          hits = await searchSite(domain, brand, firecrawlKey);
+        }
+      }
+
       if (hits.length === 0) {
         results.push({ id: product.id, name: product.name, status: "no_candidates" });
         continue;
