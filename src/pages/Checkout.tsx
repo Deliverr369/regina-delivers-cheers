@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -55,172 +55,6 @@ interface PaymentFormProps {
   paymentIntentId: string;
   onSuccess: () => Promise<void>;
 }
-
-const PaymentForm = ({
-  formData,
-  setFormData,
-  cityError,
-  setCityError,
-  estimatedTotal,
-  authorizedAmount,
-  isSubmitting,
-  setIsSubmitting,
-  setError,
-  paymentIntentId,
-  onSuccess,
-}: PaymentFormProps) => {
-  const stripe = useStripe();
-  const elements = useElements();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (name === "city") {
-      setCityError(value.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-    if (formData.city.trim().toLowerCase() !== "regina") {
-      setCityError("We only deliver within Regina.");
-      return;
-    }
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      // Confirm the PaymentIntent (authorization only — no capture yet)
-      const { error: stripeError } = await stripe.confirmPayment({
-        elements,
-        confirmParams: { return_url: window.location.origin + "/order-confirmation" },
-        redirect: "if_required",
-      });
-
-      if (stripeError) {
-        setError(stripeError.message || "Payment authorization failed");
-        setIsSubmitting(false);
-        return;
-      }
-
-      await onSuccess();
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-5">
-          {/* Contact */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</span>
-              Contact Information
-            </h2>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div><Label className="text-sm">First Name</Label><Input name="firstName" value={formData.firstName} onChange={handleChange} required className="mt-1 h-10" /></div>
-              <div><Label className="text-sm">Last Name</Label><Input name="lastName" value={formData.lastName} onChange={handleChange} required className="mt-1 h-10" /></div>
-              <div><Label className="text-sm">Email</Label><Input name="email" type="email" value={formData.email} onChange={handleChange} required className="mt-1 h-10" /></div>
-              <div><Label className="text-sm">Phone</Label><Input name="phone" type="tel" value={formData.phone} onChange={handleChange} required className="mt-1 h-10" /></div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</span>
-              Delivery Address
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm">Street Address</Label>
-                <div className="relative mt-1">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                  <Input name="address" value={formData.address} onChange={handleChange} className="pl-10 h-10" placeholder="123 Main Street" required />
-                </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-sm">City</Label>
-                  <Input name="city" value={formData.city} onChange={handleChange} required className={`mt-1 h-10 ${cityError ? "border-destructive" : ""}`} />
-                  {cityError && <p className="text-destructive text-xs mt-1">{cityError}</p>}
-                </div>
-                <div><Label className="text-sm">Postal Code</Label><Input name="postalCode" value={formData.postalCode} onChange={handleChange} placeholder="S4X 1A2" required className="mt-1 h-10" /></div>
-              </div>
-              <div>
-                <Label className="text-sm">Delivery Instructions (optional)</Label>
-                <Input name="deliveryInstructions" value={formData.deliveryInstructions} onChange={handleChange} placeholder="Ring doorbell, leave at door, etc." className="mt-1 h-10" />
-              </div>
-            </div>
-          </div>
-
-          {/* Payment */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</span>
-              Payment Method
-            </h2>
-            <Alert className="mb-4 border-primary/20 bg-primary/5">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-xs">
-                <strong>Final pricing confirmed by the store.</strong> Your card will be authorized for up to <strong>${authorizedAmount.toFixed(2)}</strong> (estimate +30% buffer). You'll only be charged the actual amount once your store confirms the final price.
-              </AlertDescription>
-            </Alert>
-            <div className="border border-border rounded-xl p-3">
-              <PaymentElement />
-            </div>
-          </div>
-        </div>
-
-        {/* Summary */}
-        <div className="lg:col-span-1">
-          <SummaryCard
-            estimatedTotal={estimatedTotal}
-            authorizedAmount={authorizedAmount}
-            isSubmitting={isSubmitting}
-            disabled={!stripe || !elements}
-          />
-        </div>
-      </div>
-    </form>
-  );
-};
-
-const SummaryCard = ({
-  estimatedTotal,
-  authorizedAmount,
-  isSubmitting,
-  disabled,
-}: {
-  estimatedTotal: number;
-  authorizedAmount: number;
-  isSubmitting: boolean;
-  disabled: boolean;
-}) => (
-  <div className="bg-card rounded-2xl border border-border p-5 sticky top-20">
-    <h2 className="font-display text-lg font-bold text-foreground mb-4">Order Summary</h2>
-    <SummaryLines />
-    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-lg p-2.5 mb-4">
-      <p className="text-[11px] text-amber-900 dark:text-amber-200 leading-snug">
-        <strong>Estimated total: ${estimatedTotal.toFixed(2)}</strong><br />
-        Card hold: ${authorizedAmount.toFixed(2)} (released if not used)
-      </p>
-    </div>
-    <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-4">
-      <Clock className="h-3.5 w-3.5" /> Est. delivery: 25-35 min
-    </div>
-    <Button type="submit" className="w-full gap-2 rounded-full font-semibold" size="lg" disabled={disabled || isSubmitting}>
-      {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Authorizing...</> : <><CheckCircle className="h-4 w-4" /> Authorize ${authorizedAmount.toFixed(2)}</>}
-    </Button>
-    <p className="text-[10px] text-muted-foreground text-center mt-3">Must be 19+. ID required on delivery.</p>
-  </div>
-);
-
-const SummaryLines = () => null; // populated by parent via context — keeping summary simple here
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -360,30 +194,45 @@ const Checkout = () => {
   if (cartItems.length === 0) { navigate("/cart"); return null; }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-secondary/40 via-background to-background">
       <Header />
-      <main className="pt-20 pb-16">
-        <div className="bg-secondary/50 border-b border-border">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-3">
-              <Link to="/cart" className="text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <h1 className="font-display text-2xl font-bold text-foreground">Checkout</h1>
+      <main className="pt-20 pb-20">
+        {/* Page header */}
+        <div className="container mx-auto px-4 pt-8 pb-6">
+          <Link
+            to="/cart"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to cart
+          </Link>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                Checkout
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5" />
+                Secure, encrypted payment · Powered by Stripe
+              </p>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-success" />
+              256-bit SSL encryption
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4">
           {error && (
-            <Alert variant="destructive" className="mb-5">
+            <Alert variant="destructive" className="mb-6 rounded-xl">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
           {initLoading ? (
-            <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
+            <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
             </div>
           ) : clientSecret && elementsOptions ? (
@@ -413,7 +262,7 @@ const Checkout = () => {
               />
             </Elements>
           ) : (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="rounded-xl">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>Could not initialize payment. Please refresh.</AlertDescription>
             </Alert>
@@ -475,75 +324,51 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-5">
-          {/* Contact */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</span>
-              Contact Information
-            </h2>
+      <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+        {/* LEFT: Form */}
+        <div className="lg:col-span-3 space-y-5">
+          {/* 1. Contact */}
+          <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information" subtitle="We'll send your receipt and updates here.">
             <div className="grid sm:grid-cols-2 gap-3">
-              <div><Label className="text-sm">First Name</Label><Input name="firstName" value={props.formData.firstName} onChange={handleChange} required className="mt-1 h-10" /></div>
-              <div><Label className="text-sm">Last Name</Label><Input name="lastName" value={props.formData.lastName} onChange={handleChange} required className="mt-1 h-10" /></div>
-              <div><Label className="text-sm">Email</Label><Input name="email" type="email" value={props.formData.email} onChange={handleChange} required className="mt-1 h-10" /></div>
-              <div><Label className="text-sm">Phone</Label><Input name="phone" type="tel" value={props.formData.phone} onChange={handleChange} required className="mt-1 h-10" /></div>
+              <FieldInput label="First name" name="firstName" value={props.formData.firstName} onChange={handleChange} required />
+              <FieldInput label="Last name" name="lastName" value={props.formData.lastName} onChange={handleChange} required />
+              <FieldInput label="Email" name="email" type="email" value={props.formData.email} onChange={handleChange} required />
+              <FieldInput label="Phone" name="phone" type="tel" value={props.formData.phone} onChange={handleChange} required />
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Address */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</span>
-              Delivery Address
-            </h2>
+          {/* 2. Delivery */}
+          <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="We currently deliver within Regina, SK only.">
             <div className="space-y-3">
-              <div>
-                <Label className="text-sm">Street Address</Label>
-                <div className="relative mt-1">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                  <Input name="address" value={props.formData.address} onChange={handleChange} className="pl-10 h-10" placeholder="123 Main Street" required />
-                </div>
-              </div>
+              <FieldInput label="Street address" name="address" value={props.formData.address} onChange={handleChange} placeholder="123 Main Street" required />
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-sm">City</Label>
-                  <Input name="city" value={props.formData.city} onChange={handleChange} required className={`mt-1 h-10 ${props.cityError ? "border-destructive" : ""}`} />
-                  {props.cityError && <p className="text-destructive text-xs mt-1">{props.cityError}</p>}
+                  <FieldInput label="City" name="city" value={props.formData.city} onChange={handleChange} required error={!!props.cityError} />
+                  {props.cityError && <p className="text-destructive text-xs mt-1.5 ml-1">{props.cityError}</p>}
                 </div>
-                <div><Label className="text-sm">Postal Code</Label><Input name="postalCode" value={props.formData.postalCode} onChange={handleChange} placeholder="S4X 1A2" required className="mt-1 h-10" /></div>
+                <FieldInput label="Postal code" name="postalCode" value={props.formData.postalCode} onChange={handleChange} placeholder="S4X 1A2" required />
               </div>
-              <div>
-                <Label className="text-sm">Delivery Instructions (optional)</Label>
-                <Input name="deliveryInstructions" value={props.formData.deliveryInstructions} onChange={handleChange} placeholder="Ring doorbell, leave at door, etc." className="mt-1 h-10" />
-              </div>
+              <FieldInput label="Delivery instructions (optional)" name="deliveryInstructions" value={props.formData.deliveryInstructions} onChange={handleChange} placeholder="Ring doorbell, leave at door, etc." />
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Payment */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</span>
-              Payment Method
-            </h2>
-            <Alert className="mb-4 border-primary/20 bg-primary/5">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-xs">
-                <strong>Final pricing confirmed by the store.</strong> Your card will be authorized for up to <strong>${props.authorizedAmount.toFixed(2)}</strong> (estimate +30% buffer). You'll only be charged the actual amount once your store confirms the final price.
-              </AlertDescription>
-            </Alert>
-            <div className="border border-border rounded-xl p-3">
+          {/* 3. Payment */}
+          <SectionCard step={3} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle="Your card is held — never charged more than the final price.">
+            <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 mb-4 flex gap-3">
+              <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-foreground/80 leading-relaxed">
+                <span className="font-semibold text-foreground">Final pricing confirmed by your store.</span> We'll authorize up to{" "}
+                <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
+              </p>
+            </div>
+            <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
               <PaymentElement />
             </div>
-          </div>
-          {/* Tip */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h2 className="font-display text-base font-bold text-foreground mb-1.5 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</span>
-              Add a Tip for Your Driver
-            </h2>
-            <p className="text-xs text-muted-foreground mb-4">100% of your tip goes to the driver delivering your order.</p>
-            <div className="grid grid-cols-4 gap-2">
+          </SectionCard>
+
+          {/* 4. Tip */}
+          <SectionCard step={4} icon={<Heart className="h-4 w-4" />} title="Add a tip for your driver" subtitle="100% of your tip goes directly to the driver.">
+            <div className="grid grid-cols-4 gap-2.5">
               {[3, 5, 8].map((amt) => {
                 const selected = props.tipPreset === amt;
                 return (
@@ -551,10 +376,10 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                     key={amt}
                     type="button"
                     onClick={() => props.setTipPreset(amt)}
-                    className={`h-12 rounded-xl border-2 font-semibold text-sm transition-all ${
+                    className={`group relative h-14 rounded-xl border font-display font-bold text-base transition-all duration-200 ${
                       selected
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-background text-foreground hover:border-primary/50"
+                        ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]"
+                        : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-secondary/60"
                     }`}
                   >
                     ${amt}
@@ -564,20 +389,19 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               <button
                 type="button"
                 onClick={() => props.setTipPreset("custom")}
-                className={`h-12 rounded-xl border-2 font-semibold text-sm transition-all ${
+                className={`h-14 rounded-xl border font-display font-semibold text-sm transition-all duration-200 ${
                   props.tipPreset === "custom"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background text-foreground hover:border-primary/50"
+                    ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]"
+                    : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-secondary/60"
                 }`}
               >
                 Custom
               </button>
             </div>
             {props.tipPreset === "custom" && (
-              <div className="mt-3">
-                <Label className="text-sm">Custom tip amount</Label>
-                <div className="relative mt-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <div className="mt-3 animate-fade-in">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
                   <Input
                     type="number"
                     min="0"
@@ -585,7 +409,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                     value={props.customTip}
                     onChange={(e) => props.setCustomTip(e.target.value)}
                     placeholder="0.00"
-                    className="pl-7 h-10"
+                    className="pl-8 h-12 rounded-xl text-base font-medium"
                     autoFocus
                   />
                 </div>
@@ -594,57 +418,187 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             <button
               type="button"
               onClick={() => props.setTipPreset(null)}
-              className={`text-xs mt-3 ${props.tipPreset === null ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+              className={`text-xs mt-3.5 transition-colors ${
+                props.tipPreset === null ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              No tip
+              No tip, thanks
             </button>
-          </div>
+          </SectionCard>
         </div>
 
-        {/* Summary */}
-        <div className="lg:col-span-1">
-          <div className="bg-card rounded-2xl border border-border p-5 sticky top-20">
-            <h2 className="font-display text-lg font-bold text-foreground mb-4">Order Summary</h2>
-            <div className="space-y-2.5 mb-4 max-h-40 overflow-y-auto">
-              {props.cartItems.map((item) => (
-                <div key={item.id} className="flex gap-2.5">
-                  <img src={item.image || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=100"} alt={item.name} className="w-10 h-10 object-cover rounded-lg bg-muted" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{item.name}</p>
-                    <p className="text-[10px] text-muted-foreground">Qty: {item.quantity}</p>
-                  </div>
-                  <span className="text-xs font-medium shrink-0">${(item.price * item.quantity).toFixed(2)}</span>
+        {/* RIGHT: Order Summary */}
+        <div className="lg:col-span-2">
+          <div className="sticky top-24">
+            <div className="relative rounded-2xl bg-card/95 backdrop-blur-xl border border-border/70 shadow-xl shadow-foreground/[0.04] overflow-hidden">
+              {/* Top accent */}
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
+
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="font-display text-lg font-bold text-foreground">Order summary</h2>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground bg-secondary px-2 py-1 rounded-full">
+                    {props.cartItems.length} item{props.cartItems.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
-              ))}
+
+                {/* Items */}
+                <div className="space-y-3 mb-5 max-h-52 overflow-y-auto pr-1 -mr-1">
+                  {props.cartItems.map((item) => (
+                    <div key={item.id} className="flex gap-3 items-center group">
+                      <div className="relative h-12 w-12 flex-shrink-0 rounded-xl bg-secondary border border-border overflow-hidden">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-full w-full object-contain p-1 transition-transform group-hover:scale-105"
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-base">🍾</div>
+                        )}
+                        <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.name}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{item.storeName}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-foreground shrink-0">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator className="mb-4" />
+
+                {/* Price breakdown */}
+                <div className="space-y-2.5 mb-5 text-sm">
+                  <Row label="Subtotal" value={`$${props.subtotal.toFixed(2)}`} muted />
+                  <Row label="Delivery" value={`$${props.deliveryFee.toFixed(2)}`} muted />
+                  <Row label="Service fee (12%)" value={`$${props.convenienceFee.toFixed(2)}`} muted />
+                  <Row label="Tax" value={`$${props.tax.toFixed(2)}`} muted />
+                  {props.tip > 0 && (
+                    <Row
+                      label={<span className="flex items-center gap-1"><Heart className="h-3 w-3 fill-primary text-primary" /> Driver tip</span>}
+                      value={`$${props.tip.toFixed(2)}`}
+                    />
+                  )}
+                </div>
+
+                <Separator className="mb-4" />
+
+                {/* Total */}
+                <div className="flex items-end justify-between mb-5">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Estimated total</p>
+                    <p className="font-display text-3xl font-bold text-foreground mt-0.5 tracking-tight">
+                      ${props.estimatedTotal.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-right text-[11px] text-muted-foreground leading-tight">
+                    Card hold<br />
+                    <span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <Button
+                  type="submit"
+                  className="w-full h-14 gap-2 rounded-2xl font-display font-bold text-base bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-primary shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
+                  disabled={!stripe || !elements || props.isSubmitting}
+                >
+                  {props.isSubmitting ? (
+                    <><Loader2 className="h-5 w-5 animate-spin" /> Authorizing...</>
+                  ) : (
+                    <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
+                  )}
+                </Button>
+
+                {/* Trust signals */}
+                <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" />
+                    25–35 min delivery
+                  </div>
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <ShieldCheck className="h-3.5 w-3.5 text-success" />
+                    Secure checkout
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground/80 text-center mt-4 leading-relaxed">
+                  Must be 19+. Valid government ID required on delivery.<br />
+                  By placing this order you agree to our terms of service.
+                </p>
+              </div>
             </div>
-            <Separator className="my-3" />
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-muted-foreground text-sm"><span>Subtotal (est.)</span><span>${props.subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>${props.deliveryFee.toFixed(2)}</span></div>
-              <div className="flex justify-between text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span>${props.convenienceFee.toFixed(2)}</span></div>
-              <div className="flex justify-between text-muted-foreground text-sm"><span>Tax</span><span>${props.tax.toFixed(2)}</span></div>
-              <div className="flex justify-between text-foreground text-sm"><span>Driver Tip</span><span>${props.tip.toFixed(2)}</span></div>
-              <Separator />
-              <div className="flex justify-between font-bold text-foreground"><span>Estimated Total</span><span>${props.estimatedTotal.toFixed(2)}</span></div>
-            </div>
-            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-lg p-2.5 mb-4">
-              <p className="text-[11px] text-amber-900 dark:text-amber-200 leading-snug">
-                <strong>Card hold:</strong> ${props.authorizedAmount.toFixed(2)}<br />
-                Only the final amount confirmed by your store will be charged. Any unused hold is released.
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-4">
-              <Clock className="h-3.5 w-3.5" /> Est. delivery: 25-35 min
-            </div>
-            <Button type="submit" className="w-full gap-2 rounded-full font-semibold" size="lg" disabled={!stripe || !elements || props.isSubmitting}>
-              {props.isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Authorizing...</> : <><CheckCircle className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>}
-            </Button>
-            <p className="text-[10px] text-muted-foreground text-center mt-3">Must be 19+. ID required on delivery.</p>
           </div>
         </div>
       </div>
     </form>
   );
 };
+
+/* ───────────────────────── helpers ───────────────────────── */
+
+const SectionCard = ({
+  step,
+  icon,
+  title,
+  subtitle,
+  children,
+}: {
+  step: number;
+  icon: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) => (
+  <section className="bg-card rounded-2xl border border-border/70 shadow-sm shadow-foreground/[0.02] p-5 sm:p-6 transition-shadow hover:shadow-md hover:shadow-foreground/[0.04]">
+    <header className="flex items-start gap-3 mb-5">
+      <div className="relative flex-shrink-0">
+        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-md shadow-primary/20">
+          {icon}
+        </div>
+        <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center ring-2 ring-card">
+          {step}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0 pt-0.5">
+        <h2 className="font-display text-base sm:text-lg font-bold text-foreground tracking-tight leading-tight">
+          {title}
+        </h2>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
+    </header>
+    {children}
+  </section>
+);
+
+const FieldInput = ({
+  label,
+  error,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; error?: boolean }) => (
+  <div>
+    <Label className="text-xs font-medium text-muted-foreground ml-1">{label}</Label>
+    <Input
+      {...props}
+      className={`mt-1.5 h-11 rounded-xl bg-background/60 border-border/80 transition-all focus-visible:ring-[3px] focus-visible:ring-ring/20 focus-visible:border-ring ${
+        error ? "border-destructive focus-visible:ring-destructive/20 focus-visible:border-destructive" : ""
+      }`}
+    />
+  </div>
+);
+
+const Row = ({ label, value, muted }: { label: React.ReactNode; value: string; muted?: boolean }) => (
+  <div className={`flex justify-between items-center ${muted ? "text-muted-foreground" : "text-foreground"}`}>
+    <span>{label}</span>
+    <span className={muted ? "" : "font-medium"}>{value}</span>
+  </div>
+);
 
 export default Checkout;
