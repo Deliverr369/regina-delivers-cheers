@@ -56,6 +56,14 @@ interface PaymentFormProps {
   onSuccess: () => Promise<void>;
 }
 
+interface SavedCard {
+  id: string;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+}
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, getCartTotal, clearCart } = useCart();
@@ -67,6 +75,9 @@ const Checkout = () => {
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [authorizedAmount, setAuthorizedAmount] = useState<number>(0);
   const [initLoading, setInitLoading] = useState(true);
+
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<string | "new">("new");
 
   const subtotal = getCartTotal();
   const storeName = cartItems[0]?.storeName || "";
@@ -120,7 +131,22 @@ const Checkout = () => {
     })();
   }, [user]);
 
-  // Create PaymentIntent on mount
+  // Fetch saved cards once
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("list-payment-methods", { body: {} });
+        const cards: SavedCard[] = data?.payment_methods || [];
+        setSavedCards(cards);
+        if (cards.length > 0) setSelectedCardId(cards[0].id);
+      } catch (err) {
+        console.warn("Failed to load saved cards", err);
+      }
+    })();
+  }, [user]);
+
+  // Create PaymentIntent whenever total or selected card changes
   useEffect(() => {
     if (!user || cartItems.length === 0) return;
     let cancelled = false;
@@ -128,7 +154,10 @@ const Checkout = () => {
       setInitLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke("create-payment-intent", {
-          body: { estimated_total: estimatedTotal },
+          body: {
+            estimated_total: estimatedTotal,
+            payment_method_id: selectedCardId !== "new" ? selectedCardId : undefined,
+          },
         });
         if (cancelled) return;
         if (error) throw error;
@@ -143,7 +172,7 @@ const Checkout = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length, estimatedTotal]);
+  }, [user, cartItems.length, estimatedTotal, selectedCardId]);
 
   const handleSuccess = async () => {
     if (!user) return;
