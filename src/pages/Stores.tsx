@@ -14,6 +14,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import tabLiquor from "@/assets/tab-liquor.png";
+import tabSmoke from "@/assets/tab-smoke.png";
+import tabTakeout from "@/assets/tab-takeout.png";
 
 const sortOptions = [
   { value: "rating", label: "Highest Rated" },
