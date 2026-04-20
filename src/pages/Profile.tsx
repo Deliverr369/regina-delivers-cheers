@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
-import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2 } from "lucide-react";
+import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2 } from "lucide-react";
 
 interface ProfileData {
   full_name: string;
@@ -20,6 +20,14 @@ interface ProfileData {
   postal_code: string;
 }
 
+interface SavedCard {
+  id: string;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+}
+
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -28,11 +36,44 @@ const Profile = () => {
   const [profile, setProfile] = useState<ProfileData>({
     full_name: "", email: "", phone: "", address: "", city: "Regina", postal_code: "",
   });
+  const [cards, setCards] = useState<SavedCard[]>([]);
+  const [cardsLoading, setCardsLoading] = useState(true);
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
-    if (user) fetchProfile();
+    if (user) {
+      fetchProfile();
+      fetchCards();
+    }
   }, [user, authLoading]);
+
+  const fetchCards = async () => {
+    try {
+      const { data } = await supabase.functions.invoke("list-payment-methods", { body: {} });
+      setCards(data?.payment_methods || []);
+    } catch (e) {
+      console.warn("Failed to load cards", e);
+    } finally {
+      setCardsLoading(false);
+    }
+  };
+
+  const handleDeleteCard = async (cardId: string) => {
+    setDeletingCardId(cardId);
+    try {
+      const { error } = await supabase.functions.invoke("delete-payment-method", {
+        body: { payment_method_id: cardId },
+      });
+      if (error) throw error;
+      setCards((prev) => prev.filter((c) => c.id !== cardId));
+      toast({ title: "Card removed", description: "Saved card has been deleted." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Could not remove card", variant: "destructive" });
+    } finally {
+      setDeletingCardId(null);
+    }
+  };
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -156,12 +197,54 @@ const Profile = () => {
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <CreditCard className="h-4.5 w-4.5 text-primary" />
               </div>
-              <h2 className="font-display text-lg font-bold text-foreground">Payment Method</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Saved Cards</h2>
             </div>
-            <p className="text-sm text-muted-foreground mb-3">No saved cards yet.</p>
-            <Button variant="outline" className="w-full h-10 rounded-xl" disabled>
-              <CreditCard className="h-4 w-4 mr-2" /> Add Card — Coming Soon
-            </Button>
+
+            {cardsLoading ? (
+              <div className="py-4 flex items-center justify-center text-muted-foreground text-sm">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading cards...
+              </div>
+            ) : cards.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No saved cards yet. Cards will be saved automatically the next time you check out.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {cards.map((card) => (
+                  <div
+                    key={card.id}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-background p-3.5"
+                  >
+                    <div className="h-9 w-12 rounded-md bg-secondary text-foreground flex items-center justify-center text-[10px] font-bold uppercase">
+                      {card.brand || "Card"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground capitalize">
+                        {card.brand} •••• {card.last4}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Expires {String(card.exp_month).padStart(2, "0")}/{String(card.exp_year).slice(-2)}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteCard(card.id)}
+                      disabled={deletingCardId === card.id}
+                      aria-label="Remove card"
+                    >
+                      {deletingCardId === card.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-full font-semibold" size="lg">

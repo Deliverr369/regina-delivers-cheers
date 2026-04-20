@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -56,6 +56,14 @@ interface PaymentFormProps {
   onSuccess: () => Promise<void>;
 }
 
+interface SavedCard {
+  id: string;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+}
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, getCartTotal, clearCart } = useCart();
@@ -67,6 +75,9 @@ const Checkout = () => {
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [authorizedAmount, setAuthorizedAmount] = useState<number>(0);
   const [initLoading, setInitLoading] = useState(true);
+
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<string | "new">("new");
 
   const subtotal = getCartTotal();
   const storeName = cartItems[0]?.storeName || "";
@@ -120,7 +131,22 @@ const Checkout = () => {
     })();
   }, [user]);
 
-  // Create PaymentIntent on mount
+  // Fetch saved cards once
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("list-payment-methods", { body: {} });
+        const cards: SavedCard[] = data?.payment_methods || [];
+        setSavedCards(cards);
+        if (cards.length > 0) setSelectedCardId(cards[0].id);
+      } catch (err) {
+        console.warn("Failed to load saved cards", err);
+      }
+    })();
+  }, [user]);
+
+  // Create PaymentIntent whenever total or selected card changes
   useEffect(() => {
     if (!user || cartItems.length === 0) return;
     let cancelled = false;
@@ -128,7 +154,10 @@ const Checkout = () => {
       setInitLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke("create-payment-intent", {
-          body: { estimated_total: estimatedTotal },
+          body: {
+            estimated_total: estimatedTotal,
+            payment_method_id: selectedCardId !== "new" ? selectedCardId : undefined,
+          },
         });
         if (cancelled) return;
         if (error) throw error;
@@ -143,7 +172,7 @@ const Checkout = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length, estimatedTotal]);
+  }, [user, cartItems.length, estimatedTotal, selectedCardId]);
 
   const handleSuccess = async () => {
     if (!user) return;
@@ -264,7 +293,7 @@ const Checkout = () => {
               <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
             </div>
           ) : clientSecret && elementsOptions ? (
-            <Elements stripe={stripePromise} options={elementsOptions}>
+            <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
               <CheckoutBody
                 formData={formData}
                 setFormData={setFormData}
@@ -287,6 +316,10 @@ const Checkout = () => {
                 setError={setError}
                 paymentIntentId={paymentIntentId}
                 onSuccess={handleSuccess}
+                savedCards={savedCards}
+                selectedCardId={selectedCardId}
+                setSelectedCardId={setSelectedCardId}
+                clientSecret={clientSecret}
               />
             </Elements>
           ) : (
@@ -313,6 +346,10 @@ interface CheckoutBodyProps extends PaymentFormProps {
   setTipPreset: (v: number | "custom" | null) => void;
   customTip: string;
   setCustomTip: (v: string) => void;
+  savedCards: SavedCard[];
+  selectedCardId: string | "new";
+  setSelectedCardId: (v: string | "new") => void;
+  clientSecret: string;
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
@@ -329,7 +366,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe) return;
     if (props.formData.city.trim().toLowerCase() !== "regina") {
       props.setCityError("We only deliver within Regina.");
       return;
@@ -337,15 +374,29 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     props.setIsSubmitting(true);
     props.setError(null);
 
-    const { error: stripeError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: window.location.origin + "/order-confirmation" },
-      redirect: "if_required",
-    });
-    if (stripeError) {
-      props.setError(stripeError.message || "Payment authorization failed");
-      props.setIsSubmitting(false);
-      return;
+    const usingSavedCard = props.selectedCardId !== "new";
+
+    if (usingSavedCard) {
+      // PaymentIntent was created with the saved payment_method already attached.
+      // Confirm it directly using the client secret.
+      const result = await stripe.confirmCardPayment(props.clientSecret);
+      if (result.error) {
+        props.setError(result.error.message || "Payment authorization failed");
+        props.setIsSubmitting(false);
+        return;
+      }
+    } else {
+      if (!elements) { props.setIsSubmitting(false); return; }
+      const { error: stripeError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: window.location.origin + "/order-confirmation" },
+        redirect: "if_required",
+      });
+      if (stripeError) {
+        props.setError(stripeError.message || "Payment authorization failed");
+        props.setIsSubmitting(false);
+        return;
+      }
     }
     await props.onSuccess();
   };
@@ -389,9 +440,67 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
               </p>
             </div>
-            <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
-              <PaymentElement />
-            </div>
+
+            {props.savedCards.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {props.savedCards.map((card) => {
+                  const selected = props.selectedCardId === card.id;
+                  return (
+                    <button
+                      key={card.id}
+                      type="button"
+                      onClick={() => props.setSelectedCardId(card.id)}
+                      className={`w-full flex items-center gap-3 rounded-xl border p-3.5 transition-all text-left ${
+                        selected
+                          ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
+                          : "border-border bg-background hover:border-primary/40"
+                      }`}
+                    >
+                      <div className={`h-9 w-12 rounded-md flex items-center justify-center text-[10px] font-bold uppercase ${
+                        selected ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                      }`}>
+                        {card.brand || "Card"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground capitalize">
+                          {card.brand} •••• {card.last4}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Expires {String(card.exp_month).padStart(2, "0")}/{String(card.exp_year).slice(-2)}
+                        </p>
+                      </div>
+                      {selected && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => props.setSelectedCardId("new")}
+                  className={`w-full flex items-center gap-3 rounded-xl border p-3.5 transition-all text-left ${
+                    props.selectedCardId === "new"
+                      ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
+                      : "border-dashed border-border bg-background hover:border-primary/40"
+                  }`}
+                >
+                  <div className={`h-9 w-12 rounded-md flex items-center justify-center ${
+                    props.selectedCardId === "new" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                  }`}>
+                    <Plus className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">Use a new card</p>
+                    <p className="text-[11px] text-muted-foreground">Saved automatically for next time</p>
+                  </div>
+                  {props.selectedCardId === "new" && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                </button>
+              </div>
+            )}
+
+            {props.selectedCardId === "new" && (
+              <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
+                <PaymentElement />
+              </div>
+            )}
           </SectionCard>
 
           {/* 4. Tip */}
