@@ -71,7 +71,18 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-3">
               {cartItems.map((item) => (
                 <div key={item.id} className="bg-card rounded-xl border border-border p-4 flex gap-3.5">
-                  <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg bg-muted" />
+                  <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
+                    ) : (
+                      <ShoppingBag className="h-7 w-7 text-muted-foreground/50" />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
                       <div className="min-w-0">

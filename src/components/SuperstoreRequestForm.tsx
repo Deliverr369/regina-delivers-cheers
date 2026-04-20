@@ -216,7 +216,7 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
                   if (e.key === "Enter") {
                     e.preventDefault();
                     if (showSuggestions && suggestions.length > 0) {
-                      pickSuggestion(suggestions[0].name);
+                      pickSuggestion(suggestions[0].name, suggestions[0].image_url);
                     } else {
                       handleNext();
                     }
@@ -234,7 +234,7 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
                     <button
                       type="button"
                       key={s.name}
-                      onClick={() => pickSuggestion(s.name)}
+                      onClick={() => pickSuggestion(s.name, s.image_url)}
                       className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0"
                     >
                       <div className="h-10 w-10 flex-shrink-0 rounded-md bg-muted overflow-hidden flex items-center justify-center">
