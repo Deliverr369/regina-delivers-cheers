@@ -91,12 +91,12 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const pickSuggestion = (name: string) => {
-    setDraft((d) => ({ ...d, name }));
+  const pickSuggestion = (name: string, image_url: string | null) => {
+    setDraft((d) => ({ ...d, name, image_url }));
     setShowSuggestions(false);
   };
 
-  const resetDraft = () => setDraft({ name: "", size: "", quantity: 1 });
+  const resetDraft = () => setDraft({ name: "", size: "", quantity: 1, image_url: null });
 
   const handleNext = () => {
     if (step === "name") {
@@ -153,7 +153,7 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
           id: `request-${Date.now()}-${idx}-${i}`,
           name: displayName,
           price: 0, // Admin will confirm final price after fulfillment
-          image: "",
+          image: item.image_url || "",
           storeId,
           storeName,
         });
