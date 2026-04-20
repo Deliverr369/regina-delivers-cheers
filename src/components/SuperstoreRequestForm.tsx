@@ -34,25 +34,33 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Fetch all unique product names from the database for autocomplete
-  const { data: allProductNames = [] } = useQuery({
-    queryKey: ["all-product-names"],
+  // Fetch unique product names + best image from the database for autocomplete
+  const { data: allProducts = [] } = useQuery({
+    queryKey: ["all-product-suggestions"],
     queryFn: async () => {
-      const names = new Set<string>();
+      const map = new Map<string, { name: string; image_url: string | null }>();
       let from = 0;
       const batchSize = 1000;
       while (true) {
         const { data, error } = await supabase
           .from("products")
-          .select("name")
+          .select("name, image_url")
           .range(from, from + batchSize - 1);
         if (error) throw error;
         if (!data || data.length === 0) break;
-        data.forEach((p) => p.name && names.add(p.name));
+        for (const p of data) {
+          if (!p.name) continue;
+          const key = p.name.toLowerCase();
+          const existing = map.get(key);
+          // Prefer the entry that has an image
+          if (!existing || (!existing.image_url && p.image_url)) {
+            map.set(key, { name: p.name, image_url: p.image_url });
+          }
+        }
         if (data.length < batchSize) break;
         from += batchSize;
       }
-      return Array.from(names).sort();
+      return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -60,16 +68,16 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
   const suggestions = useMemo(() => {
     const q = draft.name.trim().toLowerCase();
     if (q.length < 2) return [];
-    const startsWith: string[] = [];
-    const contains: string[] = [];
-    for (const name of allProductNames) {
-      const lower = name.toLowerCase();
-      if (lower.startsWith(q)) startsWith.push(name);
-      else if (lower.includes(q)) contains.push(name);
+    const startsWith: typeof allProducts = [];
+    const contains: typeof allProducts = [];
+    for (const p of allProducts) {
+      const lower = p.name.toLowerCase();
+      if (lower.startsWith(q)) startsWith.push(p);
+      else if (lower.includes(q)) contains.push(p);
       if (startsWith.length >= 8) break;
     }
     return [...startsWith, ...contains].slice(0, 8);
-  }, [draft.name, allProductNames]);
+  }, [draft.name, allProducts]);
 
   // Close dropdown on outside click
   useEffect(() => {
