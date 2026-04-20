@@ -239,7 +239,18 @@ const Checkout = () => {
   const deliveryFee = cartItems.length > 0 ? getDeliveryFee(storeName) : 0;
   const convenienceFee = subtotal * 0.12;
   const tax = subtotal * 0.11;
-  const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax;
+
+  const [tipPreset, setTipPreset] = useState<number | "custom" | null>(3);
+  const [customTip, setCustomTip] = useState<string>("");
+  const tip = useMemo(() => {
+    if (tipPreset === "custom") {
+      const n = parseFloat(customTip);
+      return isNaN(n) || n < 0 ? 0 : n;
+    }
+    return tipPreset ?? 0;
+  }, [tipPreset, customTip]);
+
+  const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax + tip;
 
   const [formData, setFormData] = useState<FormData>({
     firstName: "", lastName: "", email: user?.email || "", phone: "",
@@ -270,7 +281,7 @@ const Checkout = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length]);
+  }, [user, cartItems.length, estimatedTotal]);
 
   const handleSuccess = async () => {
     if (!user) return;
@@ -387,6 +398,11 @@ const Checkout = () => {
                 deliveryFee={deliveryFee}
                 convenienceFee={convenienceFee}
                 tax={tax}
+                tip={tip}
+                tipPreset={tipPreset}
+                setTipPreset={setTipPreset}
+                customTip={customTip}
+                setCustomTip={setCustomTip}
                 estimatedTotal={estimatedTotal}
                 authorizedAmount={authorizedAmount}
                 isSubmitting={isSubmitting}
@@ -415,6 +431,11 @@ interface CheckoutBodyProps extends PaymentFormProps {
   deliveryFee: number;
   convenienceFee: number;
   tax: number;
+  tip: number;
+  tipPreset: number | "custom" | null;
+  setTipPreset: (v: number | "custom" | null) => void;
+  customTip: string;
+  setCustomTip: (v: string) => void;
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
@@ -515,6 +536,69 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               <PaymentElement />
             </div>
           </div>
+          {/* Tip */}
+          <div className="bg-card rounded-2xl border border-border p-5">
+            <h2 className="font-display text-base font-bold text-foreground mb-1.5 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</span>
+              Add a Tip for Your Driver
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">100% of your tip goes to the driver delivering your order.</p>
+            <div className="grid grid-cols-4 gap-2">
+              {[3, 5, 8].map((amt) => {
+                const selected = props.tipPreset === amt;
+                return (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => props.setTipPreset(amt)}
+                    className={`h-12 rounded-xl border-2 font-semibold text-sm transition-all ${
+                      selected
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => props.setTipPreset("custom")}
+                className={`h-12 rounded-xl border-2 font-semibold text-sm transition-all ${
+                  props.tipPreset === "custom"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-foreground hover:border-primary/50"
+                }`}
+              >
+                Custom
+              </button>
+            </div>
+            {props.tipPreset === "custom" && (
+              <div className="mt-3">
+                <Label className="text-sm">Custom tip amount</Label>
+                <div className="relative mt-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.50"
+                    value={props.customTip}
+                    onChange={(e) => props.setCustomTip(e.target.value)}
+                    placeholder="0.00"
+                    className="pl-7 h-10"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => props.setTipPreset(null)}
+              className={`text-xs mt-3 ${props.tipPreset === null ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+            >
+              No tip
+            </button>
+          </div>
         </div>
 
         {/* Summary */}
@@ -539,6 +623,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>${props.deliveryFee.toFixed(2)}</span></div>
               <div className="flex justify-between text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span>${props.convenienceFee.toFixed(2)}</span></div>
               <div className="flex justify-between text-muted-foreground text-sm"><span>Tax</span><span>${props.tax.toFixed(2)}</span></div>
+              <div className="flex justify-between text-foreground text-sm"><span>Driver Tip</span><span>${props.tip.toFixed(2)}</span></div>
               <Separator />
               <div className="flex justify-between font-bold text-foreground"><span>Estimated Total</span><span>${props.estimatedTotal.toFixed(2)}</span></div>
             </div>
