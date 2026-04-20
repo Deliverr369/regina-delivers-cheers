@@ -36,9 +36,9 @@ const Stores = () => {
   const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
 
   const tabs = [
-    { id: "liquor" as const, label: "Liquor stores", emoji: "🍷" },
-    { id: "smoke" as const, label: "Smoke and Vape", emoji: "🚬" },
-    { id: "takeout" as const, label: "Takeout", emoji: "🍔" },
+    { id: "liquor" as const, label: "Liquor stores", icon: tabLiquor },
+    { id: "smoke" as const, label: "Smoke & Vape", icon: tabSmoke },
+    { id: "takeout" as const, label: "Takeout", icon: tabTakeout },
   ];
 
   useEffect(() => {
