@@ -648,19 +648,96 @@ const StoreDetail = () => {
                   {category === "convenience" && items.length > 0 && (() => {
                     const subs = Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[];
                     if (subs.length === 0) return null;
+                    const subEmoji = (s: string) => {
+                      const n = s.toLowerCase();
+                      if (n.includes("baby")) return "👶";
+                      if (n.includes("beauty appliance")) return "💇";
+                      if (n.includes("beauty")) return "💄";
+                      if (n.includes("beverage")) return "🥤";
+                      if (n.includes("breakfast")) return "🥣";
+                      if (n.includes("candy")) return "🍬";
+                      if (n.includes("chip") || n.includes("snack") || n.includes("popcorn")) return "🍿";
+                      if (n.includes("chocolate")) return "🍫";
+                      if (n.includes("dairy") || n.includes("egg")) return "🥚";
+                      if (n.includes("dermat")) return "🧴";
+                      if (n.includes("electronic") || n.includes("tech")) return "🔌";
+                      if (n.includes("eye makeup")) return "👁️";
+                      if (n.includes("face care")) return "🧖";
+                      if (n.includes("fashion")) return "👗";
+                      if (n.includes("feminine")) return "🌸";
+                      if (n.includes("first aid")) return "🩹";
+                      if (n.includes("fragrance")) return "🌺";
+                      if (n.includes("grocery")) return "🛒";
+                      if (n.includes("gum") || n.includes("mint")) return "🍃";
+                      if (n.includes("hair")) return "💇‍♀️";
+                      if (n.includes("health device") || n.includes("therapy")) return "🩺";
+                      if (n.includes("health") || n.includes("wellness")) return "💊";
+                      if (n.includes("home health")) return "🏠";
+                      if (n.includes("hosiery")) return "🧦";
+                      if (n.includes("household")) return "🧹";
+                      if (n.includes("incontinence")) return "🩲";
+                      if (n.includes("international")) return "🌍";
+                      if (n.includes("jewel") || n.includes("handbag")) return "💍";
+                      if (n.includes("laundry")) return "🧺";
+                      if (n.includes("makeup")) return "💋";
+                      if (n.includes("medicine")) return "💊";
+                      if (n.includes("nail")) return "💅";
+                      if (n.includes("oral")) return "🦷";
+                      if (n.includes("personal")) return "🧼";
+                      if (n.includes("men")) return "🧔";
+                      if (n.includes("toy") || n.includes("entertain")) return "🧸";
+                      return "✨";
+                    };
                     return (
-                      <div className="flex flex-wrap gap-1.5 mb-5">
-                        <Button variant={convenienceSubcategory === "all" ? "default" : "outline"} size="sm" onClick={() => setConvenienceSubcategory("all")} className="rounded-full text-xs h-8">
-                          All ({items.length})
-                        </Button>
-                        {subs.map((sub) => {
-                          const count = items.filter(p => (p as any).subcategory === sub).length;
-                          return (
-                            <Button key={sub} variant={convenienceSubcategory === sub ? "default" : "outline"} size="sm" onClick={() => setConvenienceSubcategory(sub)} className="rounded-full text-xs h-8">
-                              {sub} ({count})
-                            </Button>
-                          );
-                        })}
+                      <div className="mb-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Browse by Aisle</h3>
+                            <p className="text-xs text-muted-foreground/70 mt-0.5">{subs.length} categories • {items.length.toLocaleString()} products</p>
+                          </div>
+                          {convenienceSubcategory !== "all" && (
+                            <button onClick={() => setConvenienceSubcategory("all")} className="text-xs font-semibold text-primary hover:underline">
+                              Clear filter
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setConvenienceSubcategory("all")}
+                            className={`group relative inline-flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
+                              convenienceSubcategory === "all"
+                                ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105"
+                                : "bg-card border border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 hover:shadow-md"
+                            }`}
+                          >
+                            <span className="text-base leading-none">🏪</span>
+                            <span>All Items</span>
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${convenienceSubcategory === "all" ? "bg-white/25 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                              {items.length.toLocaleString()}
+                            </span>
+                          </button>
+                          {subs.map((sub) => {
+                            const count = items.filter(p => (p as any).subcategory === sub).length;
+                            const active = convenienceSubcategory === sub;
+                            return (
+                              <button
+                                key={sub}
+                                onClick={() => setConvenienceSubcategory(sub)}
+                                className={`group relative inline-flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
+                                  active
+                                    ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105"
+                                    : "bg-card border border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 hover:shadow-md"
+                                }`}
+                              >
+                                <span className="text-base leading-none">{subEmoji(sub)}</span>
+                                <span>{sub}</span>
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${active ? "bg-white/25 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                                  {count}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })()}
