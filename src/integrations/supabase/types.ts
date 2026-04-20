@@ -71,6 +71,60 @@ export type Database = {
         }
         Relationships: []
       }
+      image_match_jobs: {
+        Row: {
+          batch_size: number
+          created_at: string
+          enabled: boolean
+          id: string
+          last_error: string | null
+          last_processed: number | null
+          last_remaining: number | null
+          last_run_at: string | null
+          last_updated: number | null
+          min_score: number
+          source_label: string
+          source_url: string
+          total_runs: number
+          total_updated: number
+          updated_at: string
+        }
+        Insert: {
+          batch_size?: number
+          created_at?: string
+          enabled?: boolean
+          id: string
+          last_error?: string | null
+          last_processed?: number | null
+          last_remaining?: number | null
+          last_run_at?: string | null
+          last_updated?: number | null
+          min_score?: number
+          source_label: string
+          source_url: string
+          total_runs?: number
+          total_updated?: number
+          updated_at?: string
+        }
+        Update: {
+          batch_size?: number
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_processed?: number | null
+          last_remaining?: number | null
+          last_run_at?: string | null
+          last_updated?: number | null
+          min_score?: number
+          source_label?: string
+          source_url?: string
+          total_runs?: number
+          total_updated?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       import_drafts: {
         Row: {
           assigned_store_ids: string[] | null
