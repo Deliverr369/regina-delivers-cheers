@@ -117,22 +117,51 @@ const Stores = () => {
         {/* Category Tabs */}
         <div className="bg-background border-b border-border">
           <div className="container mx-auto px-4">
-            <div className="flex items-end justify-center gap-8 sm:gap-16 overflow-x-auto">
+            <div className="flex items-stretch justify-center gap-2 sm:gap-4 overflow-x-auto py-3">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex flex-col items-center gap-2 pt-4 pb-3 min-w-[90px] transition-colors ${
-                      isActive ? "text-primary" : "text-foreground hover:text-primary/80"
+                    className={`group relative flex flex-col items-center gap-2 px-5 sm:px-8 pt-3 pb-4 min-w-[120px] sm:min-w-[150px] rounded-2xl transition-all duration-300 ${
+                      isActive
+                        ? "bg-primary/5"
+                        : "hover:bg-muted/60"
                     }`}
                   >
-                    <span className="text-4xl leading-none" aria-hidden>{tab.emoji}</span>
-                    <span className="font-display font-bold text-base whitespace-nowrap">{tab.label}</span>
-                    {isActive && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-16 bg-primary rounded-full" />
-                    )}
+                    <div
+                      className={`relative flex items-center justify-center h-16 w-16 sm:h-[72px] sm:w-[72px] rounded-2xl transition-all duration-300 ${
+                        isActive
+                          ? "bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.45)]"
+                          : "bg-muted/40 group-hover:bg-muted/70"
+                      }`}
+                    >
+                      <img
+                        src={tab.icon}
+                        alt=""
+                        loading="lazy"
+                        width={512}
+                        height={512}
+                        className={`h-12 w-12 sm:h-14 sm:w-14 object-contain transition-transform duration-300 ${
+                          isActive ? "scale-105" : "group-hover:scale-105 opacity-90"
+                        }`}
+                      />
+                    </div>
+                    <span
+                      className={`font-display text-sm sm:text-base whitespace-nowrap transition-colors ${
+                        isActive
+                          ? "font-bold text-primary"
+                          : "font-semibold text-foreground/80 group-hover:text-foreground"
+                      }`}
+                    >
+                      {tab.label}
+                    </span>
+                    <span
+                      className={`absolute bottom-1 left-1/2 -translate-x-1/2 h-[3px] rounded-full bg-gradient-to-r from-primary via-primary to-primary/70 transition-all duration-300 ${
+                        isActive ? "w-10 opacity-100" : "w-0 opacity-0"
+                      }`}
+                    />
                   </button>
                 );
               })}
