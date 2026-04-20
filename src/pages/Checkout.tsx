@@ -536,6 +536,69 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               <PaymentElement />
             </div>
           </div>
+          {/* Tip */}
+          <div className="bg-card rounded-2xl border border-border p-5">
+            <h2 className="font-display text-base font-bold text-foreground mb-1.5 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</span>
+              Add a Tip for Your Driver
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">100% of your tip goes to the driver delivering your order.</p>
+            <div className="grid grid-cols-4 gap-2">
+              {[3, 5, 8].map((amt) => {
+                const selected = props.tipPreset === amt;
+                return (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => props.setTipPreset(amt)}
+                    className={`h-12 rounded-xl border-2 font-semibold text-sm transition-all ${
+                      selected
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => props.setTipPreset("custom")}
+                className={`h-12 rounded-xl border-2 font-semibold text-sm transition-all ${
+                  props.tipPreset === "custom"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-foreground hover:border-primary/50"
+                }`}
+              >
+                Custom
+              </button>
+            </div>
+            {props.tipPreset === "custom" && (
+              <div className="mt-3">
+                <Label className="text-sm">Custom tip amount</Label>
+                <div className="relative mt-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.50"
+                    value={props.customTip}
+                    onChange={(e) => props.setCustomTip(e.target.value)}
+                    placeholder="0.00"
+                    className="pl-7 h-10"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => props.setTipPreset(null)}
+              className={`text-xs mt-3 ${props.tipPreset === null ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+            >
+              No tip
+            </button>
+          </div>
         </div>
 
         {/* Summary */}
