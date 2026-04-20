@@ -312,12 +312,14 @@ const StoreDetail = () => {
     const spirits: typeof products = [];
     const ciders_seltzers: typeof products = [];
     const smokes: typeof products = [];
+    const convenience: typeof products = [];
     for (const p of products) {
       if (p.category === "beer") beer.push(p);
       else if (p.category === "wine") wine.push(p);
       else if (p.category === "spirits") spirits.push(p);
       else if (p.category === "ciders_seltzers") ciders_seltzers.push(p);
       else if (p.category === "smokes") smokes.push(p);
+      else if ((p.category as string) === "convenience") convenience.push(p);
     }
     return {
       beer: beer.sort(sortByLargestPack),
@@ -325,6 +327,7 @@ const StoreDetail = () => {
       spirits: spirits.sort(sortByOrder),
       ciders_seltzers: ciders_seltzers.sort(sortByLargestPack),
       smokes: smokes.sort(sortByOrder),
+      convenience: convenience.sort(sortByOrder),
     };
   }, [products, maxPackCountByProductId]);
 
@@ -592,6 +595,9 @@ const StoreDetail = () => {
                 )}
                 {availableCategories.includes("smokes") && (
                   <TabsTrigger value="smokes" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-slate-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🚬 Smokes ({productsByCategory.smokes.length})</TabsTrigger>
+                )}
+                {availableCategories.includes("convenience") && (
+                  <TabsTrigger value="convenience" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🛒 Convenience ({productsByCategory.convenience.length})</TabsTrigger>
                 )}
               </TabsList>
 
