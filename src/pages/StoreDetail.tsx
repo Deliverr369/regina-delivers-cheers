@@ -645,9 +645,8 @@ const StoreDetail = () => {
                       })}
                     </div>
                   )}
-                  {category === "convenience" && items.length > 0 && (() => {
-                    const subs = Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[];
-                    if (subs.length === 0) return null;
+                  {(() => {
+                    const isConv = category === "convenience";
                     const subEmoji = (s: string) => {
                       const n = s.toLowerCase();
                       if (n.includes("baby")) return "👶";
@@ -688,60 +687,11 @@ const StoreDetail = () => {
                       if (n.includes("toy") || n.includes("entertain")) return "🧸";
                       return "✨";
                     };
-                    return (
-                      <div className="mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Browse by Aisle</h3>
-                            <p className="text-xs text-muted-foreground/70 mt-0.5">{subs.length} categories • {items.length.toLocaleString()} products</p>
-                          </div>
-                          {convenienceSubcategory !== "all" && (
-                            <button onClick={() => setConvenienceSubcategory("all")} className="text-xs font-semibold text-primary hover:underline">
-                              Clear filter
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => setConvenienceSubcategory("all")}
-                            className={`group relative inline-flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
-                              convenienceSubcategory === "all"
-                                ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105"
-                                : "bg-card border border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 hover:shadow-md"
-                            }`}
-                          >
-                            <span className="text-base leading-none">🏪</span>
-                            <span>All Items</span>
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${convenienceSubcategory === "all" ? "bg-white/25 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                              {items.length.toLocaleString()}
-                            </span>
-                          </button>
-                          {subs.map((sub) => {
-                            const count = items.filter(p => (p as any).subcategory === sub).length;
-                            const active = convenienceSubcategory === sub;
-                            return (
-                              <button
-                                key={sub}
-                                onClick={() => setConvenienceSubcategory(sub)}
-                                className={`group relative inline-flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
-                                  active
-                                    ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105"
-                                    : "bg-card border border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 hover:shadow-md"
-                                }`}
-                              >
-                                <span className="text-base leading-none">{subEmoji(sub)}</span>
-                                <span>{sub}</span>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${active ? "bg-white/25 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                                  {count}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  {items.length > 0 ? (() => {
+                    const subs = isConv
+                      ? (Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[])
+                      : [];
+                    const hasSidebar = isConv && subs.length > 0;
+
                     const q = searchQuery.trim().toLowerCase();
                     let displayItems = category === "wine" && wineSubcategory !== "all"
                       ? items.filter(p => getWineSubcategory(p.name) === wineSubcategory)
@@ -758,22 +708,151 @@ const StoreDetail = () => {
                         (p.description?.toLowerCase().includes(q) ?? false)
                       );
                     }
-                    return displayItems.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                        {displayItems.map((product) => (
-                          <ProductCard key={product.id} product={product} />
-                        ))}
-                      </div>
+
+                    const renderLegacyPills = () => (
+                      <>
+                        {category === "spirits" && items.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-5">
+                            {SPIRITS_SUBCATEGORIES.map((sub) => {
+                              const count = sub.value === "all" ? items.length : items.filter(p => getSpiritsSubcategory(p.name) === sub.value).length;
+                              if (sub.value !== "all" && count === 0) return null;
+                              return (
+                                <Button key={sub.value} variant={spiritsSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setSpiritsSubcategory(sub.value)} className="rounded-full text-xs h-8">
+                                  {sub.label} ({count})
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {category === "wine" && items.length > 0 && (
+                          <div className="flex flex-wrap gap-2.5 mb-6">
+                            {WINE_SUBCATEGORIES.map((sub) => {
+                              const count = sub.value === "all" ? items.length : items.filter(p => getWineSubcategory(p.name) === sub.value).length;
+                              if (sub.value !== "all" && count === 0) return null;
+                              return (
+                                <Button key={sub.value} variant={wineSubcategory === sub.value ? "default" : "outline"} onClick={() => setWineSubcategory(sub.value)} className="rounded-full text-base h-11 px-5 font-semibold shadow-sm">
+                                  {sub.label} ({count})
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {category === "smokes" && items.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-5">
+                            {SMOKES_SUBCATEGORIES.map((sub) => {
+                              const count = sub.value === "all" ? items.length : items.filter(p => getSmokesSubcategory(p.name) === sub.value).length;
+                              if (sub.value !== "all" && count === 0) return null;
+                              return (
+                                <Button key={sub.value} variant={smokesSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setSmokesSubcategory(sub.value)} className="rounded-full text-xs h-8">
+                                  {sub.label} ({count})
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    );
+
+                    const grid = items.length > 0 ? (
+                      displayItems.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                          {displayItems.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 text-muted-foreground text-sm">
+                          {q ? `No products match "${searchQuery}"` : "No products available in this category"}
+                        </div>
+                      )
                     ) : (
                       <div className="text-center py-12 text-muted-foreground text-sm">
-                        {q ? `No products match "${searchQuery}"` : "No products available in this category"}
+                        No products available in this category
                       </div>
                     );
-                  })() : (
-                    <div className="text-center py-12 text-muted-foreground text-sm">
-                      No products available in this category
-                    </div>
-                  )}
+
+                    if (!hasSidebar) {
+                      return (
+                        <>
+                          {renderLegacyPills()}
+                          {grid}
+                        </>
+                      );
+                    }
+
+                    const activeLabel = convenienceSubcategory === "all" ? "All Departments" : convenienceSubcategory;
+                    const activeEmoji = convenienceSubcategory === "all" ? "🏪" : subEmoji(convenienceSubcategory);
+
+                    return (
+                      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+                        {/* Sidebar */}
+                        <aside className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)]">
+                          <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                            <div className="px-5 py-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border/50">
+                              <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Departments</h3>
+                              <p className="text-sm font-semibold text-foreground mt-1">{subs.length} aisles • {items.length.toLocaleString()} items</p>
+                            </div>
+                            <nav className="p-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto">
+                              <button
+                                onClick={() => setConvenienceSubcategory("all")}
+                                className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition-all ${
+                                  convenienceSubcategory === "all"
+                                    ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md"
+                                    : "text-foreground hover:bg-muted/60"
+                                }`}
+                              >
+                                <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-base ${convenienceSubcategory === "all" ? "bg-white/20" : "bg-muted"}`}>🏪</span>
+                                <span className="flex-1 truncate">All Items</span>
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${convenienceSubcategory === "all" ? "bg-white/25" : "bg-muted text-muted-foreground"}`}>
+                                  {items.length.toLocaleString()}
+                                </span>
+                              </button>
+                              {subs.map((sub) => {
+                                const count = items.filter(p => (p as any).subcategory === sub).length;
+                                const active = convenienceSubcategory === sub;
+                                return (
+                                  <button
+                                    key={sub}
+                                    onClick={() => setConvenienceSubcategory(sub)}
+                                    className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-all ${
+                                      active
+                                        ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md font-semibold"
+                                        : "text-foreground/80 hover:bg-muted/60 hover:text-foreground"
+                                    }`}
+                                  >
+                                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-base ${active ? "bg-white/20" : "bg-muted"}`}>{subEmoji(sub)}</span>
+                                    <span className="flex-1 truncate">{sub}</span>
+                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${active ? "bg-white/25" : "bg-muted text-muted-foreground"}`}>
+                                      {count}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </nav>
+                          </div>
+                        </aside>
+
+                        {/* Main content */}
+                        <div className="min-w-0">
+                          <div className="flex items-end justify-between flex-wrap gap-3 mb-5 pb-4 border-b border-border/60">
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-2xl shadow-sm">{activeEmoji}</span>
+                              <div>
+                                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">{activeLabel}</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">{displayItems.length.toLocaleString()} {displayItems.length === 1 ? "product" : "products"}{q ? ` matching "${searchQuery}"` : ""}</p>
+                              </div>
+                            </div>
+                            {convenienceSubcategory !== "all" && (
+                              <button onClick={() => setConvenienceSubcategory("all")} className="text-xs font-semibold text-primary hover:underline">
+                                ← Back to all departments
+                              </button>
+                            )}
+                          </div>
+                          {grid}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </TabsContent>
               ))}
             </Tabs>
