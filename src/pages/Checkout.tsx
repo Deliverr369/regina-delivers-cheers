@@ -281,7 +281,7 @@ const Checkout = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length]);
+  }, [user, cartItems.length, estimatedTotal]);
 
   const handleSuccess = async () => {
     if (!user) return;
@@ -398,6 +398,11 @@ const Checkout = () => {
                 deliveryFee={deliveryFee}
                 convenienceFee={convenienceFee}
                 tax={tax}
+                tip={tip}
+                tipPreset={tipPreset}
+                setTipPreset={setTipPreset}
+                customTip={customTip}
+                setCustomTip={setCustomTip}
                 estimatedTotal={estimatedTotal}
                 authorizedAmount={authorizedAmount}
                 isSubmitting={isSubmitting}
@@ -426,6 +431,11 @@ interface CheckoutBodyProps extends PaymentFormProps {
   deliveryFee: number;
   convenienceFee: number;
   tax: number;
+  tip: number;
+  tipPreset: number | "custom" | null;
+  setTipPreset: (v: number | "custom" | null) => void;
+  customTip: string;
+  setCustomTip: (v: string) => void;
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
