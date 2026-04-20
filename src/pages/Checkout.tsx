@@ -440,9 +440,67 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
               </p>
             </div>
-            <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
-              <PaymentElement />
-            </div>
+
+            {props.savedCards.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {props.savedCards.map((card) => {
+                  const selected = props.selectedCardId === card.id;
+                  return (
+                    <button
+                      key={card.id}
+                      type="button"
+                      onClick={() => props.setSelectedCardId(card.id)}
+                      className={`w-full flex items-center gap-3 rounded-xl border p-3.5 transition-all text-left ${
+                        selected
+                          ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
+                          : "border-border bg-background hover:border-primary/40"
+                      }`}
+                    >
+                      <div className={`h-9 w-12 rounded-md flex items-center justify-center text-[10px] font-bold uppercase ${
+                        selected ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                      }`}>
+                        {card.brand || "Card"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground capitalize">
+                          {card.brand} •••• {card.last4}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Expires {String(card.exp_month).padStart(2, "0")}/{String(card.exp_year).slice(-2)}
+                        </p>
+                      </div>
+                      {selected && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => props.setSelectedCardId("new")}
+                  className={`w-full flex items-center gap-3 rounded-xl border p-3.5 transition-all text-left ${
+                    props.selectedCardId === "new"
+                      ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
+                      : "border-dashed border-border bg-background hover:border-primary/40"
+                  }`}
+                >
+                  <div className={`h-9 w-12 rounded-md flex items-center justify-center ${
+                    props.selectedCardId === "new" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                  }`}>
+                    <Plus className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">Use a new card</p>
+                    <p className="text-[11px] text-muted-foreground">Saved automatically for next time</p>
+                  </div>
+                  {props.selectedCardId === "new" && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                </button>
+              </div>
+            )}
+
+            {props.selectedCardId === "new" && (
+              <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
+                <PaymentElement />
+              </div>
+            )}
           </SectionCard>
 
           {/* 4. Tip */}
