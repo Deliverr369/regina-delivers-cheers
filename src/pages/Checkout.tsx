@@ -239,7 +239,18 @@ const Checkout = () => {
   const deliveryFee = cartItems.length > 0 ? getDeliveryFee(storeName) : 0;
   const convenienceFee = subtotal * 0.12;
   const tax = subtotal * 0.11;
-  const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax;
+
+  const [tipPreset, setTipPreset] = useState<number | "custom" | null>(3);
+  const [customTip, setCustomTip] = useState<string>("");
+  const tip = useMemo(() => {
+    if (tipPreset === "custom") {
+      const n = parseFloat(customTip);
+      return isNaN(n) || n < 0 ? 0 : n;
+    }
+    return tipPreset ?? 0;
+  }, [tipPreset, customTip]);
+
+  const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax + tip;
 
   const [formData, setFormData] = useState<FormData>({
     firstName: "", lastName: "", email: user?.email || "", phone: "",
