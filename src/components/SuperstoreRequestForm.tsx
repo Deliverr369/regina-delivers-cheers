@@ -215,7 +215,7 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
                   if (e.key === "Enter") {
                     e.preventDefault();
                     if (showSuggestions && suggestions.length > 0) {
-                      pickSuggestion(suggestions[0]);
+                      pickSuggestion(suggestions[0].name);
                     } else {
                       handleNext();
                     }
@@ -228,15 +228,22 @@ const SuperstoreRequestForm = ({ storeId, storeName }: SuperstoreRequestFormProp
                 autoComplete="off"
               />
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-20 left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
+                <div className="absolute z-20 left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto">
                   {suggestions.map((s) => (
                     <button
                       type="button"
-                      key={s}
-                      onClick={() => pickSuggestion(s)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0"
+                      key={s.name}
+                      onClick={() => pickSuggestion(s.name)}
+                      className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0"
                     >
-                      {s}
+                      <div className="h-10 w-10 flex-shrink-0 rounded-md bg-muted overflow-hidden flex items-center justify-center">
+                        {s.image_url ? (
+                          <img src={s.image_url} alt={s.name} className="h-full w-full object-contain" loading="lazy" />
+                        ) : (
+                          <span className="text-base">🍾</span>
+                        )}
+                      </div>
+                      <span className="truncate font-medium">{s.name}</span>
                     </button>
                   ))}
                 </div>
