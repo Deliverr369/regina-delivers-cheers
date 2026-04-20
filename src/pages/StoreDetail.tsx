@@ -647,6 +647,7 @@ const StoreDetail = () => {
                   )}
                   {(() => {
                     const isConv = category === "convenience";
+                    const isSmokes = category === "smokes";
                     const subEmoji = (s: string) => {
                       const n = s.toLowerCase();
                       if (n.includes("baby")) return "👶";
@@ -687,10 +688,21 @@ const StoreDetail = () => {
                       if (n.includes("toy") || n.includes("entertain")) return "🧸";
                       return "✨";
                     };
+                    const smokeEmoji = (v: string) => ({
+                      cigarettes: "🚬",
+                      cigars: "🌬️",
+                      vapes: "💨",
+                      rolling: "📜",
+                      pouches: "🥡",
+                      accessories: "🔥",
+                    } as Record<string, string>)[v] || "🚬";
+
                     const subs = isConv
                       ? (Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[])
+                      : isSmokes
+                      ? SMOKES_SUBCATEGORIES.filter(s => s.value !== "all" && items.some(p => getSmokesSubcategory(p.name) === s.value)).map(s => s.value)
                       : [];
-                    const hasSidebar = isConv && subs.length > 0;
+                    const hasSidebar = (isConv || isSmokes) && subs.length > 0;
 
                     const q = searchQuery.trim().toLowerCase();
                     let displayItems = category === "wine" && wineSubcategory !== "all"
@@ -737,19 +749,6 @@ const StoreDetail = () => {
                             })}
                           </div>
                         )}
-                        {category === "smokes" && items.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mb-5">
-                            {SMOKES_SUBCATEGORIES.map((sub) => {
-                              const count = sub.value === "all" ? items.length : items.filter(p => getSmokesSubcategory(p.name) === sub.value).length;
-                              if (sub.value !== "all" && count === 0) return null;
-                              return (
-                                <Button key={sub.value} variant={smokesSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setSmokesSubcategory(sub.value)} className="rounded-full text-xs h-8">
-                                  {sub.label} ({count})
-                                </Button>
-                              );
-                            })}
-                          </div>
-                        )}
                       </>
                     );
 
@@ -780,8 +779,17 @@ const StoreDetail = () => {
                       );
                     }
 
-                    const activeLabel = convenienceSubcategory === "all" ? "All Departments" : convenienceSubcategory;
-                    const activeEmoji = convenienceSubcategory === "all" ? "🏪" : subEmoji(convenienceSubcategory);
+                    const currentValue = isConv ? convenienceSubcategory : smokesSubcategory;
+                    const setCurrent = isConv ? setConvenienceSubcategory : setSmokesSubcategory;
+                    const allLabel = isConv ? "All Departments" : "All Smokes";
+                    const allItemsLabel = isConv ? "All Items" : "All Smokes";
+                    const allEmoji = isConv ? "🏪" : "🚬";
+                    const sidebarTitle = isConv ? "Departments" : "Categories";
+                    const aisleWord = isConv ? "aisles" : "categories";
+                    const labelFor = (v: string) => isConv ? v : (SMOKES_SUBCATEGORIES.find(s => s.value === v)?.label || v);
+                    const iconFor = (v: string) => isConv ? subEmoji(v) : smokeEmoji(v);
+                    const activeLabel = currentValue === "all" ? allLabel : labelFor(currentValue);
+                    const activeEmoji = currentValue === "all" ? allEmoji : iconFor(currentValue);
 
                     return (
                       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
@@ -789,39 +797,41 @@ const StoreDetail = () => {
                         <aside className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)]">
                           <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
                             <div className="px-5 py-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border/50">
-                              <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Departments</h3>
-                              <p className="text-sm font-semibold text-foreground mt-1">{subs.length} aisles • {items.length.toLocaleString()} items</p>
+                              <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">{sidebarTitle}</h3>
+                              <p className="text-sm font-semibold text-foreground mt-1">{subs.length} {aisleWord} • {items.length.toLocaleString()} items</p>
                             </div>
                             <nav className="p-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto">
                               <button
-                                onClick={() => setConvenienceSubcategory("all")}
+                                onClick={() => setCurrent("all")}
                                 className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition-all ${
-                                  convenienceSubcategory === "all"
+                                  currentValue === "all"
                                     ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md"
                                     : "text-foreground hover:bg-muted/60"
                                 }`}
                               >
-                                <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-base ${convenienceSubcategory === "all" ? "bg-white/20" : "bg-muted"}`}>🏪</span>
-                                <span className="flex-1 truncate">All Items</span>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${convenienceSubcategory === "all" ? "bg-white/25" : "bg-muted text-muted-foreground"}`}>
+                                <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-base ${currentValue === "all" ? "bg-white/20" : "bg-muted"}`}>{allEmoji}</span>
+                                <span className="flex-1 truncate">{allItemsLabel}</span>
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${currentValue === "all" ? "bg-white/25" : "bg-muted text-muted-foreground"}`}>
                                   {items.length.toLocaleString()}
                                 </span>
                               </button>
                               {subs.map((sub) => {
-                                const count = items.filter(p => (p as any).subcategory === sub).length;
-                                const active = convenienceSubcategory === sub;
+                                const count = isConv
+                                  ? items.filter(p => (p as any).subcategory === sub).length
+                                  : items.filter(p => getSmokesSubcategory(p.name) === sub).length;
+                                const active = currentValue === sub;
                                 return (
                                   <button
                                     key={sub}
-                                    onClick={() => setConvenienceSubcategory(sub)}
+                                    onClick={() => setCurrent(sub)}
                                     className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-all ${
                                       active
                                         ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md font-semibold"
                                         : "text-foreground/80 hover:bg-muted/60 hover:text-foreground"
                                     }`}
                                   >
-                                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-base ${active ? "bg-white/20" : "bg-muted"}`}>{subEmoji(sub)}</span>
-                                    <span className="flex-1 truncate">{sub}</span>
+                                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-base ${active ? "bg-white/20" : "bg-muted"}`}>{iconFor(sub)}</span>
+                                    <span className="flex-1 truncate">{labelFor(sub)}</span>
                                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${active ? "bg-white/25" : "bg-muted text-muted-foreground"}`}>
                                       {count}
                                     </span>
@@ -842,9 +852,9 @@ const StoreDetail = () => {
                                 <p className="text-xs text-muted-foreground mt-0.5">{displayItems.length.toLocaleString()} {displayItems.length === 1 ? "product" : "products"}{q ? ` matching "${searchQuery}"` : ""}</p>
                               </div>
                             </div>
-                            {convenienceSubcategory !== "all" && (
-                              <button onClick={() => setConvenienceSubcategory("all")} className="text-xs font-semibold text-primary hover:underline">
-                                ← Back to all departments
+                            {currentValue !== "all" && (
+                              <button onClick={() => setCurrent("all")} className="text-xs font-semibold text-primary hover:underline">
+                                ← Back to {isConv ? "all departments" : "all smokes"}
                               </button>
                             )}
                           </div>
