@@ -623,6 +623,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>${props.deliveryFee.toFixed(2)}</span></div>
               <div className="flex justify-between text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span>${props.convenienceFee.toFixed(2)}</span></div>
               <div className="flex justify-between text-muted-foreground text-sm"><span>Tax</span><span>${props.tax.toFixed(2)}</span></div>
+              <div className="flex justify-between text-foreground text-sm"><span>Driver Tip</span><span>${props.tip.toFixed(2)}</span></div>
               <Separator />
               <div className="flex justify-between font-bold text-foreground"><span>Estimated Total</span><span>${props.estimatedTotal.toFixed(2)}</span></div>
             </div>
