@@ -34,6 +34,8 @@ const Stores = () => {
   const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "takeout">("liquor");
 
   const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
+  const SHELL_ID = "97208ee6-3536-4a61-849f-3dcc3ec0e71b";
+  const SMOKE_VAPE_IDS = [SEVEN_ELEVEN_ID, SHELL_ID];
 
   const tabs = [
     { id: "liquor" as const, label: "Liquor stores", icon: tabLiquor },
@@ -65,9 +67,9 @@ const Stores = () => {
   });
 
   const tabFilteredStores = stores.filter((store) => {
-    if (activeTab === "smoke") return store.id === SEVEN_ELEVEN_ID;
+    if (activeTab === "smoke") return SMOKE_VAPE_IDS.includes(store.id);
     if (activeTab === "takeout") return false;
-    return store.id !== SEVEN_ELEVEN_ID;
+    return !SMOKE_VAPE_IDS.includes(store.id);
   });
 
   const filteredStores = tabFilteredStores
