@@ -35,6 +35,7 @@ const contentMenu = [
   { title: "Promo Banners", url: "/dashboard/banners", icon: Megaphone },
   { title: "Bulk Images", url: "/dashboard/bulk-images", icon: ImagePlus },
   { title: "Auto Images", url: "/dashboard/auto-images", icon: Sparkles },
+  { title: "Match Web Images", url: "/dashboard/match-images", icon: Globe },
 ];
 
 export function DashboardSidebar() {
