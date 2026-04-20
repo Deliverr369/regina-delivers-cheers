@@ -360,30 +360,45 @@ const Checkout = () => {
   if (cartItems.length === 0) { navigate("/cart"); return null; }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-secondary/40 via-background to-background">
       <Header />
-      <main className="pt-20 pb-16">
-        <div className="bg-secondary/50 border-b border-border">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-3">
-              <Link to="/cart" className="text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <h1 className="font-display text-2xl font-bold text-foreground">Checkout</h1>
+      <main className="pt-20 pb-20">
+        {/* Page header */}
+        <div className="container mx-auto px-4 pt-8 pb-6">
+          <Link
+            to="/cart"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to cart
+          </Link>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                Checkout
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5" />
+                Secure, encrypted payment · Powered by Stripe
+              </p>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-success" />
+              256-bit SSL encryption
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4">
           {error && (
-            <Alert variant="destructive" className="mb-5">
+            <Alert variant="destructive" className="mb-6 rounded-xl">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
           {initLoading ? (
-            <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
+            <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
             </div>
           ) : clientSecret && elementsOptions ? (
@@ -413,7 +428,7 @@ const Checkout = () => {
               />
             </Elements>
           ) : (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="rounded-xl">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>Could not initialize payment. Please refresh.</AlertDescription>
             </Alert>
