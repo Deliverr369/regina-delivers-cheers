@@ -17,6 +17,7 @@ import Footer from "@/components/Footer";
 import tabLiquor from "@/assets/tab-liquor.png";
 import tabSmoke from "@/assets/tab-smoke.png";
 import tabTakeout from "@/assets/tab-takeout.png";
+import tabPharmacy from "@/assets/tab-pharmacy.png";
 
 const sortOptions = [
   { value: "rating", label: "Highest Rated" },
@@ -31,15 +32,21 @@ const Stores = () => {
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "takeout">("liquor");
+  const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "pharmacy" | "takeout">("liquor");
 
   const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
   const SHELL_ID = "97208ee6-3536-4a61-849f-3dcc3ec0e71b";
   const SMOKE_VAPE_IDS = [SEVEN_ELEVEN_ID, SHELL_ID];
+  const PHARMACY_IDS = [
+    "862492f3-afd1-48a0-bca0-463b38e9652a", // Shoppers Drug Mart
+    "f8475958-335b-410b-906b-8795898cc19d", // Rexall
+    "2e4f3a01-a5c2-4780-ad04-7a288f90b864", // London Drugs
+  ];
 
   const tabs = [
     { id: "liquor" as const, label: "Liquor stores", icon: tabLiquor },
     { id: "smoke" as const, label: "Smoke & Vape", icon: tabSmoke },
+    { id: "pharmacy" as const, label: "Pharmacy", icon: tabPharmacy },
     { id: "takeout" as const, label: "Takeout", icon: tabTakeout },
   ];
 
@@ -68,8 +75,9 @@ const Stores = () => {
 
   const tabFilteredStores = stores.filter((store) => {
     if (activeTab === "smoke") return SMOKE_VAPE_IDS.includes(store.id);
+    if (activeTab === "pharmacy") return PHARMACY_IDS.includes(store.id);
     if (activeTab === "takeout") return false;
-    return !SMOKE_VAPE_IDS.includes(store.id);
+    return !SMOKE_VAPE_IDS.includes(store.id) && !PHARMACY_IDS.includes(store.id);
   });
 
   const filteredStores = tabFilteredStores
@@ -165,6 +173,7 @@ const Stores = () => {
             <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-1.5">
               {activeTab === "liquor" && "Liquor Stores in Regina"}
               {activeTab === "smoke" && "Smoke and Vape in Regina"}
+              {activeTab === "pharmacy" && "Pharmacies in Regina"}
               {activeTab === "takeout" && "Takeout in Regina"}
             </h1>
             <p className="text-muted-foreground">
