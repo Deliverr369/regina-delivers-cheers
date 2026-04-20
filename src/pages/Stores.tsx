@@ -61,7 +61,13 @@ const Stores = () => {
     },
   });
 
-  const filteredStores = stores
+  const tabFilteredStores = stores.filter((store) => {
+    if (activeTab === "smoke") return store.id === SEVEN_ELEVEN_ID;
+    if (activeTab === "takeout") return false;
+    return store.id !== SEVEN_ELEVEN_ID;
+  });
+
+  const filteredStores = tabFilteredStores
     .filter((store) =>
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.address.toLowerCase().includes(searchQuery.toLowerCase())
