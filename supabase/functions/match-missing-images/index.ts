@@ -8,15 +8,14 @@ const corsHeaders = {
 
 const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
 
-// In-memory cache of mapped URLs per source per warm instance.
-const SITE_LINKS_CACHE = new Map<string, string[]>();
-
 interface ProductRow {
   id: string;
   name: string;
   size: string | null;
   category: string;
 }
+
+interface MapHit { url: string; title?: string; description?: string }
 
 function normalize(s: string): string {
   return s
@@ -27,181 +26,131 @@ function normalize(s: string): string {
     .trim();
 }
 
-function tokenize(s: string): Set<string> {
-  return new Set(normalize(s).split(" ").filter((t) => t.length > 2));
+function tokenize(s: string, minLen = 2): string[] {
+  return normalize(s).split(" ").filter((t) => t.length > minLen);
 }
 
-function jaccardScore(a: Set<string>, b: Set<string>): number {
-  if (a.size === 0 || b.size === 0) return 0;
-  let intersect = 0;
-  for (const t of a) if (b.has(t)) intersect++;
-  const union = a.size + b.size - intersect;
-  return intersect / union;
+// Extract a numeric volume in mL and a pack count from a string like
+// "Smirnoff Ice Raspberry 6 x 355 mL cans" or "Smirnoff Vodka 1.75L"
+function parseSize(s: string): { ml?: number; pack?: number } {
+  const lower = (s || "").toLowerCase();
+  let ml: number | undefined;
+  let pack: number | undefined;
+
+  // packs e.g. 6 x 355, 12pk, 24-pack
+  const pm = lower.match(/(\d{1,3})\s*(?:x|×|pk|pack|cans?|bottles?|btls?)\b/);
+  if (pm) pack = Number(pm[1]);
+
+  // explicit ml
+  const mlm = lower.match(/(\d{2,4})\s*ml/);
+  if (mlm) ml = Number(mlm[1]);
+  // litres
+  const lm = lower.match(/(\d(?:\.\d{1,2})?)\s*l(?:tr|iter|itre)?\b/);
+  if (lm && ml === undefined) ml = Math.round(Number(lm[1]) * 1000);
+
+  return { ml, pack };
 }
 
-async function mapSite(domain: string, firecrawlKey: string): Promise<string[]> {
-  if (SITE_LINKS_CACHE.has(domain)) return SITE_LINKS_CACHE.get(domain)!;
-  const res = await fetch(`${FIRECRAWL_V2}/map`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${firecrawlKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ url: `https://${domain}`, limit: 5000, includeSubdomains: false }),
-  });
-  if (!res.ok) {
-    console.error("Map failed", res.status, await res.text());
+function scoreCandidate(product: ProductRow, hit: MapHit): number {
+  const haystack = `${hit.title ?? ""} ${hit.description ?? ""} ${hit.url}`;
+  const productText = `${product.name} ${product.size ?? ""}`;
+  const productTokens = new Set(tokenize(productText));
+  const hayTokens = new Set(tokenize(haystack));
+  if (productTokens.size === 0) return 0;
+  let overlap = 0;
+  for (const t of productTokens) if (hayTokens.has(t)) overlap++;
+  let score = overlap / productTokens.size; // 0..1
+
+  // Size match bonus / penalty
+  const ps = parseSize(productText);
+  const hs = parseSize(haystack);
+  if (ps.ml && hs.ml) {
+    if (ps.ml === hs.ml) score += 0.4;
+    else if (Math.abs(ps.ml - hs.ml) / ps.ml < 0.05) score += 0.2;
+    else score -= 0.25;
+  }
+  if (ps.pack && hs.pack) {
+    if (ps.pack === hs.pack) score += 0.3;
+    else score -= 0.2;
+  }
+
+  // Penalize obvious deposit / non-product pages
+  if (/deposit\s+for/i.test(hit.title ?? "")) score -= 1;
+  if (/\/(deposit|gift|policies|pages|blogs)/i.test(hit.url)) score -= 0.5;
+
+  return score;
+}
+
+async function searchSite(domain: string, query: string, firecrawlKey: string): Promise<MapHit[]> {
+  try {
+    const res = await fetch(`${FIRECRAWL_V2}/map`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url: `https://${domain}`, limit: 25, search: query }),
+    });
+    if (!res.ok) {
+      console.error("Map failed", res.status, await res.text().catch(() => ""));
+      return [];
+    }
+    const json = await res.json();
+    const raw = json.links ?? json.data?.links ?? [];
+    return raw
+      .map((l: any) => typeof l === "string" ? { url: l } : { url: l?.url, title: l?.title, description: l?.description })
+      .filter((x: any) => x?.url && /\/products?\//i.test(x.url));
+  } catch (e) {
+    console.error("Map error", e);
     return [];
   }
-  const json = await res.json();
-  const links: string[] = (json.links || json.data?.links || [])
-    .map((l: any) => (typeof l === "string" ? l : l?.url))
-    .filter(Boolean);
-  SITE_LINKS_CACHE.set(domain, links);
-  return links;
 }
 
-function rankCandidateUrls(product: ProductRow, links: string[], max = 5): string[] {
-  const productTokens = tokenize(`${product.name} ${product.size ?? ""}`);
-  const scored = links
-    .map((url) => {
-      const path = decodeURIComponent(url.split("?")[0].split("#")[0]);
-      // skip obvious non-product pages
-      if (/\/(cart|checkout|account|login|search|policies|pages|blogs|collections?$)/i.test(path)) return null;
-      const tokens = tokenize(path);
-      const score = jaccardScore(productTokens, tokens);
-      return score > 0 ? { url, score } : null;
-    })
-    .filter((x): x is { url: string; score: number } => x !== null)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, max)
-    .map((x) => x.url);
-  return scored;
-}
-
-async function scrapePage(url: string, firecrawlKey: string): Promise<{ markdown?: string; html?: string; metadata?: any } | null> {
+async function scrapeImage(url: string, firecrawlKey: string): Promise<string | null> {
   try {
     const res = await fetch(`${FIRECRAWL_V2}/scrape`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         url,
-        formats: ["markdown", "html"],
+        formats: ["html"],
         onlyMainContent: true,
       }),
     });
-    if (!res.ok) {
-      console.error("Scrape failed", url, res.status);
-      return null;
-    }
+    if (!res.ok) return null;
     const json = await res.json();
-    return {
-      markdown: json.markdown ?? json.data?.markdown,
-      html: json.html ?? json.data?.html,
-      metadata: json.metadata ?? json.data?.metadata,
-    };
+    const html: string = json.html ?? json.data?.html ?? "";
+    const meta = json.metadata ?? json.data?.metadata ?? {};
+
+    // Prefer og:image (often the main product image on Shopify)
+    if (typeof meta.ogImage === "string" && /^https?:\/\//.test(meta.ogImage)) {
+      return cleanShopifyImage(meta.ogImage);
+    }
+    const og = /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i.exec(html);
+    if (og) return cleanShopifyImage(og[1]);
+
+    // First reasonable <img> in product section
+    const imgRe = /<img[^>]+(?:src|data-src|data-original|srcset)\s*=\s*["']([^"']+)["']/gi;
+    const base = new URL(url);
+    let m: RegExpExecArray | null;
+    while ((m = imgRe.exec(html)) !== null) {
+      let u = m[1].split(",")[0].trim().split(" ")[0];
+      if (u.startsWith("//")) u = base.protocol + u;
+      else if (u.startsWith("/")) u = base.origin + u;
+      if (!/^https?:\/\//.test(u)) continue;
+      if (/\.(svg|gif)(\?|$)/i.test(u)) continue;
+      if (/(logo|icon|sprite|placeholder|loading|trustbadge|payment)/i.test(u)) continue;
+      return cleanShopifyImage(u);
+    }
+    return null;
   } catch (e) {
     console.error("Scrape error", url, e);
     return null;
   }
 }
 
-function extractImageUrls(html: string, baseUrl: string): string[] {
-  if (!html) return [];
-  const urls = new Set<string>();
-  const base = new URL(baseUrl);
-  // Standard <img src="...">
-  const imgRegex = /<img[^>]+(?:src|data-src|data-original)\s*=\s*["']([^"']+)["']/gi;
-  let m: RegExpExecArray | null;
-  while ((m = imgRegex.exec(html)) !== null) {
-    let u = m[1];
-    if (u.startsWith("//")) u = base.protocol + u;
-    else if (u.startsWith("/")) u = base.origin + u;
-    if (!/^https?:\/\//i.test(u)) continue;
-    if (/\.(svg|gif)(\?|$)/i.test(u)) continue;
-    if (/(logo|icon|sprite|placeholder|loading)/i.test(u)) continue;
-    urls.add(u.split("?")[0]);
-  }
-  // og:image
-  const ogRegex = /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i;
-  const ogMatch = ogRegex.exec(html);
-  if (ogMatch) urls.add(ogMatch[1]);
-  return Array.from(urls).slice(0, 12);
-}
-
-async function aiPickBestMatch(
-  product: ProductRow,
-  candidates: { pageUrl: string; title?: string; imageUrls: string[]; snippet: string }[],
-  lovableKey: string,
-): Promise<{ image_url: string; confidence: "high" | "medium" | "low" } | null> {
-  if (candidates.length === 0) return null;
-  const sys = `You are a precise product matching assistant. The user has a product from a Saskatchewan liquor delivery catalog and a list of candidate product pages scraped from a competitor liquor store. Decide which page truly matches the same product (same brand, same product name, same size/pack), and return the single best image URL from that page. If no candidate is a clear match, return no_match=true.`;
-  const userPayload = {
-    target_product: {
-      name: product.name,
-      size: product.size,
-      category: product.category,
-    },
-    candidates: candidates.map((c, i) => ({
-      index: i,
-      page_url: c.pageUrl,
-      page_title: c.title,
-      snippet: c.snippet.slice(0, 600),
-      image_urls: c.imageUrls,
-    })),
-  };
-
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content: JSON.stringify(userPayload) },
-      ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "report_match",
-            description: "Report the chosen match",
-            parameters: {
-              type: "object",
-              properties: {
-                no_match: { type: "boolean", description: "true if none of the candidates is a clear match" },
-                candidate_index: { type: "number", description: "0-based index of the matching candidate" },
-                image_url: { type: "string", description: "best image URL chosen from that candidate's image_urls" },
-                confidence: { type: "string", enum: ["high", "medium", "low"] },
-              },
-              required: ["no_match"],
-              additionalProperties: false,
-            },
-          },
-        },
-      ],
-      tool_choice: { type: "function", function: { name: "report_match" } },
-    }),
-  });
-  if (!res.ok) {
-    console.error("AI match failed", res.status, await res.text().catch(() => ""));
-    return null;
-  }
-  const data = await res.json();
-  const call = data.choices?.[0]?.message?.tool_calls?.[0];
-  if (!call) return null;
-  let args: any;
-  try { args = JSON.parse(call.function.arguments); } catch { return null; }
-  if (args.no_match) return null;
-  if (!args.image_url || typeof args.image_url !== "string") return null;
-  if (args.confidence === "low") return null; // be safe
-  return { image_url: args.image_url, confidence: args.confidence ?? "medium" };
+function cleanShopifyImage(u: string): string {
+  // Shopify: upscale to 800px and force https
+  let out = u.replace(/_(\d+)x(\d+)?(\.[a-z]+)(\?|$)/i, "_800x$3$4").split("?")[0];
+  if (out.startsWith("http://")) out = "https://" + out.slice(7);
+  return out;
 }
 
 Deno.serve(async (req) => {
@@ -211,29 +160,16 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-
     if (!firecrawlKey) {
       return new Response(JSON.stringify({ error: "Firecrawl not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!lovableKey) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const supabase = createClient(supabaseUrl, serviceKey);
-    const anon = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const anon = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
     const { data: { user } } = await anon.auth.getUser();
     if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
@@ -242,102 +178,91 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const sourceUrl: string = body.sourceUrl;
     const batchSize: number = Math.min(Number(body.batchSize) || 5, 10);
+    const minScore: number = typeof body.minScore === "number" ? body.minScore : 0.6;
     const category: string | null = body.category ?? null;
     if (!sourceUrl) {
       return new Response(JSON.stringify({ error: "sourceUrl required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const domain = new URL(sourceUrl).hostname;
 
-    // 1. Map site (cached)
-    const links = await mapSite(domain, firecrawlKey);
-    if (links.length === 0) {
-      return new Response(JSON.stringify({ error: "Could not map site", processed: 0, updated: 0 }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // 2. Pick a batch of products with no image, deduped by name+size to avoid wasting calls
+    // Pull a wider pool, dedupe by name+size+category to avoid wasting calls
     let q = supabase
       .from("products")
-      .select("id, name, size, category, store_id")
+      .select("id, name, size, category")
       .or("image_url.is.null,image_url.eq.")
       .eq("is_hidden", false)
-      .limit(batchSize * 4); // overfetch since we dedupe
+      .order("name")
+      .limit(batchSize * 6);
     if (category) q = q.eq("category", category as any);
-    const { data: candidatesRaw, error: pErr } = await q;
+    const { data: rows, error: pErr } = await q;
     if (pErr) throw pErr;
 
     const seen = new Set<string>();
-    const uniqueProducts: ProductRow[] = [];
-    for (const p of (candidatesRaw ?? []) as any[]) {
-      const key = `${normalize(p.name)}|${normalize(p.size ?? "")}`;
+    const products: ProductRow[] = [];
+    for (const p of (rows ?? []) as any[]) {
+      const key = `${normalize(p.name)}|${normalize(p.size ?? "")}|${p.category}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      uniqueProducts.push({ id: p.id, name: p.name, size: p.size, category: p.category });
-      if (uniqueProducts.length >= batchSize) break;
+      products.push({ id: p.id, name: p.name, size: p.size, category: p.category });
+      if (products.length >= batchSize) break;
     }
 
     const results: any[] = [];
     let updated = 0;
 
-    for (const product of uniqueProducts) {
-      try {
-        const candidateUrls = rankCandidateUrls(product, links, 4);
-        if (candidateUrls.length === 0) {
-          results.push({ id: product.id, name: product.name, status: "no_candidates" });
-          continue;
-        }
-        const scrapedAll = await Promise.all(candidateUrls.map((u) => scrapePage(u, firecrawlKey)));
-        const candidates = candidateUrls.map((url, i) => {
-          const s = scrapedAll[i];
-          if (!s) return null;
-          const html = s.html ?? "";
-          const md = s.markdown ?? "";
-          const imageUrls = extractImageUrls(html, url);
-          if (imageUrls.length === 0) return null;
-          return {
-            pageUrl: url,
-            title: s.metadata?.title,
-            snippet: md.slice(0, 800),
-            imageUrls,
-          };
-        }).filter(Boolean) as any[];
+    for (const product of products) {
+      const query = `${product.name} ${product.size ?? ""}`.trim();
+      const hits = await searchSite(domain, query, firecrawlKey);
+      if (hits.length === 0) {
+        results.push({ id: product.id, name: product.name, status: "no_candidates" });
+        continue;
+      }
+      const scored = hits
+        .map((h) => ({ hit: h, score: scoreCandidate(product, h) }))
+        .sort((a, b) => b.score - a.score);
 
-        if (candidates.length === 0) {
-          results.push({ id: product.id, name: product.name, status: "no_scrape" });
-          continue;
-        }
+      const best = scored[0];
+      if (!best || best.score < minScore) {
+        results.push({
+          id: product.id, name: product.name, status: "no_match",
+          best_score: best ? Number(best.score.toFixed(2)) : 0,
+          best_title: best?.hit.title,
+        });
+        continue;
+      }
 
-        const pick = await aiPickBestMatch(product, candidates, lovableKey);
-        if (!pick) {
-          results.push({ id: product.id, name: product.name, status: "no_match" });
-          continue;
-        }
+      const image = await scrapeImage(best.hit.url, firecrawlKey);
+      if (!image) {
+        results.push({ id: product.id, name: product.name, status: "no_image", source_page: best.hit.url });
+        continue;
+      }
 
-        // Update ALL store rows that share the same normalized name+size+category, not just this id.
-        const sameKey = (candidatesRaw ?? []).filter((c: any) =>
-          normalize(c.name) === normalize(product.name) &&
-          normalize(c.size ?? "") === normalize(product.size ?? "") &&
-          c.category === product.category
-        );
-        const idsToUpdate = sameKey.length > 0 ? sameKey.map((c: any) => c.id) : [product.id];
-        const { error: uErr } = await supabase
-          .from("products")
-          .update({ image_url: pick.image_url })
-          .in("id", idsToUpdate);
-        if (uErr) {
-          results.push({ id: product.id, name: product.name, status: "update_failed", error: uErr.message });
-        } else {
-          updated += idsToUpdate.length;
-          results.push({ id: product.id, name: product.name, status: "matched", image_url: pick.image_url, confidence: pick.confidence, applied_to: idsToUpdate.length });
-        }
-      } catch (e) {
-        console.error("Product matching error", product.id, e);
-        results.push({ id: product.id, name: product.name, status: "error", error: String(e) });
+      // Apply to all rows in any store with same normalized name+size+category
+      const sameKey = (rows ?? []).filter((c: any) =>
+        normalize(c.name) === normalize(product.name) &&
+        normalize(c.size ?? "") === normalize(product.size ?? "") &&
+        c.category === product.category
+      );
+      const idsToUpdate = sameKey.length > 0 ? sameKey.map((c: any) => c.id) : [product.id];
+      const { error: uErr } = await supabase
+        .from("products")
+        .update({ image_url: image })
+        .in("id", idsToUpdate);
+      if (uErr) {
+        results.push({ id: product.id, name: product.name, status: "update_failed", error: uErr.message });
+      } else {
+        updated += idsToUpdate.length;
+        results.push({
+          id: product.id, name: product.name, status: "matched",
+          image_url: image,
+          confidence: best.score >= 1.0 ? "high" : best.score >= 0.75 ? "medium" : "low",
+          source_page: best.hit.url,
+          score: Number(best.score.toFixed(2)),
+          applied_to: idsToUpdate.length,
+        });
       }
     }
 
-    // Count remaining missing for reporting
     let remainingQ = supabase
       .from("products")
       .select("id", { count: "exact", head: true })
@@ -347,10 +272,9 @@ Deno.serve(async (req) => {
     const { count: remaining } = await remainingQ;
 
     return new Response(JSON.stringify({
-      processed: uniqueProducts.length,
+      processed: products.length,
       updated,
       remaining: remaining ?? null,
-      mapped_links: links.length,
       results,
     }), {
       status: 200,
