@@ -14,6 +14,7 @@ interface RequestItem {
   name: string;
   size: string;
   quantity: number;
+  image_url?: string | null;
 }
 
 interface SuperstoreRequestFormProps {
