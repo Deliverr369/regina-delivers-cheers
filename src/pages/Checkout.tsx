@@ -95,6 +95,31 @@ const Checkout = () => {
   });
   const [cityError, setCityError] = useState<string | null>(null);
 
+  // Auto-fill from saved profile on login
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone, address, city, postal_code, email")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!profile) return;
+      const [firstName = "", ...rest] = (profile.full_name || "").split(" ");
+      const lastName = rest.join(" ");
+      setFormData((prev) => ({
+        ...prev,
+        firstName: prev.firstName || firstName,
+        lastName: prev.lastName || lastName,
+        email: prev.email || profile.email || user.email || "",
+        phone: prev.phone || profile.phone || "",
+        address: prev.address || profile.address || "",
+        city: prev.city || profile.city || "Regina",
+        postalCode: prev.postalCode || profile.postal_code || "",
+      }));
+    })();
+  }, [user]);
+
   // Create PaymentIntent on mount
   useEffect(() => {
     if (!user || cartItems.length === 0) return;
