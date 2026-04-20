@@ -581,7 +581,7 @@ const StoreDetail = () => {
                   </button>
                 )}
               </div>
-              <TabsList className="mb-6 w-full justify-center overflow-x-auto h-auto p-1.5 gap-1 bg-muted/50 rounded-xl">
+              <TabsList className={`mb-6 w-full justify-center overflow-x-auto h-auto p-1.5 gap-1 bg-muted/50 rounded-xl ${availableCategories.length <= 1 ? "hidden" : ""}`}>
                 {availableCategories.includes("beer") && (
                   <TabsTrigger value="beer" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
