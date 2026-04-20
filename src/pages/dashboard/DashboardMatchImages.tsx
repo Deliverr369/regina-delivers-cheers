@@ -53,7 +53,7 @@ const DashboardMatchImages = () => {
 
     while (!stopRef.current) {
       const { data, error } = await supabase.functions.invoke("match-missing-images", {
-        body: { sourceUrl, batchSize: 5 },
+        body: { sourceUrl, batchSize: 5, minScore: 0.5 },
       });
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });

@@ -147,9 +147,10 @@ async function scrapeImage(url: string, firecrawlKey: string): Promise<string | 
 }
 
 function cleanShopifyImage(u: string): string {
-  // Shopify: strip the size suffix to get original (or upscale to 800)
-  // e.g. ..._100x.jpg -> ..._800x.jpg
-  return u.replace(/_(\d+)x(\d+)?(\.[a-z]+)(\?|$)/i, "_800x$3$4").split("?")[0];
+  // Shopify: upscale to 800px and force https
+  let out = u.replace(/_(\d+)x(\d+)?(\.[a-z]+)(\?|$)/i, "_800x$3$4").split("?")[0];
+  if (out.startsWith("http://")) out = "https://" + out.slice(7);
+  return out;
 }
 
 Deno.serve(async (req) => {
