@@ -504,6 +504,11 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                   </div>
                 </div>
 
+                {/* Pricing adjustment notice */}
+                <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-3 text-[11px] text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">Note:</span> Final price will be adjusted to match in-store prices at pickup and automatically reflected in your final charge. You'll only be charged the actual amount.
+                </div>
+
                 {/* CTA */}
                 <Button
                   type="submit"
