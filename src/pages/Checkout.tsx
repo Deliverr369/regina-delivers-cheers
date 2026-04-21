@@ -306,47 +306,62 @@ const Checkout = () => {
             </Alert>
           )}
 
-          {initLoading ? (
-            <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
-            </div>
-          ) : clientSecret && elementsOptions ? (
-            <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
-              <CheckoutBody
-                formData={formData}
-                setFormData={setFormData}
-                cityError={cityError}
-                setCityError={setCityError}
-                cartItems={cartItems}
-                subtotal={subtotal}
-                deliveryFee={deliveryFee}
-                storeBreakdown={uniqueStores.map(([id, name]) => ({ id: id as string, name: name as string, fee: getDeliveryFee(name as string) }))}
-                convenienceFee={convenienceFee}
-                tax={tax}
-                tip={tip}
-                tipPreset={tipPreset}
-                setTipPreset={setTipPreset}
-                customTip={customTip}
-                setCustomTip={setCustomTip}
-                estimatedTotal={estimatedTotal}
-                authorizedAmount={authorizedAmount}
-                isSubmitting={isSubmitting}
-                setIsSubmitting={setIsSubmitting}
-                setError={setError}
-                paymentIntentId={paymentIntentId}
-                onSuccess={handleSuccess}
-                savedCards={savedCards}
-                selectedCardId={selectedCardId}
-                setSelectedCardId={setSelectedCardId}
-                clientSecret={clientSecret}
-              />
-            </Elements>
-          ) : (
-            <Alert variant="destructive" className="rounded-xl">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Could not initialize payment. Please refresh.</AlertDescription>
-            </Alert>
-          )}
+          {(() => {
+            const bodyProps = {
+              formData,
+              setFormData,
+              cityError,
+              setCityError,
+              cartItems,
+              subtotal,
+              deliveryFee,
+              storeBreakdown: uniqueStores.map(([id, name]) => ({ id: id as string, name: name as string, fee: getDeliveryFee(name as string) })),
+              convenienceFee,
+              tax,
+              tip,
+              tipPreset,
+              setTipPreset,
+              customTip,
+              setCustomTip,
+              estimatedTotal,
+              authorizedAmount,
+              isSubmitting,
+              setIsSubmitting,
+              setError,
+              paymentIntentId,
+              onSuccess: handleSuccess,
+              savedCards,
+              selectedCardId,
+              setSelectedCardId,
+              clientSecret: clientSecret || "",
+              paymentMode,
+              setPaymentMode,
+            };
+
+            if (paymentMode === "cod") {
+              return <CheckoutBody {...bodyProps} />;
+            }
+            if (initLoading) {
+              return (
+                <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
+                </div>
+              );
+            }
+            if (clientSecret && elementsOptions) {
+              return (
+                <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
+                  <CheckoutBody {...bodyProps} />
+                </Elements>
+              );
+            }
+            return (
+              <Alert variant="destructive" className="rounded-xl">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>Could not initialize payment. Please refresh.</AlertDescription>
+              </Alert>
+            );
+          })()}
         </div>
       </main>
       <Footer />
