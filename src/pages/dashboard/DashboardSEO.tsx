@@ -112,7 +112,7 @@ const DashboardSEO = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>SEO-optimized</CardDescription>
-            <CardTitle className="text-3xl text-emerald-600">{loading ? "—" : stats.withSeo}</CardTitle>
+            <CardTitle className="text-3xl text-primary">{loading ? "—" : stats.withSeo}</CardTitle>
           </CardHeader>
         </Card>
         <Card>

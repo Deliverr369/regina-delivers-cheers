@@ -32,6 +32,7 @@ import DashboardAutoImages from "./pages/dashboard/DashboardAutoImages";
 import DashboardMatchImages from "./pages/dashboard/DashboardMatchImages";
 import DashboardInventory from "./pages/dashboard/DashboardInventory";
 import DashboardImporter from "./pages/dashboard/DashboardImporter";
+import DashboardSEO from "./pages/dashboard/DashboardSEO";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
                 <Route path="match-images" element={<DashboardMatchImages />} />
                 <Route path="inventory" element={<DashboardInventory />} />
                 <Route path="importer" element={<DashboardImporter />} />
+                <Route path="seo" element={<DashboardSEO />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
