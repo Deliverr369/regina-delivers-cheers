@@ -195,11 +195,15 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
             {/* Authorization summary */}
             <div className="rounded-lg border bg-muted/30 p-4 space-y-1.5 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Estimated total</span><span>${estimated.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Authorized hold</span><span className="font-medium">${authorized.toFixed(2)}</span></div>
+              {!isCod ? (
+                <div className="flex justify-between"><span className="text-muted-foreground">Authorized hold</span><span className="font-medium">${authorized.toFixed(2)}</span></div>
+              ) : (
+                <div className="flex justify-between"><span className="text-muted-foreground">Payment method</span><span className="font-medium">Cash on delivery</span></div>
+              )}
               <Separator className="my-2" />
               <div className="flex justify-between font-semibold">
                 <span>New final total</span>
-                <span className={exceedsAuth ? "text-destructive" : "text-foreground"}>${newTotal.toFixed(2)}</span>
+                <span className={!isCod && exceedsAuth ? "text-destructive" : "text-foreground"}>${newTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Variance vs estimate</span>
@@ -209,7 +213,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
               </div>
             </div>
 
-            {exceedsAuth && (
+            {!isCod && exceedsAuth && (
               <div className="flex gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <div>
