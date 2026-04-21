@@ -705,12 +705,12 @@ const StoreDetail = () => {
                       accessories: "🔥",
                     } as Record<string, string>)[v] || "🚬";
 
-                    const subs = isConv
+                    const subs = isConv || isPet
                       ? (Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[])
                       : isSmokes
                       ? SMOKES_SUBCATEGORIES.filter(s => s.value !== "all" && items.some(p => getSmokesSubcategory(p.name) === s.value)).map(s => s.value)
                       : [];
-                    const hasSidebar = (isConv || isSmokes) && subs.length > 0;
+                    const hasSidebar = (isConv || isSmokes || isPet) && subs.length > 0;
 
                     const q = searchQuery.trim().toLowerCase();
                     let displayItems = category === "wine" && wineSubcategory !== "all"
@@ -721,6 +721,8 @@ const StoreDetail = () => {
                       ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
                       : category === "convenience" && convenienceSubcategory !== "all"
                       ? items.filter(p => (p as any).subcategory === convenienceSubcategory)
+                      : category === "pet_supplies" && petSubcategory !== "all"
+                      ? items.filter(p => (p as any).subcategory === petSubcategory)
                       : items;
                     if (q) {
                       displayItems = displayItems.filter(p =>
