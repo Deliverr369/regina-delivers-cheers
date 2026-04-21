@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ProductDetailModal from "@/components/ProductDetailModal";
 
 const categories = [
   { id: "all", name: "All Products" },
@@ -30,6 +31,7 @@ const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
+  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const { toast } = useToast();
   const { addToCart } = useCart();
 
