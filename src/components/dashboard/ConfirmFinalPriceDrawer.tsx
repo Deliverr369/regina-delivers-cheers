@@ -226,6 +226,11 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
             {/* Items */}
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">Line items</Label>
+              {items.length === 0 && (
+                <div className="p-4 rounded-lg border border-dashed text-sm text-muted-foreground text-center">
+                  No line items recorded for this order. You can still save a final total below.
+                </div>
+              )}
               {items.map((it) => {
                 const orig = Number(it.estimated_price ?? it.price);
                 const cur = parseFloat(finalPrices[it.id] || "0");
