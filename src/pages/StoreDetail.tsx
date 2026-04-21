@@ -642,6 +642,20 @@ const StoreDetail = () => {
                   {(() => {
                     const isConv = category === "convenience";
                     const isSmokes = category === "smokes";
+                    const isPet = category === "pet_supplies";
+                    const petEmoji = (v: string) => {
+                      const n = v.toLowerCase();
+                      if (n.includes("dog")) return "🐶";
+                      if (n.includes("cat")) return "🐱";
+                      if (n.includes("bird")) return "🦜";
+                      if (n.includes("fish") || n.includes("aqua")) return "🐠";
+                      if (n.includes("reptile")) return "🦎";
+                      if (n.includes("small")) return "🐹";
+                      if (n.includes("flea") || n.includes("tick")) return "🪲";
+                      if (n.includes("outdoor")) return "🌲";
+                      if (n.includes("parent")) return "👨‍👩‍👧";
+                      return "🐾";
+                    };
                     const subEmoji = (s: string) => {
                       const n = s.toLowerCase();
                       if (n.includes("baby")) return "👶";
