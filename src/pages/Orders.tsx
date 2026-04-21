@@ -91,6 +91,7 @@ const Orders = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              <PriceDisclaimer variant="subtle" />
               {orders.map((order) => {
                 const status = statusConfig[order.status || "pending"];
                 return (
