@@ -256,6 +256,8 @@ const ProductDetail = () => {
                 </Button>
               </div>
 
+              <PriceDisclaimer />
+
               {/* AI rich description */}
               {description && (
                 <div className="pt-6 border-t border-border space-y-3">

@@ -255,6 +255,7 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
                 <span className="ml-auto font-bold">${totalPrice.toFixed(2)}</span>
               </Button>
             </div>
+            <PriceDisclaimer variant="subtle" className="mt-3" />
           </>
         )}
       </DialogContent>
