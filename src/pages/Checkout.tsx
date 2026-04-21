@@ -343,6 +343,7 @@ interface CheckoutBodyProps extends PaymentFormProps {
   cartItems: any[];
   subtotal: number;
   deliveryFee: number;
+  storeBreakdown: { id: string; name: string; fee: number }[];
   convenienceFee: number;
   tax: number;
   tip: number;
