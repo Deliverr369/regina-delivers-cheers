@@ -382,7 +382,7 @@ const StoreDetail = () => {
     const qty = getQuantity(product.id);
     if (qty === 0) updateQuantity(product.id, 1);
     const category = product.category as keyof typeof PACK_SIZES_BY_CATEGORY;
-    const packSizes = PACK_SIZES_BY_CATEGORY[category];
+    const packSizes = PACK_SIZES_BY_CATEGORY[category] ?? [];
     const defaultSize = packSizes.length > 0 ? packSizes[0].value : "single";
     const selectedSize = selectedPackSizes[product.id] || defaultSize;
     const packSize = packSizes.find(p => p.value === selectedSize);
