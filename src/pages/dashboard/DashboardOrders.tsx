@@ -170,7 +170,7 @@ const DashboardOrders = () => {
                         {order.authorized_amount ? `Auth $${Number(order.authorized_amount).toFixed(2)}` : `Sub $${Number(order.subtotal).toFixed(2)}`} · {order.payment_status || "pending"}
                       </p>
                     </div>
-                    {order.stripe_payment_intent_id && order.payment_status !== "captured" && (
+                    {order.payment_status !== "captured" && order.status !== "cancelled" && (
                       <Button
                         size="sm"
                         variant="default"
@@ -178,7 +178,7 @@ const DashboardOrders = () => {
                         onClick={() => { setConfirmOrderId(order.id); setConfirmOpen(true); }}
                       >
                         <DollarSign className="h-3.5 w-3.5 mr-1" />
-                        Confirm & Capture
+                        {order.stripe_payment_intent_id ? "Confirm & Capture" : "Set final price"}
                       </Button>
                     )}
                     <Select
