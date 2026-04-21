@@ -130,7 +130,8 @@ const DashboardSEO = () => {
         <CardHeader>
           <CardTitle>Bulk Generation</CardTitle>
           <CardDescription>
-            Processes products in batches of {BATCH_SIZE}. Safe to leave running — it will keep going until done.
+            🤖 <strong>Auto-mode is ON</strong> — a background job runs every minute and processes 8 products at a time. You can close this tab; it will keep going until all {" "}
+            20,000+ products are done. The manual button below is optional (only runs while this tab is open).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
