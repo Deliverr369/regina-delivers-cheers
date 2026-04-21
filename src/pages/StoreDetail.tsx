@@ -170,6 +170,7 @@ const StoreDetail = () => {
   const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
+  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const [wineSubcategory, setWineSubcategory] = useState<string>("all");
