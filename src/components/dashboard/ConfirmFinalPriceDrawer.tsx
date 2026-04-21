@@ -268,10 +268,12 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
               <Button
                 className="flex-1"
                 onClick={handleCapture}
-                disabled={capturing || exceedsAuth || order.payment_status === "captured" || !order.stripe_payment_intent_id}
+                disabled={capturing || (!isCod && exceedsAuth) || order.payment_status === "captured"}
               >
                 {capturing ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Capturing…</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {isCod ? "Saving…" : "Capturing…"}</>
+                ) : isCod ? (
+                  <>Save final price ${newTotal.toFixed(2)}</>
                 ) : (
                   <>Confirm & Capture ${newTotal.toFixed(2)}</>
                 )}
