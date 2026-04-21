@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -78,6 +78,7 @@ const Checkout = () => {
 
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | "new">("new");
+  const [paymentMode, setPaymentMode] = useState<"card" | "cod">("card");
 
   const subtotal = getCartTotal();
   const storeName = cartItems[0]?.storeName || "";
@@ -150,9 +151,16 @@ const Checkout = () => {
     })();
   }, [user]);
 
-  // Create PaymentIntent whenever total or selected card changes
+  // Create PaymentIntent whenever total or selected card changes (skip for COD)
   useEffect(() => {
     if (!user || cartItems.length === 0) return;
+    if (paymentMode === "cod") {
+      setClientSecret(null);
+      setPaymentIntentId("");
+      setAuthorizedAmount(0);
+      setInitLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setInitLoading(true);
@@ -176,12 +184,13 @@ const Checkout = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length, estimatedTotal, selectedCardId]);
+  }, [user, cartItems.length, estimatedTotal, selectedCardId, paymentMode]);
 
   const handleSuccess = async () => {
     if (!user) return;
     try {
       const storeId = cartItems[0]?.storeId;
+      const isCod = paymentMode === "cod";
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user.id,
         store_id: storeId || null,
@@ -191,15 +200,15 @@ const Checkout = () => {
         total: estimatedTotal,
         estimated_subtotal: subtotal,
         estimated_total: estimatedTotal,
-        authorized_amount: authorizedAmount,
+        authorized_amount: isCod ? 0 : authorizedAmount,
         convenience_fee: convenienceFee,
-        stripe_payment_intent_id: paymentIntentId,
-        payment_status: "authorized",
+        stripe_payment_intent_id: isCod ? null : paymentIntentId,
+        payment_status: isCod ? "pending" : "authorized",
         delivery_address: formData.address,
         delivery_city: formData.city,
         delivery_postal_code: formData.postalCode,
         delivery_instructions: formData.deliveryInstructions,
-        payment_method: "card",
+        payment_method: isCod ? "cod" : "card",
         status: "pending",
       }).select().single();
       if (orderError) throw orderError;
@@ -224,7 +233,12 @@ const Checkout = () => {
       }).eq("id", user.id);
 
       clearCart();
-      toast({ title: "Order placed!", description: "Card authorized — final amount confirmed by your store." });
+      toast({
+        title: "Order placed!",
+        description: isCod
+          ? "Cash on delivery — please have exact amount ready."
+          : "Card authorized — final amount confirmed by your store.",
+      });
       navigate("/order-confirmation");
     } catch (err: any) {
       setError(err.message);
@@ -292,47 +306,62 @@ const Checkout = () => {
             </Alert>
           )}
 
-          {initLoading ? (
-            <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
-            </div>
-          ) : clientSecret && elementsOptions ? (
-            <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
-              <CheckoutBody
-                formData={formData}
-                setFormData={setFormData}
-                cityError={cityError}
-                setCityError={setCityError}
-                cartItems={cartItems}
-                subtotal={subtotal}
-                deliveryFee={deliveryFee}
-                storeBreakdown={uniqueStores.map(([id, name]) => ({ id: id as string, name: name as string, fee: getDeliveryFee(name as string) }))}
-                convenienceFee={convenienceFee}
-                tax={tax}
-                tip={tip}
-                tipPreset={tipPreset}
-                setTipPreset={setTipPreset}
-                customTip={customTip}
-                setCustomTip={setCustomTip}
-                estimatedTotal={estimatedTotal}
-                authorizedAmount={authorizedAmount}
-                isSubmitting={isSubmitting}
-                setIsSubmitting={setIsSubmitting}
-                setError={setError}
-                paymentIntentId={paymentIntentId}
-                onSuccess={handleSuccess}
-                savedCards={savedCards}
-                selectedCardId={selectedCardId}
-                setSelectedCardId={setSelectedCardId}
-                clientSecret={clientSecret}
-              />
-            </Elements>
-          ) : (
-            <Alert variant="destructive" className="rounded-xl">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Could not initialize payment. Please refresh.</AlertDescription>
-            </Alert>
-          )}
+          {(() => {
+            const bodyProps = {
+              formData,
+              setFormData,
+              cityError,
+              setCityError,
+              cartItems,
+              subtotal,
+              deliveryFee,
+              storeBreakdown: uniqueStores.map(([id, name]) => ({ id: id as string, name: name as string, fee: getDeliveryFee(name as string) })),
+              convenienceFee,
+              tax,
+              tip,
+              tipPreset,
+              setTipPreset,
+              customTip,
+              setCustomTip,
+              estimatedTotal,
+              authorizedAmount,
+              isSubmitting,
+              setIsSubmitting,
+              setError,
+              paymentIntentId,
+              onSuccess: handleSuccess,
+              savedCards,
+              selectedCardId,
+              setSelectedCardId,
+              clientSecret: clientSecret || "",
+              paymentMode,
+              setPaymentMode,
+            };
+
+            if (paymentMode === "cod") {
+              return <CheckoutBody {...bodyProps} />;
+            }
+            if (initLoading) {
+              return (
+                <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
+                </div>
+              );
+            }
+            if (clientSecret && elementsOptions) {
+              return (
+                <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
+                  <CheckoutBody {...bodyProps} />
+                </Elements>
+              );
+            }
+            return (
+              <Alert variant="destructive" className="rounded-xl">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>Could not initialize payment. Please refresh.</AlertDescription>
+              </Alert>
+            );
+          })()}
         </div>
       </main>
       <Footer />
@@ -356,11 +385,14 @@ interface CheckoutBodyProps extends PaymentFormProps {
   selectedCardId: string | "new";
   setSelectedCardId: (v: string | "new") => void;
   clientSecret: string;
+  paymentMode: "card" | "cod";
+  setPaymentMode: (v: "card" | "cod") => void;
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const stripe = useStripe();
   const elements = useElements();
+  const isCod = props.paymentMode === "cod";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -372,7 +404,6 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe) return;
     if (props.formData.city.trim().toLowerCase() !== "regina") {
       props.setCityError("We only deliver within Regina.");
       return;
@@ -380,11 +411,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     props.setIsSubmitting(true);
     props.setError(null);
 
+    if (isCod) {
+      // Skip Stripe entirely for cash on delivery.
+      await props.onSuccess();
+      return;
+    }
+
+    if (!stripe) { props.setIsSubmitting(false); return; }
     const usingSavedCard = props.selectedCardId !== "new";
 
     if (usingSavedCard) {
-      // PaymentIntent was created with the saved payment_method already attached.
-      // Confirm it directly using the client secret.
       const result = await stripe.confirmCardPayment(props.clientSecret);
       if (result.error) {
         props.setError(result.error.message || "Payment authorization failed");
@@ -438,16 +474,61 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 3. Payment */}
-          <SectionCard step={3} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle="Your card is held — never charged more than the final price.">
-            <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 mb-4 flex gap-3">
-              <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-foreground/80 leading-relaxed">
-                <span className="font-semibold text-foreground">Final pricing confirmed by your store.</span> We'll authorize up to{" "}
-                <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
-              </p>
+          <SectionCard step={3} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle={isCod ? "Pay the driver in cash on delivery." : "Your card is held — never charged more than the final price."}>
+            {/* Card / COD toggle */}
+            <div className="grid grid-cols-2 gap-2.5 mb-4">
+              <button
+                type="button"
+                onClick={() => props.setPaymentMode("card")}
+                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                  !isCod ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${!isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                  <CreditCard className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Credit / Debit card</p>
+                  <p className="text-[11px] text-muted-foreground">Pre-authorized, charged on delivery</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => props.setPaymentMode("cod")}
+                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                  isCod ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                  <Banknote className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Cash on delivery</p>
+                  <p className="text-[11px] text-muted-foreground">Pay the driver in cash</p>
+                </div>
+              </button>
             </div>
 
-            {props.savedCards.length > 0 && (
+            {isCod ? (
+              <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 flex gap-3">
+                <Banknote className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-foreground/80 leading-relaxed">
+                  <span className="font-semibold text-foreground">Pay with cash on delivery.</span> Please have approximately{" "}
+                  <span className="font-semibold text-foreground">${props.estimatedTotal.toFixed(2)}</span> ready. Final amount may vary based on in-store prices.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 flex gap-3">
+                <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-foreground/80 leading-relaxed">
+                  <span className="font-semibold text-foreground">Final pricing confirmed by your store.</span> We'll authorize up to{" "}
+                  <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
+                </p>
+              </div>
+            )}
+            {!isCod && <div className="h-4" />}
+
+            {!isCod && props.savedCards.length > 0 && (
               <div className="space-y-2 mb-4">
                 {props.savedCards.map((card) => {
                   const selected = props.selectedCardId === card.id;
@@ -502,7 +583,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               </div>
             )}
 
-            {props.selectedCardId === "new" && (
+            {!isCod && props.selectedCardId === "new" && (
               <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
                 <PaymentElement />
               </div>
@@ -652,24 +733,25 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                     </p>
                   </div>
                   <div className="text-right text-[11px] text-muted-foreground leading-tight">
-                    Card hold<br />
-                    <span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span>
+                    {isCod ? <>Pay in cash<br /><span className="text-foreground font-semibold">on delivery</span></> : <>Card hold<br /><span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span></>}
                   </div>
                 </div>
 
                 {/* Pricing adjustment notice */}
                 <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-3 text-[11px] text-muted-foreground leading-relaxed">
-                  <span className="font-semibold text-foreground">Note:</span> Final price will be adjusted to match in-store prices at pickup and automatically reflected in your final charge. You'll only be charged the actual amount.
+                  <span className="font-semibold text-foreground">Note:</span> Final price will be adjusted to match in-store prices at pickup{isCod ? " — please bring extra cash in case the total differs slightly." : " and automatically reflected in your final charge. You'll only be charged the actual amount."}
                 </div>
 
                 {/* CTA */}
                 <Button
                   type="submit"
                   className="w-full h-14 gap-2 rounded-2xl font-display font-bold text-base bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-primary shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
-                  disabled={!stripe || !elements || props.isSubmitting}
+                  disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
                 >
                   {props.isSubmitting ? (
-                    <><Loader2 className="h-5 w-5 animate-spin" /> Authorizing...</>
+                    <><Loader2 className="h-5 w-5 animate-spin" /> {isCod ? "Placing order..." : "Authorizing..."}</>
+                  ) : isCod ? (
+                    <><Banknote className="h-4 w-4" /> Place order — Pay ${props.estimatedTotal.toFixed(2)} cash</>
                   ) : (
                     <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
                   )}
