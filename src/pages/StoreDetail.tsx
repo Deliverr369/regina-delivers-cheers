@@ -173,6 +173,7 @@ const StoreDetail = () => {
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const [wineSubcategory, setWineSubcategory] = useState<string>("all");
   const [convenienceSubcategory, setConvenienceSubcategory] = useState<string>("all");
+  const [petSubcategory, setPetSubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
