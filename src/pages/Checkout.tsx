@@ -474,14 +474,59 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 3. Payment */}
-          <SectionCard step={3} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle="Your card is held — never charged more than the final price.">
-            <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 mb-4 flex gap-3">
-              <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-foreground/80 leading-relaxed">
-                <span className="font-semibold text-foreground">Final pricing confirmed by your store.</span> We'll authorize up to{" "}
-                <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
-              </p>
+          <SectionCard step={3} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle={isCod ? "Pay the driver in cash on delivery." : "Your card is held — never charged more than the final price."}>
+            {/* Card / COD toggle */}
+            <div className="grid grid-cols-2 gap-2.5 mb-4">
+              <button
+                type="button"
+                onClick={() => props.setPaymentMode("card")}
+                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                  !isCod ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${!isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                  <CreditCard className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Credit / Debit card</p>
+                  <p className="text-[11px] text-muted-foreground">Pre-authorized, charged on delivery</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => props.setPaymentMode("cod")}
+                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                  isCod ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                  <Banknote className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Cash on delivery</p>
+                  <p className="text-[11px] text-muted-foreground">Pay the driver in cash</p>
+                </div>
+              </button>
             </div>
+
+            {isCod ? (
+              <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 flex gap-3">
+                <Banknote className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-foreground/80 leading-relaxed">
+                  <span className="font-semibold text-foreground">Pay with cash on delivery.</span> Please have approximately{" "}
+                  <span className="font-semibold text-foreground">${props.estimatedTotal.toFixed(2)}</span> ready. Final amount may vary based on in-store prices.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 flex gap-3">
+                <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-foreground/80 leading-relaxed">
+                  <span className="font-semibold text-foreground">Final pricing confirmed by your store.</span> We'll authorize up to{" "}
+                  <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
+                </p>
+              </div>
+            )}
+            {!isCod && <div className="h-4" />}
 
             {props.savedCards.length > 0 && (
               <div className="space-y-2 mb-4">
