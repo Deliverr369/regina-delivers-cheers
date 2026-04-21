@@ -93,9 +93,11 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
   const estimated = Number(order?.estimated_total || order?.total || 0);
   const variancePct = estimated > 0 ? ((newTotal - estimated) / estimated) * 100 : 0;
 
+  const isCod = !order?.stripe_payment_intent_id;
+
   const handleCapture = async () => {
     if (!order) return;
-    if (exceedsAuth) {
+    if (!isCod && exceedsAuth) {
       toast({
         title: "Cannot capture",
         description: "Final total exceeds authorized amount. Customer re-approval needed.",
@@ -131,23 +133,28 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
           final_subtotal: finalSubtotal,
           final_total: newTotal,
           tax: newTax,
+          total: newTotal,
+          ...(isCod ? { payment_status: "captured" } : {}),
         })
         .eq("id", order.id);
 
-      // Call edge function to capture
-      const { data, error } = await supabase.functions.invoke("capture-payment", {
-        body: { orderId: order.id, environment: "sandbox" },
-      });
-      if (error || (data && data.error)) {
-        throw new Error(error?.message || data?.error || "Capture failed");
+      if (!isCod) {
+        // Card: capture via Stripe edge function
+        const { data, error } = await supabase.functions.invoke("capture-payment", {
+          body: { orderId: order.id, environment: "sandbox" },
+        });
+        if (error || (data && data.error)) {
+          throw new Error(error?.message || data?.error || "Capture failed");
+        }
+        toast({ title: "Payment captured", description: `Charged $${newTotal.toFixed(2)} to customer.` });
+      } else {
+        toast({ title: "Final price saved", description: `Collect $${newTotal.toFixed(2)} cash from customer.` });
       }
-
-      toast({ title: "Payment captured", description: `Charged $${newTotal.toFixed(2)} to customer.` });
       onCaptured?.();
       onOpenChange(false);
     } catch (e) {
       toast({
-        title: "Capture failed",
+        title: isCod ? "Save failed" : "Capture failed",
         description: e instanceof Error ? e.message : "Unknown error",
         variant: "destructive",
       });
@@ -188,11 +195,15 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
             {/* Authorization summary */}
             <div className="rounded-lg border bg-muted/30 p-4 space-y-1.5 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Estimated total</span><span>${estimated.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Authorized hold</span><span className="font-medium">${authorized.toFixed(2)}</span></div>
+              {!isCod ? (
+                <div className="flex justify-between"><span className="text-muted-foreground">Authorized hold</span><span className="font-medium">${authorized.toFixed(2)}</span></div>
+              ) : (
+                <div className="flex justify-between"><span className="text-muted-foreground">Payment method</span><span className="font-medium">Cash on delivery</span></div>
+              )}
               <Separator className="my-2" />
               <div className="flex justify-between font-semibold">
                 <span>New final total</span>
-                <span className={exceedsAuth ? "text-destructive" : "text-foreground"}>${newTotal.toFixed(2)}</span>
+                <span className={!isCod && exceedsAuth ? "text-destructive" : "text-foreground"}>${newTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Variance vs estimate</span>
@@ -202,7 +213,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
               </div>
             </div>
 
-            {exceedsAuth && (
+            {!isCod && exceedsAuth && (
               <div className="flex gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <div>
@@ -257,10 +268,12 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
               <Button
                 className="flex-1"
                 onClick={handleCapture}
-                disabled={capturing || exceedsAuth || order.payment_status === "captured" || !order.stripe_payment_intent_id}
+                disabled={capturing || (!isCod && exceedsAuth) || order.payment_status === "captured"}
               >
                 {capturing ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Capturing…</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {isCod ? "Saving…" : "Capturing…"}</>
+                ) : isCod ? (
+                  <>Save final price ${newTotal.toFixed(2)}</>
                 ) : (
                   <>Confirm & Capture ${newTotal.toFixed(2)}</>
                 )}
