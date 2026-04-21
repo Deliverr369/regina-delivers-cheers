@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SuperstoreRequestForm from "@/components/SuperstoreRequestForm";
+import ProductDetailModal from "@/components/ProductDetailModal";
 
 const SUPERSTORE_ID = "25e9b4a8-850a-4d26-9aad-54c9eb2f183a";
 
@@ -169,6 +170,7 @@ const StoreDetail = () => {
   const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
+  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const [wineSubcategory, setWineSubcategory] = useState<string>("all");
@@ -410,8 +412,11 @@ const StoreDetail = () => {
 
     return (
       <div className="group bg-card rounded-xl border border-border overflow-hidden card-hover flex flex-col">
-        {/* Image */}
-        <div className="aspect-square overflow-hidden bg-muted/30 relative">
+        {/* Image - clickable */}
+        <div
+          className="aspect-square overflow-hidden bg-muted/30 relative cursor-pointer"
+          onClick={() => setOpenProductId(product.id)}
+        >
           <img
             src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"}
             alt={product.name}
@@ -421,7 +426,12 @@ const StoreDetail = () => {
 
         {/* Content */}
         <div className="p-3.5 flex flex-col flex-1 gap-2">
-          <h4 className="font-medium text-foreground text-sm line-clamp-2 leading-snug">{product.name}</h4>
+          <h4
+            className="font-medium text-foreground text-sm line-clamp-2 leading-snug cursor-pointer hover:text-primary transition-colors"
+            onClick={() => setOpenProductId(product.id)}
+          >
+            {product.name}
+          </h4>
 
           {/* Size Selection */}
           {hasSizes && !hasMultipleSizes && (
@@ -882,6 +892,12 @@ const StoreDetail = () => {
 
 
       <Footer />
+
+      <ProductDetailModal
+        productId={openProductId}
+        open={!!openProductId}
+        onOpenChange={(open) => !open && setOpenProductId(null)}
+      />
     </div>
   );
 };
