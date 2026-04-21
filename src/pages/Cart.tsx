@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/hooks/useCart";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PriceDisclaimer from "@/components/PriceDisclaimer";
 
 const Cart = () => {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
@@ -123,6 +124,7 @@ const Cart = () => {
                   <Separator />
                   <div className="flex justify-between font-bold text-foreground text-base"><span>Total</span><span>${total.toFixed(2)}</span></div>
                 </div>
+                <PriceDisclaimer variant="subtle" className="mb-4" />
                 <Link to="/checkout">
                   <Button className="w-full gap-2 rounded-full font-semibold" size="lg">
                     Checkout <ArrowRight className="h-4 w-4" />

@@ -3,6 +3,7 @@ import { CheckCircle, Package, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PriceDisclaimer from "@/components/PriceDisclaimer";
 
 const OrderConfirmation = () => {
   const orderNumber = `RS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -54,14 +55,16 @@ const OrderConfirmation = () => {
               </div>
             </div>
 
-            <div className="bg-muted rounded-xl p-6 mb-8 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <div className="bg-muted rounded-xl p-6 mb-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <h3 className="font-display font-bold text-foreground mb-2">What's Next?</h3>
               <ul className="text-left text-muted-foreground space-y-2">
                 <li>• You'll receive an SMS when your driver is on the way</li>
                 <li>• Have your ID ready - we check everyone who looks under 25</li>
-                <li>• Payment will be collected upon delivery</li>
+                <li>• Your card is on hold; the final amount is captured after delivery</li>
               </ul>
             </div>
+
+            <PriceDisclaimer className="mb-8 text-left animate-fade-in" />
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: "0.4s" }}>
               <Link to="/">

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PriceDisclaimer from "@/components/PriceDisclaimer";
 
 const statusConfig: Record<string, { bg: string; label: string }> = {
   pending: { bg: "bg-amber-500", label: "Pending" },
@@ -90,6 +91,7 @@ const Orders = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              <PriceDisclaimer variant="subtle" />
               {orders.map((order) => {
                 const status = statusConfig[order.status || "pending"];
                 return (
