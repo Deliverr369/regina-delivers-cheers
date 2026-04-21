@@ -128,13 +128,23 @@ async function runJob(supabase: any, job: any, firecrawlKey: string) {
   const batchSize = Math.min(Number(job.batch_size) || 5, 10);
   const minScore = Number(job.min_score) ?? 0.5;
 
+  // Randomize starting offset so we don't keep retrying the same un-matchable products
+  const { count: missingCount } = await supabase
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .or("image_url.is.null,image_url.eq.")
+    .eq("is_hidden", false);
+  const poolSize = batchSize * 6;
+  const maxOffset = Math.max(0, (missingCount ?? 0) - poolSize);
+  const offset = maxOffset > 0 ? Math.floor(Math.random() * maxOffset) : 0;
+
   const { data: rows, error: pErr } = await supabase
     .from("products")
     .select("id, name, size, category")
     .or("image_url.is.null,image_url.eq.")
     .eq("is_hidden", false)
     .order("name")
-    .limit(batchSize * 6);
+    .range(offset, offset + poolSize - 1);
   if (pErr) throw pErr;
 
   const seen = new Set<string>();
