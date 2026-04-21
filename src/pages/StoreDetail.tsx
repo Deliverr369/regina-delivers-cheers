@@ -314,6 +314,7 @@ const StoreDetail = () => {
     const ciders_seltzers: typeof products = [];
     const smokes: typeof products = [];
     const convenience: typeof products = [];
+    const pet_supplies: typeof products = [];
     for (const p of products) {
       if (p.category === "beer") beer.push(p);
       else if (p.category === "wine") wine.push(p);
@@ -321,6 +322,7 @@ const StoreDetail = () => {
       else if (p.category === "ciders_seltzers") ciders_seltzers.push(p);
       else if (p.category === "smokes") smokes.push(p);
       else if ((p.category as string) === "convenience") convenience.push(p);
+      else if ((p.category as string) === "pet_supplies") pet_supplies.push(p);
     }
     return {
       beer: beer.sort(sortByLargestPack),
@@ -329,6 +331,7 @@ const StoreDetail = () => {
       ciders_seltzers: ciders_seltzers.sort(sortByLargestPack),
       smokes: smokes.sort(sortByOrder),
       convenience: convenience.sort(sortByOrder),
+      pet_supplies: pet_supplies.sort(sortByOrder),
     };
   }, [products, maxPackCountByProductId]);
 
@@ -599,6 +602,9 @@ const StoreDetail = () => {
                 )}
                 {availableCategories.includes("convenience") && (
                   <TabsTrigger value="convenience" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🛒 Convenience ({productsByCategory.convenience.length})</TabsTrigger>
+                )}
+                {availableCategories.includes("pet_supplies") && (
+                  <TabsTrigger value="pet_supplies" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-teal-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🐾 Pet Supplies ({productsByCategory.pet_supplies.length})</TabsTrigger>
                 )}
               </TabsList>
 
