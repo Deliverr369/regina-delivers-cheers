@@ -306,6 +306,7 @@ const Checkout = () => {
                 cartItems={cartItems}
                 subtotal={subtotal}
                 deliveryFee={deliveryFee}
+                storeBreakdown={uniqueStores.map(([id, name]) => ({ id: id as string, name: name as string, fee: getDeliveryFee(name as string) }))}
                 convenienceFee={convenienceFee}
                 tax={tax}
                 tip={tip}
