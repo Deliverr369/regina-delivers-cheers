@@ -503,6 +503,11 @@ export type Database = {
           is_hidden: boolean | null
           name: string
           price: number
+          seo_description: string | null
+          seo_generated_at: string | null
+          seo_keywords: string[] | null
+          seo_meta_description: string | null
+          seo_meta_title: string | null
           size: string | null
           store_id: string
           subcategory: string | null
@@ -518,6 +523,11 @@ export type Database = {
           is_hidden?: boolean | null
           name: string
           price: number
+          seo_description?: string | null
+          seo_generated_at?: string | null
+          seo_keywords?: string[] | null
+          seo_meta_description?: string | null
+          seo_meta_title?: string | null
           size?: string | null
           store_id: string
           subcategory?: string | null
@@ -533,6 +543,11 @@ export type Database = {
           is_hidden?: boolean | null
           name?: string
           price?: number
+          seo_description?: string | null
+          seo_generated_at?: string | null
+          seo_keywords?: string[] | null
+          seo_meta_description?: string | null
+          seo_meta_title?: string | null
           size?: string | null
           store_id?: string
           subcategory?: string | null
