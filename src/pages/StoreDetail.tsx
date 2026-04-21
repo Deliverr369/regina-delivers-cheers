@@ -789,15 +789,15 @@ const StoreDetail = () => {
                       );
                     }
 
-                    const currentValue = isConv ? convenienceSubcategory : smokesSubcategory;
-                    const setCurrent = isConv ? setConvenienceSubcategory : setSmokesSubcategory;
-                    const allLabel = isConv ? "All Departments" : "All Smokes";
-                    const allItemsLabel = isConv ? "All Items" : "All Smokes";
-                    const allEmoji = isConv ? "🏪" : "🚬";
-                    const sidebarTitle = isConv ? "Departments" : "Categories";
-                    const aisleWord = isConv ? "aisles" : "categories";
-                    const labelFor = (v: string) => isConv ? v : (SMOKES_SUBCATEGORIES.find(s => s.value === v)?.label || v);
-                    const iconFor = (v: string) => isConv ? subEmoji(v) : smokeEmoji(v);
+                    const currentValue = isConv ? convenienceSubcategory : isPet ? petSubcategory : smokesSubcategory;
+                    const setCurrent = isConv ? setConvenienceSubcategory : isPet ? setPetSubcategory : setSmokesSubcategory;
+                    const allLabel = isConv ? "All Departments" : isPet ? "All Pets" : "All Smokes";
+                    const allItemsLabel = isConv ? "All Items" : isPet ? "All Pet Supplies" : "All Smokes";
+                    const allEmoji = isConv ? "🏪" : isPet ? "🐾" : "🚬";
+                    const sidebarTitle = isConv ? "Departments" : isPet ? "Pet Type" : "Categories";
+                    const aisleWord = isConv ? "aisles" : isPet ? "categories" : "categories";
+                    const labelFor = (v: string) => isConv || isPet ? v : (SMOKES_SUBCATEGORIES.find(s => s.value === v)?.label || v);
+                    const iconFor = (v: string) => isConv ? subEmoji(v) : isPet ? petEmoji(v) : smokeEmoji(v);
                     const activeLabel = currentValue === "all" ? allLabel : labelFor(currentValue);
                     const activeEmoji = currentValue === "all" ? allEmoji : iconFor(currentValue);
 
