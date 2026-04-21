@@ -190,6 +190,7 @@ const Checkout = () => {
     if (!user) return;
     try {
       const storeId = cartItems[0]?.storeId;
+      const isCod = paymentMode === "cod";
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user.id,
         store_id: storeId || null,
@@ -199,15 +200,15 @@ const Checkout = () => {
         total: estimatedTotal,
         estimated_subtotal: subtotal,
         estimated_total: estimatedTotal,
-        authorized_amount: authorizedAmount,
+        authorized_amount: isCod ? 0 : authorizedAmount,
         convenience_fee: convenienceFee,
-        stripe_payment_intent_id: paymentIntentId,
-        payment_status: "authorized",
+        stripe_payment_intent_id: isCod ? null : paymentIntentId,
+        payment_status: isCod ? "pending" : "authorized",
         delivery_address: formData.address,
         delivery_city: formData.city,
         delivery_postal_code: formData.postalCode,
         delivery_instructions: formData.deliveryInstructions,
-        payment_method: "card",
+        payment_method: isCod ? "cod" : "card",
         status: "pending",
       }).select().single();
       if (orderError) throw orderError;
@@ -232,7 +233,12 @@ const Checkout = () => {
       }).eq("id", user.id);
 
       clearCart();
-      toast({ title: "Order placed!", description: "Card authorized — final amount confirmed by your store." });
+      toast({
+        title: "Order placed!",
+        description: isCod
+          ? "Cash on delivery — please have exact amount ready."
+          : "Card authorized — final amount confirmed by your store.",
+      });
       navigate("/order-confirmation");
     } catch (err: any) {
       setError(err.message);
