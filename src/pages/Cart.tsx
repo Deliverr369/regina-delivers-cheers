@@ -122,7 +122,7 @@ const Cart = () => {
                 <h2 className="font-display text-lg font-bold text-foreground mb-5">Order Summary</h2>
                 <div className="space-y-3 mb-5">
                   <div className="flex justify-between text-muted-foreground text-sm"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery</span><span>${deliveryFee.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground text-sm"><span>Delivery{storeCount > 1 ? ` (${storeCount} stores)` : ""}</span><span>${deliveryFee.toFixed(2)}</span></div>
                   <div className="flex justify-between text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span>${convenienceFee.toFixed(2)}</span></div>
                   <div className="flex justify-between text-muted-foreground text-sm"><span>Tax (GST + PST)</span><span>${tax.toFixed(2)}</span></div>
                   <Separator />
