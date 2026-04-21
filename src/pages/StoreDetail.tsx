@@ -892,6 +892,12 @@ const StoreDetail = () => {
 
 
       <Footer />
+
+      <ProductDetailModal
+        productId={openProductId}
+        open={!!openProductId}
+        onOpenChange={(open) => !open && setOpenProductId(null)}
+      />
     </div>
   );
 };
