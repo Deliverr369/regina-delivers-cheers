@@ -385,6 +385,8 @@ interface CheckoutBodyProps extends PaymentFormProps {
   selectedCardId: string | "new";
   setSelectedCardId: (v: string | "new") => void;
   clientSecret: string;
+  paymentMode: "card" | "cod";
+  setPaymentMode: (v: "card" | "cod") => void;
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
