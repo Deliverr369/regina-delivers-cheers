@@ -81,7 +81,11 @@ const Checkout = () => {
 
   const subtotal = getCartTotal();
   const storeName = cartItems[0]?.storeName || "";
-  const deliveryFee = cartItems.length > 0 ? getDeliveryFee(storeName) : 0;
+  // Charge delivery fee per unique store
+  const uniqueStores = Array.from(
+    new Map(cartItems.map((i) => [i.storeId, i.storeName])).entries()
+  );
+  const deliveryFee = uniqueStores.reduce((sum, [, name]) => sum + getDeliveryFee(name), 0);
   const convenienceFee = subtotal * 0.12;
   const tax = subtotal * 0.11;
 
