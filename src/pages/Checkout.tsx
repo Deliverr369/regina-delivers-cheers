@@ -528,7 +528,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             )}
             {!isCod && <div className="h-4" />}
 
-            {props.savedCards.length > 0 && (
+            {!isCod && props.savedCards.length > 0 && (
               <div className="space-y-2 mb-4">
                 {props.savedCards.map((card) => {
                   const selected = props.selectedCardId === card.id;
