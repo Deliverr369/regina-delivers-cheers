@@ -213,14 +213,18 @@ const Checkout = () => {
       }).select().single();
       if (orderError) throw orderError;
 
-      const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        product_name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        estimated_price: item.price,
-      }));
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+      const orderItems = cartItems.map((item) => {
+        const match = String(item.id).match(UUID_RE);
+        return {
+          order_id: order.id,
+          product_id: match ? match[0] : null,
+          product_name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          estimated_price: item.price,
+        };
+      });
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
