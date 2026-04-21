@@ -733,24 +733,25 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                     </p>
                   </div>
                   <div className="text-right text-[11px] text-muted-foreground leading-tight">
-                    Card hold<br />
-                    <span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span>
+                    {isCod ? <>Pay in cash<br /><span className="text-foreground font-semibold">on delivery</span></> : <>Card hold<br /><span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span></>}
                   </div>
                 </div>
 
                 {/* Pricing adjustment notice */}
                 <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-3 text-[11px] text-muted-foreground leading-relaxed">
-                  <span className="font-semibold text-foreground">Note:</span> Final price will be adjusted to match in-store prices at pickup and automatically reflected in your final charge. You'll only be charged the actual amount.
+                  <span className="font-semibold text-foreground">Note:</span> Final price will be adjusted to match in-store prices at pickup{isCod ? " — please bring extra cash in case the total differs slightly." : " and automatically reflected in your final charge. You'll only be charged the actual amount."}
                 </div>
 
                 {/* CTA */}
                 <Button
                   type="submit"
                   className="w-full h-14 gap-2 rounded-2xl font-display font-bold text-base bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-primary shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
-                  disabled={!stripe || !elements || props.isSubmitting}
+                  disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
                 >
                   {props.isSubmitting ? (
-                    <><Loader2 className="h-5 w-5 animate-spin" /> Authorizing...</>
+                    <><Loader2 className="h-5 w-5 animate-spin" /> {isCod ? "Placing order..." : "Authorizing..."}</>
+                  ) : isCod ? (
+                    <><Banknote className="h-4 w-4" /> Place order — Pay ${props.estimatedTotal.toFixed(2)} cash</>
                   ) : (
                     <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
                   )}
