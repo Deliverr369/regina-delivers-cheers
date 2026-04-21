@@ -173,6 +173,7 @@ const StoreDetail = () => {
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const [wineSubcategory, setWineSubcategory] = useState<string>("all");
   const [convenienceSubcategory, setConvenienceSubcategory] = useState<string>("all");
+  const [petSubcategory, setPetSubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
@@ -641,6 +642,20 @@ const StoreDetail = () => {
                   {(() => {
                     const isConv = category === "convenience";
                     const isSmokes = category === "smokes";
+                    const isPet = category === "pet_supplies";
+                    const petEmoji = (v: string) => {
+                      const n = v.toLowerCase();
+                      if (n.includes("dog")) return "🐶";
+                      if (n.includes("cat")) return "🐱";
+                      if (n.includes("bird")) return "🦜";
+                      if (n.includes("fish") || n.includes("aqua")) return "🐠";
+                      if (n.includes("reptile")) return "🦎";
+                      if (n.includes("small")) return "🐹";
+                      if (n.includes("flea") || n.includes("tick")) return "🪲";
+                      if (n.includes("outdoor")) return "🌲";
+                      if (n.includes("parent")) return "👨‍👩‍👧";
+                      return "🐾";
+                    };
                     const subEmoji = (s: string) => {
                       const n = s.toLowerCase();
                       if (n.includes("baby")) return "👶";
@@ -690,12 +705,12 @@ const StoreDetail = () => {
                       accessories: "🔥",
                     } as Record<string, string>)[v] || "🚬";
 
-                    const subs = isConv
+                    const subs = isConv || isPet
                       ? (Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[])
                       : isSmokes
                       ? SMOKES_SUBCATEGORIES.filter(s => s.value !== "all" && items.some(p => getSmokesSubcategory(p.name) === s.value)).map(s => s.value)
                       : [];
-                    const hasSidebar = (isConv || isSmokes) && subs.length > 0;
+                    const hasSidebar = (isConv || isSmokes || isPet) && subs.length > 0;
 
                     const q = searchQuery.trim().toLowerCase();
                     let displayItems = category === "wine" && wineSubcategory !== "all"
@@ -706,6 +721,8 @@ const StoreDetail = () => {
                       ? items.filter(p => getSmokesSubcategory(p.name) === smokesSubcategory)
                       : category === "convenience" && convenienceSubcategory !== "all"
                       ? items.filter(p => (p as any).subcategory === convenienceSubcategory)
+                      : category === "pet_supplies" && petSubcategory !== "all"
+                      ? items.filter(p => (p as any).subcategory === petSubcategory)
                       : items;
                     if (q) {
                       displayItems = displayItems.filter(p =>
@@ -772,15 +789,15 @@ const StoreDetail = () => {
                       );
                     }
 
-                    const currentValue = isConv ? convenienceSubcategory : smokesSubcategory;
-                    const setCurrent = isConv ? setConvenienceSubcategory : setSmokesSubcategory;
-                    const allLabel = isConv ? "All Departments" : "All Smokes";
-                    const allItemsLabel = isConv ? "All Items" : "All Smokes";
-                    const allEmoji = isConv ? "🏪" : "🚬";
-                    const sidebarTitle = isConv ? "Departments" : "Categories";
-                    const aisleWord = isConv ? "aisles" : "categories";
-                    const labelFor = (v: string) => isConv ? v : (SMOKES_SUBCATEGORIES.find(s => s.value === v)?.label || v);
-                    const iconFor = (v: string) => isConv ? subEmoji(v) : smokeEmoji(v);
+                    const currentValue = isConv ? convenienceSubcategory : isPet ? petSubcategory : smokesSubcategory;
+                    const setCurrent = isConv ? setConvenienceSubcategory : isPet ? setPetSubcategory : setSmokesSubcategory;
+                    const allLabel = isConv ? "All Departments" : isPet ? "All Pets" : "All Smokes";
+                    const allItemsLabel = isConv ? "All Items" : isPet ? "All Pet Supplies" : "All Smokes";
+                    const allEmoji = isConv ? "🏪" : isPet ? "🐾" : "🚬";
+                    const sidebarTitle = isConv ? "Departments" : isPet ? "Pet Type" : "Categories";
+                    const aisleWord = isConv ? "aisles" : isPet ? "categories" : "categories";
+                    const labelFor = (v: string) => isConv || isPet ? v : (SMOKES_SUBCATEGORIES.find(s => s.value === v)?.label || v);
+                    const iconFor = (v: string) => isConv ? subEmoji(v) : isPet ? petEmoji(v) : smokeEmoji(v);
                     const activeLabel = currentValue === "all" ? allLabel : labelFor(currentValue);
                     const activeEmoji = currentValue === "all" ? allEmoji : iconFor(currentValue);
 
