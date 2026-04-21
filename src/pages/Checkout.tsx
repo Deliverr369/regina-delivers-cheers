@@ -151,9 +151,16 @@ const Checkout = () => {
     })();
   }, [user]);
 
-  // Create PaymentIntent whenever total or selected card changes
+  // Create PaymentIntent whenever total or selected card changes (skip for COD)
   useEffect(() => {
     if (!user || cartItems.length === 0) return;
+    if (paymentMode === "cod") {
+      setClientSecret(null);
+      setPaymentIntentId("");
+      setAuthorizedAmount(0);
+      setInitLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setInitLoading(true);
@@ -177,7 +184,7 @@ const Checkout = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length, estimatedTotal, selectedCardId]);
+  }, [user, cartItems.length, estimatedTotal, selectedCardId, paymentMode]);
 
   const handleSuccess = async () => {
     if (!user) return;
