@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+
+const STORAGE_KEY = "deliverr_cart_v1";
 
 export interface CartItem {
   id: string;
