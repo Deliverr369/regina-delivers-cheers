@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 5;
 
 const DashboardSEO = () => {
   const { toast } = useToast();

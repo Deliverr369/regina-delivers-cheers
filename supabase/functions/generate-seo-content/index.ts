@@ -135,11 +135,13 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { product_id, batch_size = 10, force = false } = body as {
+    const { product_id, batch_size = 5, force = false } = body as {
       product_id?: string;
       batch_size?: number;
       force?: boolean;
     };
+    // Hard cap to keep us well under the 150s edge timeout
+    const safeBatch = Math.min(batch_size, 8);
 
     let products: ProductRow[] = [];
 
@@ -155,7 +157,7 @@ Deno.serve(async (req) => {
       let q = admin
         .from("products")
         .select("id, name, category, subcategory, size, description, price")
-        .limit(Math.min(batch_size, 50));
+        .limit(safeBatch);
       if (!force) q = q.is("seo_generated_at", null);
       const { data, error } = await q;
       if (error) throw error;
@@ -169,27 +171,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    const results: Array<{ id: string; ok: boolean; error?: string }> = [];
-
-    for (const p of products) {
-      try {
-        const seo = await generateForProduct(p, LOVABLE_API_KEY);
-        const { error: updErr } = await admin
-          .from("products")
-          .update({
-            seo_description: seo.description,
-            seo_meta_title: seo.meta_title?.slice(0, 60),
-            seo_meta_description: seo.meta_description?.slice(0, 160),
-            seo_keywords: seo.keywords,
-            seo_generated_at: new Date().toISOString(),
-          })
-          .eq("id", p.id);
-        if (updErr) throw updErr;
-        results.push({ id: p.id, ok: true });
-      } catch (e) {
-        results.push({ id: p.id, ok: false, error: e instanceof Error ? e.message : String(e) });
-      }
-    }
+    // Process all products in parallel — each AI call ~3-8s, total stays well under 150s
+    const results = await Promise.all(
+      products.map(async (p) => {
+        try {
+          const seo = await generateForProduct(p, LOVABLE_API_KEY);
+          const { error: updErr } = await admin
+            .from("products")
+            .update({
+              seo_description: seo.description,
+              seo_meta_title: seo.meta_title?.slice(0, 60),
+              seo_meta_description: seo.meta_description?.slice(0, 160),
+              seo_keywords: seo.keywords,
+              seo_generated_at: new Date().toISOString(),
+            })
+            .eq("id", p.id);
+          if (updErr) throw updErr;
+          return { id: p.id, ok: true as const };
+        } catch (e) {
+          return { id: p.id, ok: false as const, error: e instanceof Error ? e.message : String(e) };
+        }
+      })
+    );
 
     // Count remaining
     const { count } = await admin
