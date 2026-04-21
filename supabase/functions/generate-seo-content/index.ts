@@ -22,7 +22,7 @@ Your job: write SEO-optimized content that ranks #1 on Google for liquor deliver
 
 Rules:
 - Naturally include keywords like: "Regina liquor delivery", "buy [product] Regina", "same-day delivery Regina", "Saskatchewan", and the product/brand name.
-- Description: 90-140 words, friendly, factual, mention tasting notes/use cases when relevant, end with a soft CTA referring to fast Regina delivery.
+- Description: This appears DIRECTLY ON THE PRODUCT PAGE for customers to read. Write 3-5 rich, engaging sentences (80-130 words) that describe the product as if you're a passionate sommelier/beer expert speaking to a customer. Include: flavor profile / tasting notes, style or origin, ideal serving suggestions or food pairings, and a closing line about fast Regina delivery. Sound human, warm, and confident — NOT robotic or keyword-stuffed.
 - Meta title: <= 60 chars, include product name + Regina.
 - Meta description: <= 158 chars, compelling, include Regina + delivery.
 - Keywords: 6-10 highly-targeted long-tail keywords, lowercase.

@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ProductDetailModal from "@/components/ProductDetailModal";
 
 const categories = [
   { id: "all", name: "All Products" },
@@ -30,6 +31,7 @@ const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
+  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const { toast } = useToast();
   const { addToCart } = useCart();
 
@@ -268,14 +270,15 @@ const Products = () => {
                 return (
                   <div
                     key={product.id}
-                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all animate-fade-in flex flex-col"
+                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all animate-fade-in flex flex-col cursor-pointer group"
                     style={{ animationDelay: `${index * 0.03}s` }}
+                    onClick={() => setOpenProductId(product.id)}
                   >
                     <div className="aspect-square overflow-hidden">
                       <img 
                         src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"} 
                         alt={product.name} 
-                        className="w-full h-full object-cover hover:scale-105 transition-transform" 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                       />
                     </div>
                     <div className="p-3 flex flex-col flex-1">
@@ -289,11 +292,14 @@ const Products = () => {
                       
                       {/* Size Selection Chips */}
                       {sizes.length > 1 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
+                        <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
                           {sizes.map((s: any) => (
                             <button
                               key={s.id}
-                              onClick={() => setSelectedSizes(prev => ({ ...prev, [product.id]: s.pack_size }))}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSizes(prev => ({ ...prev, [product.id]: s.pack_size }));
+                              }}
                               className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
                                 currentSize === s.pack_size
                                   ? "bg-primary text-primary-foreground border-primary"
@@ -313,7 +319,14 @@ const Products = () => {
 
                       <div className="flex items-center justify-between mt-auto">
                         <span className="font-bold text-primary">${displayPrice.toFixed(2)}</span>
-                        <Button size="sm" className="h-8 w-8 p-0" onClick={() => handleAddToCart(product)}>
+                        <Button
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(product);
+                          }}
+                        >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
@@ -333,6 +346,12 @@ const Products = () => {
       </main>
 
       <Footer />
+
+      <ProductDetailModal
+        productId={openProductId}
+        open={!!openProductId}
+        onOpenChange={(open) => !open && setOpenProductId(null)}
+      />
     </div>
   );
 };
