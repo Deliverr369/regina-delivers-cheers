@@ -3,6 +3,7 @@ import { CheckCircle, Package, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PriceDisclaimer from "@/components/PriceDisclaimer";
 
 const OrderConfirmation = () => {
   const orderNumber = `RS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
+import PriceDisclaimer from "@/components/PriceDisclaimer";
 
 const getPackSortValue = (packSize: string): number => {
   const match = String(packSize || "").match(/(\d+(?:\.\d+)?)/);
