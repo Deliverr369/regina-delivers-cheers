@@ -392,6 +392,7 @@ interface CheckoutBodyProps extends PaymentFormProps {
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const stripe = useStripe();
   const elements = useElements();
+  const isCod = props.paymentMode === "cod";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -403,7 +404,6 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe) return;
     if (props.formData.city.trim().toLowerCase() !== "regina") {
       props.setCityError("We only deliver within Regina.");
       return;
@@ -411,11 +411,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     props.setIsSubmitting(true);
     props.setError(null);
 
+    if (isCod) {
+      // Skip Stripe entirely for cash on delivery.
+      await props.onSuccess();
+      return;
+    }
+
+    if (!stripe) { props.setIsSubmitting(false); return; }
     const usingSavedCard = props.selectedCardId !== "new";
 
     if (usingSavedCard) {
-      // PaymentIntent was created with the saved payment_method already attached.
-      // Confirm it directly using the client secret.
       const result = await stripe.confirmCardPayment(props.clientSecret);
       if (result.error) {
         props.setError(result.error.message || "Payment authorization failed");
