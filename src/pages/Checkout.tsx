@@ -620,7 +620,17 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 {/* Price breakdown */}
                 <div className="space-y-2.5 mb-5 text-sm">
                   <Row label="Subtotal" value={`$${props.subtotal.toFixed(2)}`} muted />
-                  <Row label="Delivery" value={`$${props.deliveryFee.toFixed(2)}`} muted />
+                  <Row label={`Delivery${props.storeBreakdown.length > 1 ? ` (${props.storeBreakdown.length} stores)` : ""}`} value={`$${props.deliveryFee.toFixed(2)}`} muted />
+                  {props.storeBreakdown.length > 1 && (
+                    <div className="pl-3 border-l-2 border-border space-y-1">
+                      {props.storeBreakdown.map((s) => (
+                        <div key={s.id} className="flex justify-between text-muted-foreground text-xs">
+                          <span className="truncate pr-2">{s.name}</span>
+                          <span>${s.fee.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Row label="Service fee (12%)" value={`$${props.convenienceFee.toFixed(2)}`} muted />
                   <Row label="Tax" value={`$${props.tax.toFixed(2)}`} muted />
                   {props.tip > 0 && (
