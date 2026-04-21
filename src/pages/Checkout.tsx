@@ -390,9 +390,13 @@ interface CheckoutBodyProps extends PaymentFormProps {
 }
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
-  const stripe = useStripe();
-  const elements = useElements();
   const isCod = props.paymentMode === "cod";
+  // Hooks must be called unconditionally — but they throw if no <Elements> provider.
+  // In COD mode we render outside <Elements>, so swallow the error and use nulls.
+  let stripe: ReturnType<typeof useStripe> = null;
+  let elements: ReturnType<typeof useElements> = null;
+  try { stripe = useStripe(); } catch { /* COD mode — no Elements provider */ }
+  try { elements = useElements(); } catch { /* COD mode — no Elements provider */ }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
