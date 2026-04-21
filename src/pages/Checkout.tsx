@@ -78,6 +78,7 @@ const Checkout = () => {
 
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | "new">("new");
+  const [paymentMode, setPaymentMode] = useState<"card" | "cod">("card");
 
   const subtotal = getCartTotal();
   const storeName = cartItems[0]?.storeName || "";
