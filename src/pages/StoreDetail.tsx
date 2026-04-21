@@ -623,32 +623,6 @@ const StoreDetail = () => {
                 .filter(([category]) => availableCategories.includes(category))
                 .map(([category, items]) => (
                 <TabsContent key={category} value={category}>
-                  {category === "spirits" && items.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {SPIRITS_SUBCATEGORIES.map((sub) => {
-                        const count = sub.value === "all" ? items.length : items.filter(p => getSpiritsSubcategory(p.name) === sub.value).length;
-                        if (sub.value !== "all" && count === 0) return null;
-                        return (
-                          <Button key={sub.value} variant={spiritsSubcategory === sub.value ? "default" : "outline"} size="sm" onClick={() => setSpiritsSubcategory(sub.value)} className="rounded-full text-xs h-8">
-                            {sub.label} ({count})
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {category === "wine" && items.length > 0 && (
-                    <div className="flex flex-wrap gap-2.5 mb-6">
-                      {WINE_SUBCATEGORIES.map((sub) => {
-                        const count = sub.value === "all" ? items.length : items.filter(p => getWineSubcategory(p.name) === sub.value).length;
-                        if (sub.value !== "all" && count === 0) return null;
-                        return (
-                          <Button key={sub.value} variant={wineSubcategory === sub.value ? "default" : "outline"} onClick={() => setWineSubcategory(sub.value)} className="rounded-full text-base h-11 px-5 font-semibold shadow-sm">
-                            {sub.label} ({count})
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
                   {(() => {
                     const isConv = category === "convenience";
                     const isSmokes = category === "smokes";
