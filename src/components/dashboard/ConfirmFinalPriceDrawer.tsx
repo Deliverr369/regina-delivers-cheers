@@ -93,9 +93,11 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
   const estimated = Number(order?.estimated_total || order?.total || 0);
   const variancePct = estimated > 0 ? ((newTotal - estimated) / estimated) * 100 : 0;
 
+  const isCod = !order?.stripe_payment_intent_id;
+
   const handleCapture = async () => {
     if (!order) return;
-    if (exceedsAuth) {
+    if (!isCod && exceedsAuth) {
       toast({
         title: "Cannot capture",
         description: "Final total exceeds authorized amount. Customer re-approval needed.",
@@ -131,23 +133,28 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
           final_subtotal: finalSubtotal,
           final_total: newTotal,
           tax: newTax,
+          total: newTotal,
+          ...(isCod ? { payment_status: "captured" } : {}),
         })
         .eq("id", order.id);
 
-      // Call edge function to capture
-      const { data, error } = await supabase.functions.invoke("capture-payment", {
-        body: { orderId: order.id, environment: "sandbox" },
-      });
-      if (error || (data && data.error)) {
-        throw new Error(error?.message || data?.error || "Capture failed");
+      if (!isCod) {
+        // Card: capture via Stripe edge function
+        const { data, error } = await supabase.functions.invoke("capture-payment", {
+          body: { orderId: order.id, environment: "sandbox" },
+        });
+        if (error || (data && data.error)) {
+          throw new Error(error?.message || data?.error || "Capture failed");
+        }
+        toast({ title: "Payment captured", description: `Charged $${newTotal.toFixed(2)} to customer.` });
+      } else {
+        toast({ title: "Final price saved", description: `Collect $${newTotal.toFixed(2)} cash from customer.` });
       }
-
-      toast({ title: "Payment captured", description: `Charged $${newTotal.toFixed(2)} to customer.` });
       onCaptured?.();
       onOpenChange(false);
     } catch (e) {
       toast({
-        title: "Capture failed",
+        title: isCod ? "Save failed" : "Capture failed",
         description: e instanceof Error ? e.message : "Unknown error",
         variant: "destructive",
       });
