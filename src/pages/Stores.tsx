@@ -49,6 +49,7 @@ const Stores = () => {
   const TAKEOUT_IDS = [
     "ae44e7e4-1b47-4936-a2df-c92bcf17d9a7", // A&W Rochdale
     "4e1b49ec-6588-4b4b-b439-d94a845029a9", // McDonald's Rochdale
+    "b14b2c6d-ef00-4bb0-a5b4-aacc4b1bb27a", // Burger King Rochdale
   ];
 
   const tabs = [
