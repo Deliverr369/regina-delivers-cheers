@@ -46,6 +46,9 @@ const Stores = () => {
   const PET_IDS = [
     "c7592e95-851f-4eaf-a8de-8fbe8337cafe", // PetSmart
   ];
+  const TAKEOUT_IDS = [
+    "ae44e7e4-1b47-4936-a2df-c92bcf17d9a7", // A&W Rochdale
+  ];
 
   const tabs = [
     { id: "liquor" as const, label: "Liquor stores", icon: tabLiquor },
@@ -82,8 +85,8 @@ const Stores = () => {
     if (activeTab === "smoke") return SMOKE_VAPE_IDS.includes(store.id);
     if (activeTab === "pharmacy") return PHARMACY_IDS.includes(store.id);
     if (activeTab === "pet") return PET_IDS.includes(store.id);
-    if (activeTab === "takeout") return false;
-    return !SMOKE_VAPE_IDS.includes(store.id) && !PHARMACY_IDS.includes(store.id) && !PET_IDS.includes(store.id);
+    if (activeTab === "takeout") return TAKEOUT_IDS.includes(store.id);
+    return !SMOKE_VAPE_IDS.includes(store.id) && !PHARMACY_IDS.includes(store.id) && !PET_IDS.includes(store.id) && !TAKEOUT_IDS.includes(store.id);
   });
 
   const filteredStores = tabFilteredStores
@@ -184,9 +187,7 @@ const Stores = () => {
               {activeTab === "pet" && "Pet Supplies in Regina"}
             </h1>
             <p className="text-muted-foreground">
-              {activeTab === "takeout"
-                ? "Coming soon — restaurant takeout delivery"
-                : `Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "store" : "stores"}`}
+              {`Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "restaurant" : tabFilteredStores.length === 0 ? "spots" : activeTab === "takeout" ? "restaurants" : "stores"}`}
             </p>
           </div>
         </div>
