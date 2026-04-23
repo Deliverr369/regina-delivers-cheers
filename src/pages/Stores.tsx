@@ -87,12 +87,15 @@ const Stores = () => {
     },
   });
 
+  const GROCERY_IDS: string[] = [];
+
   const tabFilteredStores = stores.filter((store) => {
     if (activeTab === "smoke") return SMOKE_VAPE_IDS.includes(store.id);
     if (activeTab === "pharmacy") return PHARMACY_IDS.includes(store.id);
     if (activeTab === "pet") return PET_IDS.includes(store.id);
     if (activeTab === "takeout") return TAKEOUT_IDS.includes(store.id);
-    return !SMOKE_VAPE_IDS.includes(store.id) && !PHARMACY_IDS.includes(store.id) && !PET_IDS.includes(store.id) && !TAKEOUT_IDS.includes(store.id);
+    if (activeTab === "grocery") return GROCERY_IDS.includes(store.id);
+    return !SMOKE_VAPE_IDS.includes(store.id) && !PHARMACY_IDS.includes(store.id) && !PET_IDS.includes(store.id) && !TAKEOUT_IDS.includes(store.id) && !GROCERY_IDS.includes(store.id);
   });
 
   const filteredStores = tabFilteredStores
