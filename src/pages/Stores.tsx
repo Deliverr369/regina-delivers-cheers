@@ -261,82 +261,8 @@ const Stores = () => {
             </div>
           )}
 
-          {/* Takeout: grouped by brand */}
-          {!isLoading && activeTab === "takeout" && filteredStores.length > 0 && (() => {
-            const getBrand = (name: string) => {
-              const n = name.toLowerCase();
-              if (n.includes("a&w")) return "A&W";
-              if (n.includes("mcdonald")) return "McDonald's";
-              if (n.includes("burger king")) return "Burger King";
-              if (n.includes("dairy queen") || n.includes("dq")) return "Dairy Queen";
-              if (n.includes("five guys")) return "Five Guys";
-              return "Other";
-            };
-            const groups = filteredStores.reduce((acc, s) => {
-              const b = getBrand(s.name);
-              (acc[b] ||= []).push(s);
-              return acc;
-            }, {} as Record<string, typeof filteredStores>);
-            const brandOrder = ["A&W", "McDonald's", "Burger King", "Dairy Queen", "Five Guys", "Other"];
-            return (
-              <div className="space-y-10">
-                {brandOrder.filter(b => groups[b]).map((brand) => (
-                  <section key={brand}>
-                    <h2 className="font-display text-2xl font-bold text-foreground mb-4">{brand}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      {groups[brand].map((store) => (
-                        <Link
-                          key={store.id}
-                          to={`/stores/${store.id}`}
-                          className="group bg-card rounded-2xl overflow-hidden border border-border card-hover"
-                        >
-                          <div className="relative h-44 overflow-hidden bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center">
-                            <img
-                              src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
-                              alt={store.name}
-                              className={`transition-transform duration-500 group-hover:scale-105 ${
-                                store.image_url?.includes('.png')
-                                  ? 'max-h-24 max-w-[55%] object-contain'
-                                  : 'w-full h-full object-cover'
-                              }`}
-                            />
-                            <div className="absolute top-3 left-3 flex gap-2">
-                              {store.is_open ? (
-                                <Badge className="bg-success text-white text-xs font-medium shadow-sm">Open</Badge>
-                              ) : (
-                                <Badge variant="secondary" className="text-xs font-medium bg-background/90 backdrop-blur-sm">Closed</Badge>
-                              )}
-                            </div>
-                          </div>
-                          <div className="p-5">
-                            <h3 className="font-display text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
-                              {store.name}
-                            </h3>
-                            <div className="flex items-center justify-between pt-3 border-t border-border">
-                              <div className="flex items-center gap-1.5">
-                                <Star className="h-4 w-4 fill-gold text-gold" />
-                                <span className="font-semibold text-foreground text-sm">{store.rating}</span>
-                                <span className="text-muted-foreground text-xs">({store.reviews_count})</span>
-                              </div>
-                              <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  {store.delivery_time}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            );
-          })()}
-
           {/* Stores Grid */}
-          {!isLoading && activeTab !== "takeout" && (
+          {!isLoading && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredStores.map((store) => (
                 <Link
