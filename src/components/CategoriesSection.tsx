@@ -1,46 +1,60 @@
 import { Link } from "react-router-dom";
-import { Beer, Wine, Martini, Cigarette, ArrowRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import catLiquor from "@/assets/cat-liquor.png";
+import catSmoke from "@/assets/cat-smoke.png";
+import catPharmacy from "@/assets/cat-pharmacy.png";
+import catPet from "@/assets/cat-pet.png";
+import catTakeout from "@/assets/cat-takeout.png";
+import catGrocery from "@/assets/cat-grocery.png";
 
 const categories = [
   {
-    id: "beer",
-    name: "Beer",
-    description: "Domestic, imported & craft",
-    icon: Beer,
-    emoji: "🍺",
-    gradient: "from-amber-500/20 to-amber-600/5",
-    iconColor: "text-beer bg-beer/15",
-    image: "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=500&auto=format",
-  },
-  {
-    id: "wine",
-    name: "Wine",
-    description: "Red, white, rosé & sparkling",
-    icon: Wine,
-    emoji: "🍷",
-    gradient: "from-rose-500/20 to-rose-600/5",
-    iconColor: "text-wine bg-wine/15",
-    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500&auto=format",
-  },
-  {
-    id: "spirits",
-    name: "Spirits",
-    description: "Vodka, whisky, rum & more",
-    icon: Martini,
-    emoji: "🥃",
-    gradient: "from-violet-500/20 to-violet-600/5",
-    iconColor: "text-spirits bg-spirits/15",
-    image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=500&auto=format",
+    id: "liquor",
+    name: "Liquor Stores",
+    description: "Wine, Beer & Spirits",
+    image: catLiquor,
+    halo: "bg-rose-100",
+    to: "/stores?category=liquor",
   },
   {
     id: "smokes",
-    name: "Smokes & More",
-    description: "Cigarettes, cigars & tobacco",
-    icon: Cigarette,
-    emoji: "🚬",
-    gradient: "from-slate-500/20 to-slate-600/5",
-    iconColor: "text-muted-foreground bg-muted",
-    image: "https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?w=500&auto=format",
+    name: "Smoke & Vape",
+    description: "Cigarettes, Vapes & More",
+    image: catSmoke,
+    halo: "bg-purple-100",
+    to: "/products?category=smokes",
+  },
+  {
+    id: "pharmacy",
+    name: "Pharmacy",
+    description: "Health & Wellness",
+    image: catPharmacy,
+    halo: "bg-teal-100",
+    to: "/stores?category=pharmacy",
+  },
+  {
+    id: "pet",
+    name: "Pet Supplies",
+    description: "Food, Toys & More",
+    image: catPet,
+    halo: "bg-orange-100",
+    to: "/products?category=pet_supplies",
+  },
+  {
+    id: "takeout",
+    name: "Takeout",
+    description: "Food & Beverages",
+    image: catTakeout,
+    halo: "bg-amber-100",
+    to: "/stores?category=takeout",
+  },
+  {
+    id: "grocery",
+    name: "Grocery Stores",
+    description: "Fresh Groceries & Essentials",
+    image: catGrocery,
+    halo: "bg-emerald-100",
+    to: "/stores?category=grocery",
   },
 ];
 
@@ -53,42 +67,43 @@ const CategoriesSection = () => {
             Shop by Category
           </h2>
           <p className="text-muted-foreground text-base max-w-lg mx-auto">
-            Browse our wide selection from Regina's top liquor stores
+            Everything you need, delivered fast across Regina
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-7 max-w-6xl mx-auto">
           {categories.map((category) => (
             <Link
               key={category.id}
-              to={`/products?category=${category.id}`}
-              className="group relative overflow-hidden rounded-2xl bg-card border border-border card-hover"
+              to={category.to}
+              className="group relative flex flex-col items-center justify-between rounded-3xl bg-card border border-border/60 hover:border-primary hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_20px_40px_-20px_hsl(var(--primary)/0.35)] transition-all duration-300 p-6 md:p-8 text-center min-h-[280px] md:min-h-[320px]"
             >
-              {/* Image */}
-              <div className="aspect-[4/3] overflow-hidden relative">
+              {/* Illustration with halo */}
+              <div className="relative flex items-center justify-center w-full h-32 md:h-40 mb-4">
+                <div className={`absolute w-28 h-28 md:w-36 md:h-36 rounded-full ${category.halo} opacity-70`} />
                 <img
                   src={category.image}
                   alt={category.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  width={512}
+                  height={512}
+                  loading="lazy"
+                  className="relative w-32 h-32 md:w-40 md:h-40 object-contain group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
               </div>
 
-              {/* Content */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${category.iconColor} mb-3`}>
-                  <category.icon className="h-5 w-5" />
-                </div>
-                <h3 className="font-display text-lg font-bold text-white mb-0.5">
+              {/* Text */}
+              <div className="flex-1 flex flex-col items-center">
+                <h3 className="font-display text-lg md:text-xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
                   {category.name}
                 </h3>
-                <p className="text-white/60 text-sm mb-3">
+                <p className="text-muted-foreground text-sm md:text-base mb-4">
                   {category.description}
                 </p>
-                <div className="flex items-center gap-1.5 text-primary text-sm font-medium group-hover:gap-3 transition-all">
-                  <span>Shop Now</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </div>
+              </div>
+
+              {/* Arrow button */}
+              <div className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-foreground/60 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
+                <ChevronRight className="h-4 w-4" />
               </div>
             </Link>
           ))}
