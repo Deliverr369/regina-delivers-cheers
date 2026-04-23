@@ -19,6 +19,7 @@ import tabSmoke from "@/assets/tab-smoke.png";
 import tabTakeout from "@/assets/tab-takeout.png";
 import tabPharmacy from "@/assets/tab-pharmacy.png";
 import tabPet from "@/assets/tab-pet.png";
+import tabGrocery from "@/assets/tab-grocery.png";
 
 const sortOptions = [
   { value: "rating", label: "Highest Rated" },
@@ -33,7 +34,7 @@ const Stores = () => {
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "pharmacy" | "takeout" | "pet">("liquor");
+  const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "pharmacy" | "takeout" | "pet" | "grocery">("liquor");
 
   const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
   const SHELL_ID = "97208ee6-3536-4a61-849f-3dcc3ec0e71b";
@@ -60,6 +61,7 @@ const Stores = () => {
     { id: "pharmacy" as const, label: "Pharmacy", icon: tabPharmacy },
     { id: "takeout" as const, label: "Takeout", icon: tabTakeout },
     { id: "pet" as const, label: "Pet Supplies", icon: tabPet },
+    { id: "grocery" as const, label: "Grocery", icon: tabGrocery },
   ];
 
   useEffect(() => {
@@ -189,6 +191,7 @@ const Stores = () => {
               {activeTab === "pharmacy" && "Pharmacies in Regina"}
               {activeTab === "takeout" && "Takeout in Regina"}
               {activeTab === "pet" && "Pet Supplies in Regina"}
+              {activeTab === "grocery" && "Grocery Stores in Regina"}
             </h1>
             <p className="text-muted-foreground">
               {`Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "restaurant" : tabFilteredStores.length === 0 ? "spots" : activeTab === "takeout" ? "restaurants" : "stores"}`}
