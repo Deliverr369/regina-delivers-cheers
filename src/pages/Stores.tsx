@@ -264,23 +264,37 @@ const Stores = () => {
           {/* Stores Grid */}
           {!isLoading && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredStores.map((store) => (
+              {filteredStores.map((store) => {
+                const heroByTab: Record<string, string> = {
+                  liquor: "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=900&auto=format&fit=crop&q=70",
+                  smoke: "https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=900&auto=format&fit=crop&q=70",
+                  pharmacy: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=900&auto=format&fit=crop&q=70",
+                  takeout: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=900&auto=format&fit=crop&q=70",
+                  pet: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=900&auto=format&fit=crop&q=70",
+                  grocery: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=900&auto=format&fit=crop&q=70",
+                };
+                const heroPerStore: Record<string, string> = {
+                  "194b9050-c0b3-4d8a-af11-bb74a480c431": "https://images.unsplash.com/photo-1566633806327-68e152aaf26d?w=900&auto=format&fit=crop&q=70", // Costco - bottles lineup
+                  "25e9b4a8-850a-4d26-9aad-54c9eb2f183a": "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=900&auto=format&fit=crop&q=70", // Superstore - shelves
+                  "334b6260-b35b-404b-9645-b1bfe0fcd667": "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=900&auto=format&fit=crop&q=70", // Willow Park - wine
+                  "f01dc982-5e14-4ffa-b873-e7b369a44ca4": "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=900&auto=format&fit=crop&q=70", // Co-op
+                };
+                const heroSrc = heroPerStore[store.id] || heroByTab[activeTab] || heroByTab.liquor;
+                return (
                 <Link
                   key={store.id}
                   to={`/stores/${store.id}`}
                   className="group bg-card rounded-2xl overflow-hidden border border-border card-hover"
                 >
-                  {/* Image/Logo */}
-                  <div className="relative h-44 overflow-hidden bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center">
+                  {/* Hero image */}
+                  <div className="relative h-44 overflow-hidden bg-gradient-to-br from-secondary/60 to-muted/40">
                     <img
-                      src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
-                      alt={store.name}
-                      className={`transition-transform duration-500 group-hover:scale-105 ${
-                        store.image_url?.includes('.png')
-                          ? 'max-h-24 max-w-[55%] object-contain'
-                          : 'w-full h-full object-cover'
-                      }`}
+                      src={heroSrc}
+                      alt={`${store.name} storefront`}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
                       {store.is_open ? (
                         <Badge className="bg-success text-white text-xs font-medium shadow-sm">Open</Badge>
@@ -290,14 +304,22 @@ const Stores = () => {
                     </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-5">
-                    <h3 className="font-display text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
+                  {/* Content with overlapping logo */}
+                  <div className="relative p-5 pt-7">
+                    {store.image_url && (
+                      <div className="absolute -top-8 left-5 h-16 w-16 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center overflow-hidden">
+                        <img
+                          src={store.image_url}
+                          alt={`${store.name} logo`}
+                          className="max-h-12 max-w-12 object-contain"
+                        />
+                      </div>
+                    )}
+                    <h3 className="font-display text-lg font-bold text-foreground mb-1.5 pl-20 group-hover:text-primary transition-colors truncate">
                       {store.name}
                     </h3>
-                    
 
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center justify-between pt-3 mt-2 border-t border-border">
                       <div className="flex items-center gap-1.5">
                         <Star className="h-4 w-4 fill-gold text-gold" />
                         <span className="font-semibold text-foreground text-sm">{store.rating}</span>
@@ -313,7 +335,8 @@ const Stores = () => {
                     </div>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           )}
 
