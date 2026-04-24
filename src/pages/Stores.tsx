@@ -274,10 +274,11 @@ const Stores = () => {
                   grocery: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=900&auto=format&fit=crop&q=70",
                 };
                 const heroPerStore: Record<string, string> = {
-                  "194b9050-c0b3-4d8a-af11-bb74a480c431": "https://images.unsplash.com/photo-1566633806327-68e152aaf26d?w=900&auto=format&fit=crop&q=70", // Costco - bottles lineup
-                  "25e9b4a8-850a-4d26-9aad-54c9eb2f183a": "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=900&auto=format&fit=crop&q=70", // Superstore - shelves
-                  "334b6260-b35b-404b-9645-b1bfe0fcd667": "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=900&auto=format&fit=crop&q=70", // Willow Park - wine
-                  "f01dc982-5e14-4ffa-b873-e7b369a44ca4": "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=900&auto=format&fit=crop&q=70", // Co-op
+                  "194b9050-c0b3-4d8a-af11-bb74a480c431": "/images/stores/costco-storefront.png", // Costco
+                  "25e9b4a8-850a-4d26-9aad-54c9eb2f183a": "/images/stores/superstore-storefront.png", // Superstore
+                  "334b6260-b35b-404b-9645-b1bfe0fcd667": "/images/stores/willowpark-storefront.png", // Willow Park
+                  "f01dc982-5e14-4ffa-b873-e7b369a44ca4": "/images/stores/coop-storefront.png", // Co-op
+                  "27d251bc-7047-4065-b16c-03b12d67d3c7": "/images/stores/sobeys-storefront.png", // Sobeys Liquor
                 };
                 const heroSrc = heroPerStore[store.id] || heroByTab[activeTab] || heroByTab.liquor;
                 return (
