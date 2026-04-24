@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,13 +89,23 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
 
   const totalPrice = currentPrice * quantity;
 
+  const [specialInstructions, setSpecialInstructions] = useState("");
+  const isFood = product?.category === "takeout";
+
+  // Reset instructions when product changes / modal closes
+  useEffect(() => {
+    if (!open) setSpecialInstructions("");
+  }, [open, productId]);
+
   const handleAddToCart = () => {
     if (!product) return;
     const sizeLabel = selectedPackSize || packPrices[0]?.pack_size;
+    const trimmedNote = specialInstructions.trim();
+    const noteSuffix = trimmedNote ? ` — Note: ${trimmedNote}` : "";
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product.id,
-        name: sizeLabel ? `${product.name} (${sizeLabel})` : product.name,
+        name: `${sizeLabel ? `${product.name} (${sizeLabel})` : product.name}${noteSuffix}`,
         price: currentPrice,
         image: product.image_url || "",
         storeId: (product.stores as any)?.id || product.store_id || "",
@@ -227,6 +239,24 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
                 </Link>
               )}
             </div>
+
+            {/* Special instructions for food */}
+            {isFood && (
+              <div className="px-6 pb-4 space-y-2 border-t border-border pt-4">
+                <Label htmlFor="special-instructions" className="text-sm font-semibold">
+                  Special instructions <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Textarea
+                  id="special-instructions"
+                  placeholder="e.g. No onions, extra sauce, well done…"
+                  value={specialInstructions}
+                  onChange={(e) => setSpecialInstructions(e.target.value.slice(0, 250))}
+                  className="min-h-[70px] resize-none"
+                  maxLength={250}
+                />
+                <p className="text-xs text-muted-foreground text-right">{specialInstructions.length}/250</p>
+              </div>
+            )}
 
             {/* Sticky add-to-cart footer */}
             <div className="sticky bottom-0 bg-background border-t border-border px-6 py-4 flex items-center gap-4">
