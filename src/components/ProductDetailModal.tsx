@@ -87,13 +87,23 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
 
   const totalPrice = currentPrice * quantity;
 
+  const [specialInstructions, setSpecialInstructions] = useState("");
+  const isFood = product?.category === "takeout";
+
+  // Reset instructions when product changes / modal closes
+  useEffect(() => {
+    if (!open) setSpecialInstructions("");
+  }, [open, productId]);
+
   const handleAddToCart = () => {
     if (!product) return;
     const sizeLabel = selectedPackSize || packPrices[0]?.pack_size;
+    const trimmedNote = specialInstructions.trim();
+    const noteSuffix = trimmedNote ? ` — Note: ${trimmedNote}` : "";
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product.id,
-        name: sizeLabel ? `${product.name} (${sizeLabel})` : product.name,
+        name: `${sizeLabel ? `${product.name} (${sizeLabel})` : product.name}${noteSuffix}`,
         price: currentPrice,
         image: product.image_url || "",
         storeId: (product.stores as any)?.id || product.store_id || "",
