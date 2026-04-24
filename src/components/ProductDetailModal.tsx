@@ -240,6 +240,24 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
               )}
             </div>
 
+            {/* Special instructions for food */}
+            {isFood && (
+              <div className="px-6 pb-4 space-y-2 border-t border-border pt-4">
+                <Label htmlFor="special-instructions" className="text-sm font-semibold">
+                  Special instructions <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Textarea
+                  id="special-instructions"
+                  placeholder="e.g. No onions, extra sauce, well done…"
+                  value={specialInstructions}
+                  onChange={(e) => setSpecialInstructions(e.target.value.slice(0, 250))}
+                  className="min-h-[70px] resize-none"
+                  maxLength={250}
+                />
+                <p className="text-xs text-muted-foreground text-right">{specialInstructions.length}/250</p>
+              </div>
+            )}
+
             {/* Sticky add-to-cart footer */}
             <div className="sticky bottom-0 bg-background border-t border-border px-6 py-4 flex items-center gap-4">
               <div className="flex items-center gap-2">
