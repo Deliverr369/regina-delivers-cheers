@@ -13,6 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SuperstoreRequestForm from "@/components/SuperstoreRequestForm";
 import ProductDetailModal from "@/components/ProductDetailModal";
+import ManualItemDialog from "@/components/ManualItemDialog";
 
 const SUPERSTORE_ID = "25e9b4a8-850a-4d26-9aad-54c9eb2f183a";
 
@@ -578,26 +579,29 @@ const StoreDetail = () => {
             </div>
           ) : (
             <Tabs defaultValue={defaultCategory} className="w-full">
-              {/* Search bar */}
-              <div className="relative max-w-xl mx-auto mb-5">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products in this store..."
-                  className="pl-10 pr-10 h-11 rounded-full bg-card border-border shadow-sm"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label="Clear search"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+              {/* Search bar + manual add */}
+              <div className="max-w-3xl mx-auto mb-5 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products in this store..."
+                    className="pl-10 pr-10 h-11 rounded-full bg-card border-border shadow-sm w-full"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <ManualItemDialog storeId={store.id} storeName={store.name} />
               </div>
               <TabsList className={`mb-6 w-full justify-center overflow-x-auto h-auto p-1.5 gap-1 bg-muted/50 rounded-xl ${availableCategories.length <= 1 ? "hidden" : ""}`}>
                 {availableCategories.includes("beer") && (
