@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.0d7529fd9a36411ba7c3e59b162a5d82",
+  "appName": "regina-delivers-cheers",
+  "webDir": "dist",
+  "server": {
+    "url": "https://0d7529fd-9a36-411b-a7c3-e59b162a5d82.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
