@@ -20,6 +20,9 @@ import Signup from "./pages/Signup";
 import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
+import Favorites from "./pages/Favorites";
+import Onboarding from "./pages/Onboarding";
+import OnboardingGate from "./components/OnboardingGate";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
@@ -46,8 +49,10 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <OnboardingGate />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/categories" element={<Categories />} />
               <Route path="/stores" element={<Stores />} />
               <Route path="/stores/:id" element={<StoreDetail />} />
@@ -62,6 +67,7 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/favorites" element={<Favorites />} />
 
               {/* Admin Dashboard */}
               <Route path="/dashboard" element={<DashboardLayout />}>
