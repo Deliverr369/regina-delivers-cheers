@@ -180,6 +180,7 @@ const StoreDetail = () => {
   const [petSubcategory, setPetSubcategory] = useState<string>("all");
   const [takeoutSubcategory, setTakeoutSubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const tabsListRef = useRef<HTMLDivElement>(null);
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
