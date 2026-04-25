@@ -235,13 +235,13 @@ const verifiedFiles = [
 ];
 
 if (foundFiles === 0) {
-  console.warn('[patch-capacitor-ios] No Capacitor iOS bridge files found; skipping.');
-  process.exit(0);
-}
-
-if (verifiedFiles.length !== foundFiles) {
+  console.warn('[patch-capacitor-ios] No Capacitor iOS bridge files found; skipping bridge patch.');
+} else if (verifiedFiles.length !== foundFiles) {
   console.error(`[patch-capacitor-ios] Patched ${verifiedFiles.length}/${foundFiles} Capacitor iOS bridge files. Please check changed Capacitor source format.`);
   process.exit(1);
+} else {
+  console.log(`[patch-capacitor-ios] Verified safe Capacitor iOS event dispatch in ${verifiedFiles.length} file${verifiedFiles.length === 1 ? '' : 's'}.`);
 }
 
-console.log(`[patch-capacitor-ios] Verified safe Capacitor iOS event dispatch in ${verifiedFiles.length} file${verifiedFiles.length === 1 ? '' : 's'}.`);
+applyUISceneAdoption();
+
