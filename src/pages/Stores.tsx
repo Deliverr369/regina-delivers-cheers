@@ -302,9 +302,9 @@ const Stores = () => {
             </div>
 
             {/* Page Header (web) */}
-            <div className="bg-secondary/50 border-b border-border">
-              <div className="container mx-auto px-4 py-8 md:py-10">
-                <h1 className="font-display font-bold text-foreground mb-1.5 text-3xl md:text-4xl">
+            <div className="bg-muted/30 border-b border-border/60">
+              <div className="container mx-auto px-4 py-10 md:py-12">
+                <h1 className="font-display font-bold text-foreground mb-2 text-3xl md:text-[2.5rem] leading-tight tracking-tight">
                   {activeTab === "liquor" && "Liquor Stores in Regina"}
                   {activeTab === "smoke" && "Smoke and Vape in Regina"}
                   {activeTab === "pharmacy" && "Pharmacies in Regina"}
@@ -312,7 +312,7 @@ const Stores = () => {
                   {activeTab === "pet" && "Pet Supplies in Regina"}
                   {activeTab === "grocery" && "Grocery Stores in Regina"}
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-[15px] leading-relaxed">
                   {`Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "restaurant" : tabFilteredStores.length === 0 ? "spots" : activeTab === "takeout" ? "restaurants" : "stores"}`}
                 </p>
               </div>
