@@ -22,7 +22,7 @@ const HeroSection = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!address.trim()) {
-      navigate("/stores");
+      navigate("/categories");
       return;
     }
     if (isRegina === false) {
@@ -34,7 +34,7 @@ const HeroSection = () => {
       return;
     }
     localStorage.setItem("delivery_address", address);
-    navigate(`/stores?address=${encodeURIComponent(address)}`);
+    navigate(`/categories?address=${encodeURIComponent(address)}`);
   };
 
   const stats = [
