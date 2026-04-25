@@ -13,6 +13,8 @@ import {
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useIsNative } from "@/hooks/useIsNative";
+import MobileDrawer from "@/components/MobileDrawer";
 import logo from "@/assets/deliverr-logo.png";
 
 const Header = () => {
