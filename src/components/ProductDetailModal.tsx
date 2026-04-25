@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
 import { safeImageUrl } from "@/lib/image-url";
+import { useIsNative } from "@/hooks/useIsNative";
 
 interface ProductDetailModalProps {
   productId: string | null;
@@ -30,8 +31,10 @@ const getPackSortValue = (packSize: string): number => {
 const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }: ProductDetailModalProps) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const isNative = useIsNative();
   const [selectedPackSize, setSelectedPackSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product-detail", productId],
@@ -75,6 +78,7 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
     if (!open) {
       setSelectedPackSize(null);
       setQuantity(1);
+      setDescExpanded(false);
     }
   }, [open, productId]);
 
