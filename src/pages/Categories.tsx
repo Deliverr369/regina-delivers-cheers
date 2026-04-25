@@ -70,23 +70,23 @@ const Categories = () => {
       </div>
 
       {/* Category circles grid */}
-      <div className="container mx-auto px-5 -mt-12 max-w-2xl flex-1">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 pb-10">
+      <div className="container mx-auto px-5 -mt-8 max-w-md flex-1">
+        <div className="grid grid-cols-3 gap-x-4 gap-y-7 pb-8">
           {categories.map((cat) => (
             <Link
               key={cat.id}
               to={cat.to}
               className="flex flex-col items-center group focus:outline-none"
             >
-              <div className="relative aspect-square w-full rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
+              <div className="relative aspect-square w-full max-w-[88px] rounded-full bg-white shadow-[0_6px_18px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="relative w-[72%] h-[72%] object-contain"
+                  className="relative w-[70%] h-[70%] object-contain"
                   loading="lazy"
                 />
               </div>
-              <span className="mt-4 text-base font-bold text-foreground text-center">
+              <span className="mt-2 text-xs font-semibold text-foreground text-center leading-tight">
                 {cat.name}
               </span>
             </Link>
