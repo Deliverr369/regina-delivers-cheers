@@ -11,6 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { safeImageUrl } from "@/lib/image-url";
 import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -91,7 +92,7 @@ const InventoryTable = memo(({ groups, selectedKeys, onToggleSelect, onSelectAll
                       isSelected ? "border-primary/30" : "border-border/30"
                     } ${g.hasImage ? "bg-white" : "bg-muted/30"}`}>
                       {g.image_url ? (
-                        <img src={g.image_url} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" />
+                        <img src={safeImageUrl(g.image_url)} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
                           <ImageIcon className="h-3.5 w-3.5 text-muted-foreground/25" />
