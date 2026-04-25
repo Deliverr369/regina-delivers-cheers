@@ -453,9 +453,9 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+      <div className="grid lg:grid-cols-5 gap-6 lg:gap-8 min-w-0">
         {/* LEFT: Form */}
-        <div className="lg:col-span-3 space-y-5">
+        <div className="lg:col-span-3 space-y-5 min-w-0">
           {/* 1. Contact */}
           <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information" subtitle="We'll send your receipt and updates here.">
             <div className="grid sm:grid-cols-2 gap-3">
@@ -660,8 +660,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
         </div>
 
         {/* RIGHT: Order Summary */}
-        <div className="lg:col-span-2">
-          <div className="sticky top-24">
+        <div className="lg:col-span-2 min-w-0">
+          <div className="lg:sticky lg:top-24">
             <div className="relative rounded-2xl bg-card/95 backdrop-blur-xl border border-border/70 shadow-xl shadow-foreground/[0.04] overflow-hidden">
               {/* Top accent */}
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
@@ -831,11 +831,11 @@ const FieldInput = ({
   error,
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; error?: boolean }) => (
-  <div>
+  <div className="min-w-0">
     <Label className="text-xs font-medium text-muted-foreground ml-1">{label}</Label>
     <Input
       {...props}
-      className={`mt-1.5 h-11 rounded-xl bg-background/60 border-border/80 transition-all focus-visible:ring-[3px] focus-visible:ring-ring/20 focus-visible:border-ring ${
+      className={`mt-1.5 h-11 w-full rounded-xl bg-background/60 border-border/80 transition-all focus-visible:ring-[3px] focus-visible:ring-ring/20 focus-visible:border-ring ${
         error ? "border-destructive focus-visible:ring-destructive/20 focus-visible:border-destructive" : ""
       }`}
     />
@@ -843,9 +843,9 @@ const FieldInput = ({
 );
 
 const Row = ({ label, value, muted }: { label: React.ReactNode; value: string; muted?: boolean }) => (
-  <div className={`flex justify-between items-center ${muted ? "text-muted-foreground" : "text-foreground"}`}>
-    <span>{label}</span>
-    <span className={muted ? "" : "font-medium"}>{value}</span>
+  <div className={`flex justify-between items-center gap-2 ${muted ? "text-muted-foreground" : "text-foreground"}`}>
+    <span className="min-w-0">{label}</span>
+    <span className={`tabular-nums shrink-0 ${muted ? "" : "font-medium"}`}>{value}</span>
   </div>
 );
 
