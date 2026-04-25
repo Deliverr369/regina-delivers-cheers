@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, Star, Clock, Search, Filter, ChevronDown, Truck, Store } from "lucide-react";
+import { MapPin, Star, Clock, Search, Filter, ChevronDown, Truck, Store, Home, Tag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
