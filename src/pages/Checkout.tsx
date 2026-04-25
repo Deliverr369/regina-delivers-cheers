@@ -275,7 +275,7 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/40 via-background to-background">
       <Header />
-      <main className="pt-20 pb-20">
+      <main className="pt-header pb-20">
         {/* Page header */}
         <div className="container mx-auto px-4 pt-8 pb-6">
           <Link
