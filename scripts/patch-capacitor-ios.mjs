@@ -12,6 +12,7 @@ import { join } from 'node:path';
 const iosAppRoot = join(process.cwd(), 'ios', 'App', 'App');
 const iosRoot = join(process.cwd(), 'ios');
 const staleStatusBarNotificationToken = 'capacitorStatusBarTappedNotification';
+const requireIOSProject = process.argv.includes('--require-ios');
 
 function removeSceneManifestFromInfoPlist() {
   const plistPath = join(iosAppRoot, 'Info.plist');
@@ -111,7 +112,12 @@ function removeSceneDelegateFromPbxproj() {
 
 function removeLegacyUISceneAdoption() {
   if (!existsSync(iosRoot)) {
-    console.log('[patch-capacitor-ios] No ios directory; skipping legacy UIScene cleanup.');
+    const message = '[patch-capacitor-ios] No ios directory found. Run this from the project root after adding/syncing iOS.';
+    if (requireIOSProject) {
+      console.error(message);
+      process.exit(1);
+    }
+    console.log(`${message} Skipping legacy UIScene cleanup.`);
     return;
   }
   const sceneRewritten = rewriteGeneratedSceneDelegates();
