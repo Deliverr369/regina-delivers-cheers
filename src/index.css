@@ -170,5 +170,5 @@
   .safe-px { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
   .pb-safe-plus { padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); }
   /* Header height (4rem) + status-bar safe inset, for fixed-header page offset */
-  .pt-header { padding-top: calc(4rem + env(safe-area-inset-top)); }
+  .pt-header { padding-top: calc(5rem + env(safe-area-inset-top)); }
 }
