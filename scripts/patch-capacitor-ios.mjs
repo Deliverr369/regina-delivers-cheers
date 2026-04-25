@@ -10,6 +10,7 @@ import { join } from 'node:path';
 
 const iosAppRoot = join(process.cwd(), 'ios', 'App', 'App');
 const iosRoot = join(process.cwd(), 'ios');
+const staleStatusBarNotificationToken = 'capacitorStatusBarTappedNotification';
 
 const sceneDelegateSwift = `import UIKit
 import Capacitor
@@ -179,6 +180,7 @@ function applyUISceneAdoption() {
   console.log(
     `[patch-capacitor-ios] UIScene adoption: SceneDelegate=${sceneWritten} Info.plist=${plistPatched} AppDelegate=${appDelegatePatched} project.pbxproj=${pbxPatched}`
   );
+  verifyNoStaleIOSNotificationReferences();
 }
 
 const roots = ['node_modules/@capacitor/ios', 'ios'].map((path) => join(process.cwd(), path));
