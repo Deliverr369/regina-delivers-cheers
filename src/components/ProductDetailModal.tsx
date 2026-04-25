@@ -282,11 +282,11 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
 
             {/* Sticky add-to-cart footer (safe-area aware on iOS) */}
             <div
-              className={`sticky bottom-0 bg-background border-t border-border px-6 py-4 flex items-center gap-4 ${
-                isNative ? "pb-safe-plus" : ""
+              className={`sticky bottom-0 bg-background/98 backdrop-blur border-t border-border flex items-center gap-3 ${
+                isNative ? "px-4 pt-3 pb-safe-plus" : "px-6 py-4 gap-4"
               }`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <Button
                   variant="outline"
                   size="icon"
@@ -307,7 +307,7 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
                 </Button>
               </div>
               <Button
-                className={`flex-1 gap-2 font-bold shadow-md ${isNative ? "h-12 text-base rounded-full" : "h-11"}`}
+                className={`flex-1 gap-2 font-bold shadow-md ${isNative ? "h-12 text-[15px] rounded-full" : "h-11"}`}
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="h-4 w-4" />
