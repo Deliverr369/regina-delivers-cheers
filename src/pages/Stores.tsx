@@ -381,10 +381,10 @@ const Stores = () => {
 
           {/* Loading State */}
           {isLoading && (
-            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"}`}>
+            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}`}>
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse">
-                  <div className="h-44 bg-muted" />
+                <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border/60 shadow-[0_6px_16px_rgba(0,0,0,0.06)] animate-pulse">
+                  <div className="h-48 bg-muted" />
                   <div className="p-5 space-y-3">
                     <div className="h-5 bg-muted rounded w-3/4" />
                     <div className="h-4 bg-muted rounded w-1/2" />
