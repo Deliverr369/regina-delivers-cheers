@@ -320,24 +320,32 @@ const Stores = () => {
           </>
         )}
 
-        <div className={isNative ? "px-4 py-4" : "container mx-auto px-4 py-6"}>
+        <div className={isNative ? "px-4 py-4" : "container mx-auto px-4 py-8"}>
           {/* Search and Filters */}
-          <div className={`flex gap-2 mb-4 ${isNative ? "flex-row items-center" : "flex-col sm:flex-row gap-3 mb-6"}`}>
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className={`flex gap-2 mb-4 ${isNative ? "flex-row items-center" : "flex-col sm:flex-row sm:items-center gap-3 mb-8"}`}>
+            <div className="relative flex-1 min-w-0">
+              <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground ${isNative ? "h-4 w-4" : "h-[18px] w-[18px]"}`} />
               <Input
                 placeholder="Search stores..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={isNative ? "pl-10 h-9 rounded-xl text-sm" : "pl-10 h-10"}
+                className={
+                  isNative
+                    ? "pl-10 h-9 rounded-xl text-sm"
+                    : "pl-11 h-11 rounded-xl text-[15px] bg-card border-border/70 shadow-sm focus-visible:ring-primary/30 focus-visible:border-primary/40 transition-shadow"
+                }
               />
             </div>
-            
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 shrink-0">
               <Button
                 variant={showOpenOnly ? "default" : "outline"}
                 size="sm"
-                className={`rounded-full px-3 text-xs ${isNative ? "h-9" : "h-10 px-4 text-sm"}`}
+                className={`rounded-full text-xs transition-all ${
+                  isNative
+                    ? "h-9 px-3"
+                    : `h-11 px-4 text-sm shadow-sm ${showOpenOnly ? "" : "bg-card hover:bg-muted/60 border-border/70"}`
+                }`}
                 onClick={() => setShowOpenOnly(!showOpenOnly)}
               >
                 <span className={`w-2 h-2 rounded-full mr-2 ${showOpenOnly ? "bg-primary-foreground" : "bg-success"}`} />
@@ -346,7 +354,15 @@ const Stores = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className={`gap-1 px-3 text-xs ${isNative ? "h-9 rounded-full" : "h-10 px-4 text-sm gap-1.5"}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`gap-1 text-xs rounded-full transition-all ${
+                      isNative
+                        ? "h-9 px-3"
+                        : "h-11 px-4 text-sm gap-1.5 bg-card hover:bg-muted/60 border-border/70 shadow-sm"
+                    }`}
+                  >
                     <Filter className="h-3.5 w-3.5" />
                     {currentSort?.label}
                     <ChevronDown className="h-3.5 w-3.5" />
