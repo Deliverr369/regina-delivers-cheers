@@ -524,18 +524,19 @@ const StoreDetail = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="pt-16">
+      <main className={isNative ? "pt-16 safe-top" : "pt-16"}>
         {/* Store Header */}
-        <div className="relative h-56 md:h-72 overflow-hidden">
+        <div className={`relative overflow-hidden ${isNative ? "h-40" : "h-56 md:h-72"}`}>
           <img
             src={safeImageUrl(store.image_url) || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=800&auto=format&fm=jpg"}
             alt={store.name}
             className={`w-full h-full ${store.image_url?.includes('.png') ? 'object-contain bg-gradient-to-br from-muted to-muted/50 p-8' : 'object-cover'}`}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent" />
-          
-          <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8">
-            <div className="container mx-auto">
+          {/* Stronger gradient on iOS for guaranteed text contrast */}
+          <div className={`absolute inset-0 ${isNative ? "bg-gradient-to-t from-black/85 via-black/45 to-black/20" : "bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent"}`} />
+
+          <div className={`absolute bottom-0 left-0 right-0 ${isNative ? "p-4" : "p-5 md:p-8"}`}>
+            <div className={isNative ? "" : "container mx-auto"}>
               <Link to="/stores" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white mb-3 transition-colors text-sm">
                 <ArrowLeft className="h-4 w-4" /> All Stores
               </Link>
@@ -543,7 +544,7 @@ const StoreDetail = () => {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2.5 mb-1.5">
-                    <h1 className="font-display text-2xl md:text-3xl font-bold text-white">{store.name}</h1>
+                    <h1 className={`font-display font-bold text-white ${isNative ? "text-xl" : "text-2xl md:text-3xl"}`}>{store.name}</h1>
                     {store.is_open ? (
                       <Badge className="bg-success text-white text-xs">Open</Badge>
                     ) : (
