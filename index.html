@@ -22,20 +22,79 @@
   <meta property="og:description" content="Regina Releaf allows customers to order liquor and smoke delivery from Regina stores.">
   <meta name="twitter:description" content="Regina Releaf allows customers to order liquor and smoke delivery from Regina stores.">
   <script>
-    window.Capacitor = window.Capacitor || {};
-    window.Capacitor.createEvent = window.Capacitor.createEvent || function (eventName, eventData) {
-      var event = document.createEvent("Events");
-      event.initEvent(eventName, false, false);
-      if (eventData && typeof eventData === "object") Object.assign(event, eventData);
-      return event;
-    };
-    window.Capacitor.triggerEvent = window.Capacitor.triggerEvent || function (eventName, target, eventData) {
-      var event = window.Capacitor.createEvent(eventName, eventData || {});
-      if (target === "document") return document.dispatchEvent(event);
-      if (target === "window") return window.dispatchEvent(event);
-      var targetElement = document.querySelector(target);
-      return targetElement ? targetElement.dispatchEvent(event) : false;
-    };
+    (function () {
+      var pendingEvents = [];
+
+      function createEvent(eventName, eventData) {
+        var event = document.createEvent("Events");
+        event.initEvent(eventName, false, false);
+        if (eventData && typeof eventData === "object") Object.assign(event, eventData);
+        return event;
+      }
+
+      function dispatch(eventName, target, eventData) {
+        try {
+          var event = createEvent(eventName, eventData || {});
+          if (target === "document") return document.dispatchEvent(event);
+          if (target === "window") return window.dispatchEvent(event);
+          var targetElement = typeof target === "string" ? document.querySelector(target) : null;
+          return targetElement ? targetElement.dispatchEvent(event) : false;
+        } catch (e) {
+          console.warn("[Capacitor shim] dispatch failed", e);
+          return false;
+        }
+      }
+
+      function isBridgeReady() {
+        // Native bridge sets isNativePlatform; in browser we treat DOM-ready as ready.
+        var cap = window.Capacitor;
+        if (!cap) return false;
+        if (typeof cap.isNativePlatform === "function") {
+          try { return !!cap.isNativePlatform() ? document.readyState !== "loading" : true; }
+          catch (e) { return document.readyState !== "loading"; }
+        }
+        return document.readyState !== "loading";
+      }
+
+      function flushPending() {
+        while (pendingEvents.length) {
+          var args = pendingEvents.shift();
+          dispatch.apply(null, args);
+        }
+      }
+
+      function guardedTriggerEvent(eventName, target, eventData) {
+        if (!isBridgeReady()) {
+          pendingEvents.push([eventName, target, eventData]);
+          return false;
+        }
+        return dispatch(eventName, target, eventData);
+      }
+
+      function install() {
+        window.Capacitor = window.Capacitor || {};
+        if (!window.Capacitor.createEvent) window.Capacitor.createEvent = createEvent;
+        // Always wrap triggerEvent so calls before bridge-ready are queued instead of throwing.
+        var native = window.Capacitor.triggerEvent;
+        window.Capacitor.triggerEvent = function (eventName, target, eventData) {
+          if (!isBridgeReady()) {
+            pendingEvents.push([eventName, target, eventData]);
+            return false;
+          }
+          if (typeof native === "function" && native !== window.Capacitor.triggerEvent) {
+            try { return native.call(window.Capacitor, eventName, target, eventData); }
+            catch (e) { return dispatch(eventName, target, eventData); }
+          }
+          return dispatch(eventName, target, eventData);
+        };
+      }
+
+      install();
+      // Re-assert after the native bridge may have replaced window.Capacitor,
+      // and flush any queued events once WKWebView finishes loading.
+      document.addEventListener("DOMContentLoaded", function () { install(); flushPending(); });
+      window.addEventListener("load", function () { install(); flushPending(); });
+    })();
   </script>
 </head>
 
