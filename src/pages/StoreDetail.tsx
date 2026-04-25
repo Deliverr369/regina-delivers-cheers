@@ -579,7 +579,7 @@ const StoreDetail = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Tabs defaultValue={defaultCategory} className="w-full" onValueChange={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <Tabs defaultValue={defaultCategory} className="w-full">
               {/* Search bar + manual add */}
               <div className="max-w-3xl mx-auto mb-5 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                 <div className="relative flex-1">
