@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useIsNative } from "@/hooks/useIsNative";
 import MobileDrawer from "@/components/MobileDrawer";
+import NotificationsBell from "@/components/NotificationsBell";
 import logo from "@/assets/deliverr-logo.png";
 
 const Header = () => {
@@ -53,6 +54,7 @@ const Header = () => {
 
           {/* Right Side */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {user && <NotificationsBell />}
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground">
                 <ShoppingCart className="h-[18px] w-[18px]" />
