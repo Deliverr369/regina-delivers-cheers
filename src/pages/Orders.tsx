@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsNative } from "@/hooks/useIsNative";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
