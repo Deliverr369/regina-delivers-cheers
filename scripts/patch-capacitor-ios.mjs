@@ -10,6 +10,7 @@ import { join } from 'node:path';
 
 const iosAppRoot = join(process.cwd(), 'ios', 'App', 'App');
 const iosRoot = join(process.cwd(), 'ios');
+const staleStatusBarNotificationToken = 'capacitorStatusBarTappedNotification';
 
 const sceneDelegateSwift = `import UIKit
 import Capacitor
@@ -179,6 +180,7 @@ function applyUISceneAdoption() {
   console.log(
     `[patch-capacitor-ios] UIScene adoption: SceneDelegate=${sceneWritten} Info.plist=${plistPatched} AppDelegate=${appDelegatePatched} project.pbxproj=${pbxPatched}`
   );
+  verifyNoStaleIOSNotificationReferences();
 }
 
 const roots = ['node_modules/@capacitor/ios', 'ios'].map((path) => join(process.cwd(), path));
@@ -200,6 +202,24 @@ function collectFiles(root, fileName, results = []) {
     else if (entry === fileName) results.push(fullPath);
   }
   return results;
+}
+
+function collectSwiftFiles(root, results = []) {
+  if (!existsSync(root)) return results;
+  for (const entry of readdirSync(root)) {
+    const fullPath = join(root, entry);
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) collectSwiftFiles(fullPath, results);
+    else if (entry.endsWith('.swift')) results.push(fullPath);
+  }
+  return results;
+}
+
+function verifyNoStaleIOSNotificationReferences() {
+  const staleFiles = collectSwiftFiles(iosRoot).filter((path) => readFileSync(path, 'utf8').includes(staleStatusBarNotificationToken));
+  if (staleFiles.length === 0) return;
+  console.error(`[patch-capacitor-ios] Stale Capacitor status-bar notification reference remains in: ${staleFiles.join(', ')}`);
+  process.exit(1);
 }
 
 function patchSwiftBridge(path) {
