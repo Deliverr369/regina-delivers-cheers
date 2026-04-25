@@ -302,9 +302,9 @@ const Stores = () => {
             </div>
 
             {/* Page Header (web) */}
-            <div className="bg-secondary/50 border-b border-border">
-              <div className="container mx-auto px-4 py-8 md:py-10">
-                <h1 className="font-display font-bold text-foreground mb-1.5 text-3xl md:text-4xl">
+            <div className="bg-muted/30 border-b border-border/60">
+              <div className="container mx-auto px-4 py-10 md:py-12">
+                <h1 className="font-display font-bold text-foreground mb-2 text-3xl md:text-[2.5rem] leading-tight tracking-tight">
                   {activeTab === "liquor" && "Liquor Stores in Regina"}
                   {activeTab === "smoke" && "Smoke and Vape in Regina"}
                   {activeTab === "pharmacy" && "Pharmacies in Regina"}
@@ -312,7 +312,7 @@ const Stores = () => {
                   {activeTab === "pet" && "Pet Supplies in Regina"}
                   {activeTab === "grocery" && "Grocery Stores in Regina"}
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-[15px] leading-relaxed">
                   {`Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "restaurant" : tabFilteredStores.length === 0 ? "spots" : activeTab === "takeout" ? "restaurants" : "stores"}`}
                 </p>
               </div>
@@ -320,24 +320,32 @@ const Stores = () => {
           </>
         )}
 
-        <div className={isNative ? "px-4 py-4" : "container mx-auto px-4 py-6"}>
+        <div className={isNative ? "px-4 py-4" : "container mx-auto px-4 py-8"}>
           {/* Search and Filters */}
-          <div className={`flex gap-2 mb-4 ${isNative ? "flex-row items-center" : "flex-col sm:flex-row gap-3 mb-6"}`}>
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className={`flex gap-2 mb-4 ${isNative ? "flex-row items-center" : "flex-col sm:flex-row sm:items-center gap-3 mb-8"}`}>
+            <div className="relative flex-1 min-w-0">
+              <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground ${isNative ? "h-4 w-4" : "h-[18px] w-[18px]"}`} />
               <Input
                 placeholder="Search stores..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={isNative ? "pl-10 h-9 rounded-xl text-sm" : "pl-10 h-10"}
+                className={
+                  isNative
+                    ? "pl-10 h-9 rounded-xl text-sm"
+                    : "pl-11 h-11 rounded-xl text-[15px] bg-card border-border/70 shadow-sm focus-visible:ring-primary/30 focus-visible:border-primary/40 transition-shadow"
+                }
               />
             </div>
-            
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 shrink-0">
               <Button
                 variant={showOpenOnly ? "default" : "outline"}
                 size="sm"
-                className={`rounded-full px-3 text-xs ${isNative ? "h-9" : "h-10 px-4 text-sm"}`}
+                className={`rounded-full text-xs transition-all ${
+                  isNative
+                    ? "h-9 px-3"
+                    : `h-11 px-4 text-sm shadow-sm ${showOpenOnly ? "" : "bg-card hover:bg-muted/60 border-border/70"}`
+                }`}
                 onClick={() => setShowOpenOnly(!showOpenOnly)}
               >
                 <span className={`w-2 h-2 rounded-full mr-2 ${showOpenOnly ? "bg-primary-foreground" : "bg-success"}`} />
@@ -346,7 +354,15 @@ const Stores = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className={`gap-1 px-3 text-xs ${isNative ? "h-9 rounded-full" : "h-10 px-4 text-sm gap-1.5"}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`gap-1 text-xs rounded-full transition-all ${
+                      isNative
+                        ? "h-9 px-3"
+                        : "h-11 px-4 text-sm gap-1.5 bg-card hover:bg-muted/60 border-border/70 shadow-sm"
+                    }`}
+                  >
                     <Filter className="h-3.5 w-3.5" />
                     {currentSort?.label}
                     <ChevronDown className="h-3.5 w-3.5" />
@@ -365,10 +381,10 @@ const Stores = () => {
 
           {/* Loading State */}
           {isLoading && (
-            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"}`}>
+            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}`}>
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse">
-                  <div className="h-44 bg-muted" />
+                <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border/60 shadow-[0_6px_16px_rgba(0,0,0,0.06)] animate-pulse">
+                  <div className="h-48 bg-muted" />
                   <div className="p-5 space-y-3">
                     <div className="h-5 bg-muted rounded w-3/4" />
                     <div className="h-4 bg-muted rounded w-1/2" />
@@ -381,7 +397,7 @@ const Stores = () => {
 
           {/* Stores Grid */}
           {!isLoading && (
-            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"}`}>
+            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}`}>
               {filteredStores.map((store) => {
                 const heroPerStore: Record<string, string> = {
                   "194b9050-c0b3-4d8a-af11-bb74a480c431": "/images/stores/costco-storefront.png", // Costco
@@ -397,45 +413,54 @@ const Stores = () => {
                 <Link
                   key={store.id}
                   to={`/stores/${store.id}`}
-                  className={`group bg-card overflow-hidden border border-border card-hover ${isNative ? "rounded-xl shadow-sm" : "rounded-2xl"}`}
+                  className={`group bg-card overflow-hidden flex flex-col h-full transition-all duration-200 ease-out ${
+                    isNative
+                      ? "rounded-xl shadow-sm border border-border"
+                      : "rounded-2xl border border-border/60 shadow-[0_6px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.10)] hover:-translate-y-1 hover:border-border"
+                  }`}
                 >
                   {/* Hero - storefront photo (liquor) or brand logo (others) */}
-                  <div className={`relative overflow-hidden ${isNative ? "h-28" : "h-44"} ${useStorefrontLayout && heroSrc ? "" : "bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center"}`}>
+                  <div className={`relative overflow-hidden shrink-0 ${isNative ? "h-28" : "h-48"} ${useStorefrontLayout && heroSrc ? "" : "bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center"}`}>
                     {useStorefrontLayout && heroSrc ? (
                       <>
                         <img
                           src={heroSrc}
                           alt={`${store.name} storefront`}
                           loading="lazy"
-                          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.04]"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
                       </>
                     ) : (
                       <img
                         src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
                         alt={store.name}
                         loading="lazy"
-                        className={`transition-transform duration-500 group-hover:scale-105 ${
+                        className={`transition-transform duration-500 group-hover:scale-[1.04] ${
                           store.image_url?.includes(".png")
-                            ? "max-h-24 max-w-[55%] object-contain"
+                            ? "max-h-28 max-w-[55%] object-contain"
                             : "w-full h-full object-cover"
                         }`}
                       />
                     )}
                     <div className="absolute top-3 left-3 flex gap-2">
                       {store.is_open ? (
-                        <Badge className="bg-success text-white text-xs font-medium shadow-sm">Open</Badge>
+                        <Badge className="rounded-full bg-success/15 text-success border border-success/25 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide shadow-sm backdrop-blur-sm hover:bg-success/15">
+                          <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-success" />
+                          Open
+                        </Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs font-medium bg-background/90 backdrop-blur-sm">Closed</Badge>
+                        <Badge variant="secondary" className="rounded-full text-[11px] font-semibold px-2.5 py-0.5 bg-background/90 text-muted-foreground border border-border/60 backdrop-blur-sm">
+                          Closed
+                        </Badge>
                       )}
                     </div>
                   </div>
 
                   {/* Content - overlapping logo only for liquor storefront layout (web) */}
-                  <div className={`relative ${isNative ? "p-3" : "p-5"} ${useStorefrontLayout && heroSrc && !isNative ? "pt-7" : ""}`}>
+                  <div className={`relative flex-1 flex flex-col ${isNative ? "p-3" : "p-5"} ${useStorefrontLayout && heroSrc && !isNative ? "pt-7" : ""}`}>
                     {useStorefrontLayout && heroSrc && store.image_url && !isNative && (
-                      <div className="absolute -top-8 left-5 h-16 w-16 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center overflow-hidden">
+                      <div className="absolute -top-8 left-5 h-16 w-16 rounded-2xl bg-card border border-border/70 shadow-md flex items-center justify-center overflow-hidden">
                         <img
                           src={store.image_url}
                           alt={`${store.name} logo`}
@@ -443,23 +468,23 @@ const Stores = () => {
                         />
                       </div>
                     )}
-                    <h3 className={`font-display font-bold text-foreground mb-1 group-hover:text-primary transition-colors truncate ${
+                    <h3 className={`font-display font-bold text-foreground group-hover:text-primary transition-colors truncate ${
                       isNative
-                        ? "text-sm"
-                        : `text-lg mb-1.5 ${useStorefrontLayout && heroSrc ? "pl-20" : ""}`
+                        ? "text-sm mb-1"
+                        : `text-[19px] leading-snug mb-2 ${useStorefrontLayout && heroSrc ? "pl-20" : ""}`
                     }`}>
                       {store.name}
                     </h3>
 
-                    <div className={`flex items-center gap-2 ${isNative ? "text-xs text-muted-foreground" : "justify-between pt-3 mt-2 border-t border-border"}`}>
+                    <div className={`flex items-center gap-2 mt-auto ${isNative ? "text-xs text-muted-foreground" : "justify-between pt-3 border-t border-border/60"}`}>
                       <div className="flex items-center gap-1">
-                        <Star className={`fill-gold text-gold ${isNative ? "h-3 w-3" : "h-4 w-4"}`} />
+                        <Star className={`fill-gold text-gold ${isNative ? "h-3 w-3" : "h-[15px] w-[15px]"}`} />
                         <span className={`font-semibold text-foreground ${isNative ? "text-xs" : "text-sm"}`}>{store.rating}</span>
-                        {!isNative && <span className="text-muted-foreground text-xs">({store.reviews_count})</span>}
+                        {!isNative && <span className="text-muted-foreground/80 text-xs font-medium">({store.reviews_count})</span>}
                       </div>
                       {isNative && <span aria-hidden>•</span>}
-                      <div className={`flex items-center gap-1 text-muted-foreground ${isNative ? "text-xs" : "gap-3 text-sm"}`}>
-                        <Clock className={isNative ? "h-3 w-3" : "h-3.5 w-3.5"} />
+                      <div className={`flex items-center gap-1 text-muted-foreground ${isNative ? "text-xs" : "gap-1.5 text-[13px] font-medium"}`}>
+                        <Clock className={isNative ? "h-3 w-3" : "h-[14px] w-[14px]"} />
                         {store.delivery_time}
                       </div>
                     </div>
