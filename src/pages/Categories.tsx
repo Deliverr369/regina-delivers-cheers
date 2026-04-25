@@ -1,25 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { ChevronDown, MapPin, ArrowLeft, X } from "lucide-react";
-import { Wine, ShoppingBasket, UtensilsCrossed, Cigarette, Pill, PawPrint } from "lucide-react";
+import catLiquor from "@/assets/cat-liquor.png";
+import catSmoke from "@/assets/cat-smoke.png";
+import catPharmacy from "@/assets/cat-pharmacy.png";
+import catPet from "@/assets/cat-pet.png";
+import catTakeout from "@/assets/cat-takeout.png";
+import catGrocery from "@/assets/cat-grocery.png";
 
-type Category = {
-  key: string;
-  label: string;
-  icon: typeof Wine;
-  iconBg: string;
-  iconColor: string;
-  to: string;
-  enabled: boolean;
-};
-
-const categories: Category[] = [
-  { key: "liquor", label: "Liquor stores", icon: Wine, iconBg: "bg-rose-50", iconColor: "text-rose-500", to: "/stores", enabled: true },
-  { key: "grocery", label: "Grocery stores", icon: ShoppingBasket, iconBg: "bg-emerald-50", iconColor: "text-emerald-600", to: "/stores?category=grocery", enabled: false },
-  { key: "takeout", label: "Takeout", icon: UtensilsCrossed, iconBg: "bg-amber-50", iconColor: "text-amber-600", to: "/stores?category=takeout", enabled: false },
-  { key: "smoke", label: "Smoke shops", icon: Cigarette, iconBg: "bg-slate-100", iconColor: "text-slate-600", to: "/stores?category=smoke", enabled: false },
-  { key: "pharmacy", label: "Pharmacy", icon: Pill, iconBg: "bg-sky-50", iconColor: "text-sky-600", to: "/stores?category=pharmacy", enabled: false },
-  { key: "pets", label: "Pet supplies", icon: PawPrint, iconBg: "bg-violet-50", iconColor: "text-violet-600", to: "/stores?category=pets", enabled: false },
+const categories = [
+  { id: "liquor", name: "Liquor Stores", image: catLiquor, halo: "bg-rose-100", to: "/stores?category=liquor" },
+  { id: "smokes", name: "Smoke & Vape", image: catSmoke, halo: "bg-purple-100", to: "/products?category=smokes" },
+  { id: "pharmacy", name: "Pharmacy", image: catPharmacy, halo: "bg-teal-100", to: "/stores?category=pharmacy" },
+  { id: "pet", name: "Pet Supplies", image: catPet, halo: "bg-orange-100", to: "/products?category=pet_supplies" },
+  { id: "takeout", name: "Takeout", image: catTakeout, halo: "bg-amber-100", to: "/stores?category=takeout" },
+  { id: "grocery", name: "Grocery Stores", image: catGrocery, halo: "bg-emerald-100", to: "/stores?category=grocery" },
 ];
 
 const Categories = () => {
@@ -34,25 +29,17 @@ const Categories = () => {
     setAddress(fromQuery || stored || "");
   }, [searchParams]);
 
-  const handlePick = (cat: Category) => {
-    if (!cat.enabled) return;
-    navigate(cat.to);
-  };
-
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Coral header */}
       <div className="bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 pt-6 pb-10 max-w-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <button
-              onClick={() => navigate("/")}
-              className="p-2 -ml-2 rounded-full hover:bg-white/10 transition"
-              aria-label="Back"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 -ml-2 mb-4 rounded-full hover:bg-white/10 transition"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
 
           <button
             onClick={() => navigate("/")}
@@ -68,47 +55,36 @@ const Categories = () => {
             <ChevronDown className="h-5 w-5 mt-1 shrink-0 opacity-90 group-hover:opacity-100" />
           </button>
 
-          <h1 className="text-2xl md:text-3xl font-semibold mt-8 mb-2 leading-snug">
+          <h1 className="text-2xl md:text-3xl font-semibold mt-8 leading-snug">
             Where would you like to shop today?
           </h1>
         </div>
       </div>
 
-      {/* Category circles grid */}
       <div className="container mx-auto px-4 -mt-6 max-w-2xl">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-8 pb-10">
-          {categories.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => handlePick(cat)}
-                disabled={!cat.enabled}
-                className="flex flex-col items-center group focus:outline-none"
-              >
-                <div
-                  className={`relative aspect-square w-full max-w-[180px] rounded-full bg-white shadow-lg flex items-center justify-center transition-transform ${
-                    cat.enabled ? "group-hover:scale-105 group-active:scale-95" : "opacity-60"
-                  }`}
-                >
-                  <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${cat.iconBg}`}>
-                    <Icon className={`h-12 w-12 ${cat.iconColor}`} strokeWidth={1.5} />
-                  </div>
-                  {!cat.enabled && (
-                    <span className="absolute top-2 right-2 bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                      SOON
-                    </span>
-                  )}
-                </div>
-                <span className="mt-3 text-sm md:text-base font-semibold text-foreground text-center">
-                  {cat.label}
-                </span>
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-2 gap-x-5 gap-y-7 pb-10">
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              to={cat.to}
+              className="flex flex-col items-center group focus:outline-none"
+            >
+              <div className="relative aspect-square w-full max-w-[180px] rounded-full bg-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
+                <div className={`absolute w-24 h-24 rounded-full ${cat.halo} opacity-70`} />
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="relative w-28 h-28 object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <span className="mt-3 text-sm md:text-base font-semibold text-foreground text-center">
+                {cat.name}
+              </span>
+            </Link>
+          ))}
         </div>
 
-        {/* How it works tip */}
         {showTip && (
           <div className="bg-teal-600 text-white rounded-lg p-5 mb-10 relative">
             <button
