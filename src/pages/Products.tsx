@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
 import { useQuery } from "@tanstack/react-query";
+import { safeImageUrl } from "@/lib/image-url";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -276,7 +277,7 @@ const Products = () => {
                   >
                     <div className="aspect-square overflow-hidden">
                       <img 
-                        src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"} 
+                        src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format&fm=jpg"} 
                         alt={product.name} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                       />

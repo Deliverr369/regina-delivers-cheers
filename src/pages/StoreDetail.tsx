@@ -13,6 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SuperstoreRequestForm from "@/components/SuperstoreRequestForm";
 import ProductDetailModal from "@/components/ProductDetailModal";
+import { safeImageUrl } from "@/lib/image-url";
 import ManualItemDialog from "@/components/ManualItemDialog";
 
 const SUPERSTORE_ID = "25e9b4a8-850a-4d26-9aad-54c9eb2f183a";
@@ -423,7 +424,7 @@ const StoreDetail = () => {
           onClick={() => setOpenProductId(product.id)}
         >
           <img
-            src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format"}
+            src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format&fm=jpg"}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />
@@ -525,7 +526,7 @@ const StoreDetail = () => {
         {/* Store Header */}
         <div className="relative h-56 md:h-72 overflow-hidden">
           <img
-            src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=800&auto=format"}
+            src={safeImageUrl(store.image_url) || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=800&auto=format&fm=jpg"}
             alt={store.name}
             className={`w-full h-full ${store.image_url?.includes('.png') ? 'object-contain bg-gradient-to-br from-muted to-muted/50 p-8' : 'object-cover'}`}
           />
