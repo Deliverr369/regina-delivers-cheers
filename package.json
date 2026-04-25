@@ -12,6 +12,7 @@
     "capacitor:sync:before": "node scripts/patch-capacitor-ios.mjs",
     "capacitor:sync:after": "node scripts/patch-capacitor-ios.mjs",
     "capacitor:update:after": "node scripts/patch-capacitor-ios.mjs",
+    "ios:repair": "node scripts/patch-capacitor-ios.mjs --require-ios",
     "lint": "eslint .",
     "postinstall": "node scripts/patch-capacitor-ios.mjs",
     "preview": "vite preview"
