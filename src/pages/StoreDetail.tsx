@@ -549,7 +549,7 @@ const StoreDetail = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className={isNative ? "pt-16 safe-top" : "pt-16"}>
+      <main className={isNative ? "pt-header" : "pt-16"}>
         {/* Store Header */}
         <div className={`relative overflow-hidden ${isNative ? "h-44" : "h-56 md:h-72"}`}>
           <img

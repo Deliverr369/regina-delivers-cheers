@@ -65,7 +65,7 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className={isNative ? "pt-16 safe-top pb-16" : "pt-20 pb-16"}>
+      <main className={isNative ? "pt-header pb-16" : "pt-20 pb-16"}>
         <div className={isNative ? "bg-primary text-primary-foreground" : "bg-secondary/50 border-b border-border"}>
           <div className={isNative ? "px-4 pt-4 pb-4" : "container mx-auto px-4 py-8"}>
             <h1 className={`font-display font-bold ${isNative ? "text-[20px] text-primary-foreground" : "text-3xl text-foreground"} mb-1`}>My Orders</h1>

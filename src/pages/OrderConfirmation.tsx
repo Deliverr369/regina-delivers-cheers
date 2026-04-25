@@ -12,7 +12,7 @@ const OrderConfirmation = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="pt-20 pb-16">
+      <main className="pt-header pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-lg mx-auto">
             {/* Success Icon */}

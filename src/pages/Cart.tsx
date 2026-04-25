@@ -31,7 +31,7 @@ const Cart = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-20 pb-16">
+        <main className="pt-header pb-16">
           <div className="container mx-auto px-4">
             <div className="max-w-md mx-auto text-center py-20">
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
@@ -55,7 +55,7 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-20 pb-32 lg:pb-16">
+      <main className="pt-header pb-32 lg:pb-16">
         <div className="bg-secondary/50 border-b border-border">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3 min-w-0">

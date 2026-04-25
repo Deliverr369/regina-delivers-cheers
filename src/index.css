@@ -164,9 +164,11 @@
     @apply py-16 md:py-24;
   }
 
-  /* iPhone safe-area helpers (only meaningful inside the Capacitor app) */
+  /* iPhone / Android safe-area helpers (Capacitor app + notched browsers) */
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
   .safe-px { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
   .pb-safe-plus { padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); }
+  /* Header height (4rem) + status-bar safe inset, for fixed-header page offset */
+  .pt-header { padding-top: calc(5rem + env(safe-area-inset-top)); }
 }

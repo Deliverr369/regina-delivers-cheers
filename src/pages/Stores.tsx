@@ -128,7 +128,7 @@ const Stores = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className={`pb-16 ${isNative ? "pt-16 safe-top bg-background" : "pt-20"}`}>
+      <main className={`pb-16 ${isNative ? "pt-header bg-background" : "pt-20"}`}>
         {isNative ? (
           <>
             {/* iOS: Coral brand header (address + category icons) */}
