@@ -24,8 +24,10 @@ const statusConfig: Record<string, { bg: string; label: string }> = {
 const Orders = () => {
   const { user, loading: authLoading } = useAuth();
   const isNative = useIsNative();
+  const { reorder } = useReorder();
+  const queryClient = useQueryClient();
 
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ["orders", user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -39,6 +41,11 @@ const Orders = () => {
     },
     enabled: !!user,
   });
+
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
+    await refetch();
+  };
 
   if (authLoading) {
     return (
@@ -148,6 +155,17 @@ const Orders = () => {
                         )}
                       </div>
                     )}
+                    <div className="mt-3 pt-3 border-t border-border flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full gap-2 h-8 text-xs"
+                        onClick={() => reorder(order as any)}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Order again
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
