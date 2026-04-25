@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
+import { safeImageUrl } from "@/lib/image-url";
 
 const getPackSortValue = (packSize: string): number => {
   const match = String(packSize || "").match(/(\d+(?:\.\d+)?)/);
@@ -157,7 +158,7 @@ const ProductDetail = () => {
             {/* Image */}
             <div className="bg-card rounded-2xl border border-border p-8 flex items-center justify-center aspect-square">
               <img
-                src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=800&auto=format"}
+                src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=800&auto=format&fm=jpg"}
                 alt={product.name}
                 className="max-w-full max-h-full object-contain"
               />
