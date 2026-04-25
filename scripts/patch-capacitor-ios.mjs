@@ -1,48 +1,63 @@
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const bridgePath = join(process.cwd(), 'node_modules/@capacitor/ios/Capacitor/Capacitor/CapacitorBridge.swift');
-const cordovaPluginManagerPath = join(process.cwd(), 'node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPluginManager.m');
-const guardedPause = "if (window.Capacitor && typeof window.Capacitor.triggerEvent === 'function') { window.Capacitor.triggerEvent('pause', 'document'); } else { window.addEventListener('load', function () { if (window.Capacitor && typeof window.Capacitor.triggerEvent === 'function') { window.Capacitor.triggerEvent('pause', 'document'); } }, { once: true }); }";
-const guardedResume = "if (window.Capacitor && typeof window.Capacitor.triggerEvent === 'function') { window.Capacitor.triggerEvent('resume', 'document'); } else { window.addEventListener('load', function () { if (window.Capacitor && typeof window.Capacitor.triggerEvent === 'function') { window.Capacitor.triggerEvent('resume', 'document'); } }, { once: true }); }";
-let patchedFiles = 0;
+const roots = ['node_modules/@capacitor/ios', 'ios'].map((path) => join(process.cwd(), path));
+const bridgeFileName = 'CapacitorBridge.swift';
+const cordovaFileName = 'CDVPluginManager.m';
 
-if (!existsSync(bridgePath)) {
-  console.warn('[patch-capacitor-ios] Capacitor iOS bridge not found; skipping.');
+const safeNoDataSwift = `self.eval(js: "(function(){try{var c=window.Capacitor;if(c&&typeof c.triggerEvent==='function'){return c.triggerEvent('\\(eventName)','\\(target)');}var e=document.createEvent('Events');e.initEvent('\\(eventName)',false,false);var t='\\(target)'==='document'?document:('\\(target)'==='window'?window:document.querySelector('\\(target)'));return !!(t&&t.dispatchEvent&&t.dispatchEvent(e));}catch(e){return false;}})()")`;
+const safeWithDataSwift = `self.eval(js: "(function(){try{var d=\\(data);var c=window.Capacitor;if(c&&typeof c.triggerEvent==='function'){return c.triggerEvent('\\(eventName)','\\(target)',d);}var e=document.createEvent('Events');e.initEvent('\\(eventName)',false,false);if(d&&typeof d==='object'){Object.assign(e,d);}var t='\\(target)'==='document'?document:('\\(target)'==='window'?window:document.querySelector('\\(target)'));return !!(t&&t.dispatchEvent&&t.dispatchEvent(e));}catch(e){return false;}})()")`;
+
+const safeCordovaEvent = (eventName) =>
+  `(function(){try{var c=window.Capacitor;if(c&&typeof c.triggerEvent==='function'){return c.triggerEvent('${eventName}','document');}var e=document.createEvent('Events');e.initEvent('${eventName}',false,false);return document.dispatchEvent(e);}catch(e){return false;}})()`;
+
+function collectFiles(root, fileName, results = []) {
+  if (!existsSync(root)) return results;
+  for (const entry of readdirSync(root)) {
+    const fullPath = join(root, entry);
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) collectFiles(fullPath, fileName, results);
+    else if (entry === fileName) results.push(fullPath);
+  }
+  return results;
+}
+
+function patchSwiftBridge(path) {
+  const source = readFileSync(path, 'utf8');
+  const patched = source
+    .replace(
+      /(@objc public func triggerJSEvent\(eventName: String, target: String\) \{\n\s*)self\.eval\(js: ".*"\)(\n\s*\})/,
+      `$1${safeNoDataSwift}$2`
+    )
+    .replace(
+      /(@objc public func triggerJSEvent\(eventName: String, target: String, data: String\) \{\n\s*)self\.eval\(js: ".*"\)(\n\s*\})/,
+      `$1${safeWithDataSwift}$2`
+    );
+
+  if (patched !== source) writeFileSync(path, patched);
+  return patched.includes('typeof c.triggerEvent') && patched.includes('document.createEvent');
+}
+
+function patchCordovaManager(path) {
+  const source = readFileSync(path, 'utf8');
+  const patched = source
+    .replace(/\[self\.commandDelegate evalJsHelper2:@".*pause.*"\];/, `[self.commandDelegate evalJsHelper2:@"${safeCordovaEvent('pause')}"];`)
+    .replace(/\[self\.commandDelegate evalJsHelper2:@".*resume.*"\];/, `[self.commandDelegate evalJsHelper2:@"${safeCordovaEvent('resume')}"];`);
+
+  if (patched !== source) writeFileSync(path, patched);
+  return patched.includes('typeof c.triggerEvent') && patched.includes('document.createEvent');
+}
+
+const bridgePaths = roots.flatMap((root) => collectFiles(root, bridgeFileName));
+const cordovaPaths = roots.flatMap((root) => collectFiles(root, cordovaFileName));
+const verifiedFiles = [
+  ...bridgePaths.filter(patchSwiftBridge),
+  ...cordovaPaths.filter(patchCordovaManager),
+];
+
+if (verifiedFiles.length === 0) {
+  console.warn('[patch-capacitor-ios] No Capacitor iOS bridge files found; skipping.');
   process.exit(0);
 }
 
-const source = readFileSync(bridgePath, 'utf8');
-
-const patched = source
-  .replace(
-    'self.eval(js: "window.Capacitor.triggerEvent(\'\\(eventName)\', \'\\(target)\')")',
-    'self.eval(js: "if (window.Capacitor && typeof window.Capacitor.triggerEvent === \'function\') { window.Capacitor.triggerEvent(\'\\(eventName)\', \'\\(target)\'); } else { window.addEventListener(\'load\', function () { if (window.Capacitor && typeof window.Capacitor.triggerEvent === \'function\') { window.Capacitor.triggerEvent(\'\\(eventName)\', \'\\(target)\'); } }, { once: true }); }")'
-  )
-  .replace(
-    'self.eval(js: "window.Capacitor.triggerEvent(\'\\(eventName)\', \'\\(target)\', \\(data))")',
-    'self.eval(js: "if (window.Capacitor && typeof window.Capacitor.triggerEvent === \'function\') { window.Capacitor.triggerEvent(\'\\(eventName)\', \'\\(target)\', \\(data)); } else { window.addEventListener(\'load\', function () { if (window.Capacitor && typeof window.Capacitor.triggerEvent === \'function\') { window.Capacitor.triggerEvent(\'\\(eventName)\', \'\\(target)\', \\(data)); } }, { once: true }); }")'
-  );
-
-if (patched !== source) {
-  writeFileSync(bridgePath, patched);
-  patchedFiles += 1;
-}
-
-if (existsSync(cordovaPluginManagerPath)) {
-  const cordovaSource = readFileSync(cordovaPluginManagerPath, 'utf8');
-  const cordovaPatched = cordovaSource
-    .replace('@"window.Capacitor.triggerEvent(\'pause\', \'document\');"', `@"${guardedPause}"`)
-    .replace('@"window.Capacitor.triggerEvent(\'resume\', \'document\');"', `@"${guardedResume}"`);
-  if (cordovaPatched !== cordovaSource) {
-    writeFileSync(cordovaPluginManagerPath, cordovaPatched);
-    patchedFiles += 1;
-  }
-}
-
-if (patchedFiles === 0 && !source.includes('window.Capacitor && typeof window.Capacitor.triggerEvent')) {
-  console.error('[patch-capacitor-ios] Expected iOS bridge triggerEvent lines were not found.');
-  process.exit(1);
-}
-
-console.log(`[patch-capacitor-ios] Verified safe Capacitor iOS event dispatch (${patchedFiles} file${patchedFiles === 1 ? '' : 's'} patched).`);
+console.log(`[patch-capacitor-ios] Verified safe Capacitor iOS event dispatch in ${verifiedFiles.length} file${verifiedFiles.length === 1 ? '' : 's'}.`);
