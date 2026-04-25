@@ -349,6 +349,12 @@ const StoreDetail = () => {
   const availableCategories = Object.entries(productsByCategory).filter(([_, items]) => items.length > 0).map(([cat]) => cat);
   const defaultCategory = availableCategories.length > 0 ? availableCategories[0] : "beer";
 
+  // Always reset the sticky category tab bar to the first tab on load / store change
+  useEffect(() => {
+    if (tabsListRef.current) tabsListRef.current.scrollLeft = 0;
+    window.scrollTo({ top: 0 });
+  }, [id, availableCategories.join(",")]);
+
   const getQuantity = (productId: string) => quantities[productId] || 0;
   const updateQuantity = (productId: string, delta: number) => {
     setQuantities((prev) => ({ ...prev, [productId]: Math.max(0, (prev[productId] || 0) + delta) }));
