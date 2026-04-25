@@ -22,6 +22,7 @@ const Header = () => {
   const { cartItems } = useCart();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const isNative = useIsNative();
   const navigate = useNavigate();
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
