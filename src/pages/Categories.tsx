@@ -33,7 +33,7 @@ const Categories = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Coral header */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-5 pt-5 pb-16 max-w-2xl">
+        <div className="container mx-auto px-5 pt-4 pb-10 max-w-2xl">
           {/* Top bar: hamburger + chat */}
           <div className="flex items-center justify-between mb-6">
             <button
