@@ -579,7 +579,7 @@ const StoreDetail = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Tabs defaultValue={defaultCategory} className="w-full" onValueChange={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <Tabs defaultValue={defaultCategory} className="w-full">
               {/* Search bar + manual add */}
               <div className="max-w-3xl mx-auto mb-5 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                 <div className="relative flex-1">
@@ -604,7 +604,7 @@ const StoreDetail = () => {
                 </div>
                 <ManualItemDialog storeId={store.id} storeName={store.name} />
               </div>
-              <TabsList className={`sticky top-16 z-30 mb-6 w-full justify-start sm:justify-center overflow-x-auto flex-nowrap h-auto p-1.5 gap-1 bg-background/95 backdrop-blur-md border border-border/50 shadow-sm rounded-xl ${availableCategories.length <= 1 ? "hidden" : ""}`}>
+              <TabsList className={`mb-6 w-full justify-start sm:justify-center overflow-x-auto flex-nowrap h-auto p-1.5 gap-1 bg-background/95 border border-border/50 shadow-sm rounded-xl ${availableCategories.length <= 1 ? "hidden" : ""}`}>
                 {availableCategories.includes("beer") && (
                   <TabsTrigger value="beer" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
