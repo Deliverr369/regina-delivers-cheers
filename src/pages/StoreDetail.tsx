@@ -574,7 +574,7 @@ const StoreDetail = () => {
         </div>
 
         {/* Products */}
-        <div className="container mx-auto px-4 py-6">
+        <div className={isNative ? "px-3 pt-3 pb-4" : "container mx-auto px-4 py-6"}>
           {id === SUPERSTORE_ID ? (
             <SuperstoreRequestForm storeId={store.id} storeName={store.name} />
           ) : productsLoading ? (
@@ -583,8 +583,10 @@ const StoreDetail = () => {
             </div>
           ) : (
             <Tabs defaultValue={defaultCategory} className="w-full">
+              {/* Sticky on iOS so user can switch stores/categories mid-scroll */}
+              <div className={isNative ? "sticky top-16 z-30 bg-background/95 backdrop-blur-md -mx-3 px-3 pb-2 border-b border-border" : ""}>
               {/* Search bar + manual add */}
-              <div className="max-w-3xl mx-auto mb-5 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+              <div className={`flex gap-2 items-stretch sm:items-center ${isNative ? "mb-2" : "max-w-3xl mx-auto mb-5 flex-col sm:flex-row"}`}>
                 <div className="relative flex-1">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
@@ -592,7 +594,7 @@ const StoreDetail = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search products in this store..."
-                    className="pl-10 pr-10 h-11 rounded-full bg-card border-border shadow-sm w-full"
+                    className={`pl-10 pr-10 rounded-full bg-card border-border shadow-sm w-full ${isNative ? "h-9 text-sm" : "h-11"}`}
                   />
                   {searchQuery && (
                     <button
