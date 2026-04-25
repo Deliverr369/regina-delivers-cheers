@@ -16,7 +16,7 @@ const Index = () => {
   if (loading) return null;
 
   if (user) {
-    return <Navigate to="/stores" replace />;
+    return <Navigate to="/categories" replace />;
   }
 
   return (
