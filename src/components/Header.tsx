@@ -34,11 +34,11 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/80">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-3 sm:px-4 max-w-full">
+        <div className="flex items-center justify-between h-16 gap-2 min-w-0">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img src={logo} alt="Deliverr" className="h-7 md:h-8" />
+          <Link to="/" className="flex items-center shrink-0 min-w-0">
+            <img src={logo} alt="Deliverr" className="h-7 md:h-8 w-auto max-w-[140px] object-contain" />
           </Link>
 
           {/* Desktop Nav */}
@@ -52,7 +52,7 @@ const Header = () => {
           </nav>
 
           {/* Right Side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground">
                 <ShoppingCart className="h-[18px] w-[18px]" />
