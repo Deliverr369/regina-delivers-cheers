@@ -66,7 +66,7 @@ const Stores = () => {
   ];
 
   const tabs = [
-    { id: "liquor" as const, label: "Liquor stores", icon: tabLiquor },
+    { id: "liquor" as const, label: "Liquor", icon: tabLiquor },
     { id: "smoke" as const, label: "Smoke & Vape", icon: tabSmoke },
     { id: "pharmacy" as const, label: "Pharmacy", icon: tabPharmacy },
     { id: "takeout" as const, label: "Takeout", icon: tabTakeout },
