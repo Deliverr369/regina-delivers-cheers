@@ -2,13 +2,15 @@ import { Link } from "react-router-dom";
 import { Package, Clock, MapPin, Loader2, ShoppingBag, ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsNative } from "@/hooks/useIsNative";
+import { useReorder } from "@/hooks/useReorder";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
+import PullToRefresh from "@/components/PullToRefresh";
 
 const statusConfig: Record<string, { bg: string; label: string }> = {
   pending: { bg: "bg-amber-500", label: "Pending" },
