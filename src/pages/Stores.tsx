@@ -128,41 +128,74 @@ const Stores = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-20 pb-16">
+      <main className={`pb-16 ${isNative ? "pt-16 safe-top" : "pt-20"}`}>
         {/* Delivery Address Banner */}
         {deliveryAddress && (
-          <div className="bg-primary/10 border-b border-primary/20">
-            <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-muted-foreground">Delivering to:</span>
-                <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+          isNative ? (
+            // iOS: compact single-line bar, neutral background
+            <div className="bg-muted/50 border-b border-border">
+              <div className="px-4 py-2 flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="flex-1 text-[13px] font-medium text-foreground truncate">
+                  {deliveryAddress}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeliveryAddress("");
+                    localStorage.removeItem("delivery_address");
+                  }}
+                  className="text-[12px] font-semibold text-primary shrink-0 px-1"
+                >
+                  Change
+                </button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-foreground shrink-0"
-                onClick={() => {
-                  setDeliveryAddress("");
-                  localStorage.removeItem("delivery_address");
-                }}
-              >
-                Change
-              </Button>
             </div>
-          </div>
+          ) : (
+            <div className="bg-primary/10 border-b border-primary/20">
+              <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-muted-foreground">Delivering to:</span>
+                  <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+                  onClick={() => {
+                    setDeliveryAddress("");
+                    localStorage.removeItem("delivery_address");
+                  }}
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
+          )
         )}
         {/* Category Tabs */}
         <div className="bg-background border-b border-border">
-          <div className="container mx-auto px-4">
-            <div className="flex items-stretch justify-center gap-6 sm:gap-12 overflow-x-auto py-4">
+          <div className={isNative ? "px-2" : "container mx-auto px-4"}>
+            <div
+              ref={tabsScrollRef}
+              className={`flex items-stretch overflow-x-auto ${
+                isNative
+                  ? "justify-start gap-2 py-2"
+                  : "justify-center gap-6 sm:gap-12 py-4"
+              }`}
+            >
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className="group relative flex flex-col items-center gap-2 pt-2 pb-3 min-w-[110px] sm:min-w-[140px]"
+                    className={`group relative flex flex-col items-center ${
+                      isNative
+                        ? "gap-1 pt-1 pb-2 min-w-[72px]"
+                        : "gap-2 pt-2 pb-3 min-w-[110px] sm:min-w-[140px]"
+                    }`}
                   >
                     <img
                       src={tab.icon}
@@ -170,12 +203,14 @@ const Stores = () => {
                       loading="lazy"
                       width={512}
                       height={512}
-                      className={`h-20 w-20 sm:h-24 sm:w-24 object-contain transition-transform duration-300 ${
-                        isActive ? "scale-105" : "group-hover:scale-105 opacity-90"
-                      }`}
+                      className={`object-contain transition-transform duration-300 ${
+                        isNative ? "h-12 w-12" : "h-20 w-20 sm:h-24 sm:w-24"
+                      } ${isActive ? "scale-105" : "group-hover:scale-105 opacity-90"}`}
                     />
                     <span
-                      className={`font-display text-base sm:text-lg whitespace-nowrap transition-colors ${
+                      className={`font-display whitespace-nowrap transition-colors ${
+                        isNative ? "text-[11px]" : "text-base sm:text-lg"
+                      } ${
                         isActive
                           ? "font-bold text-primary"
                           : "font-semibold text-foreground/80 group-hover:text-foreground"
@@ -185,7 +220,7 @@ const Stores = () => {
                     </span>
                     <span
                       className={`absolute -bottom-px left-1/2 -translate-x-1/2 h-[3px] rounded-full bg-primary transition-all duration-300 ${
-                        isActive ? "w-16 opacity-100" : "w-0 opacity-0"
+                        isActive ? (isNative ? "w-8 opacity-100" : "w-16 opacity-100") : "w-0 opacity-0"
                       }`}
                     />
                   </button>
