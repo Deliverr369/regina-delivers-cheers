@@ -515,7 +515,7 @@ const StoreDetail = () => {
             <Link to="/stores"><Button className="rounded-full">Back to Stores</Button></Link>
           </div>
         </main>
-        <Footer />
+        {!isNative && <Footer />}
       </div>
     );
   }
@@ -901,7 +901,7 @@ const StoreDetail = () => {
       </main>
 
 
-      <Footer />
+      {!isNative && <Footer />}
 
       <ProductDetailModal
         productId={openProductId}
