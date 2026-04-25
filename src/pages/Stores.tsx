@@ -471,12 +471,23 @@ const Stores = () => {
           )}
 
           {!isLoading && filteredStores.length === 0 && (
-            <div className="text-center py-20">
+            <div className="text-center py-16">
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <Store className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="font-display text-lg font-bold text-foreground mb-1">No stores found</h3>
-              <p className="text-muted-foreground text-sm">Try adjusting your search or filters</p>
+              {tabFilteredStores.length === 0 ? (
+                <>
+                  <h3 className="font-display text-lg font-bold text-foreground mb-1">Coming soon to Regina</h3>
+                  <p className="text-muted-foreground text-sm px-6">
+                    We're working hard to bring this category to Deliverr. Check back soon!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="font-display text-lg font-bold text-foreground mb-1">No stores found</h3>
+                  <p className="text-muted-foreground text-sm">Try adjusting your search or filters</p>
+                </>
+              )}
             </div>
           )}
         </div>
