@@ -9,6 +9,7 @@ import { join } from 'node:path';
 // AppDelegate lifecycle hooks so Capacitor plugins keep working.
 
 const iosAppRoot = join(process.cwd(), 'ios', 'App', 'App');
+const iosRoot = join(process.cwd(), 'ios');
 
 const sceneDelegateSwift = `import UIKit
 import Capacitor
@@ -111,14 +112,17 @@ function patchAppDelegate() {
 }
 
 function writeSceneDelegate() {
-  if (!existsSync(iosAppRoot)) return false;
-  const scenePath = join(iosAppRoot, 'SceneDelegate.swift');
-  if (existsSync(scenePath)) {
-    // overwrite to keep up to date
+  if (!existsSync(iosRoot)) return false;
+  const scenePaths = new Set(collectFiles(iosRoot, 'SceneDelegate.swift'));
+  if (existsSync(iosAppRoot)) scenePaths.add(join(iosAppRoot, 'SceneDelegate.swift'));
+  if (scenePaths.size === 0) return false;
+
+  for (const scenePath of scenePaths) {
+    // Always overwrite stale local copies. Older versions referenced
+    // NSNotification.Name.capacitorStatusBarTappedNotification, which no
+    // longer exists in current Capacitor iOS and breaks Xcode builds.
     writeFileSync(scenePath, sceneDelegateSwift);
-    return true;
   }
-  writeFileSync(scenePath, sceneDelegateSwift);
   return true;
 }
 
@@ -164,8 +168,8 @@ function patchPbxproj() {
 }
 
 function applyUISceneAdoption() {
-  if (!existsSync(iosAppRoot)) {
-    console.log('[patch-capacitor-ios] No ios/App/App directory; skipping UIScene adoption.');
+  if (!existsSync(iosRoot)) {
+    console.log('[patch-capacitor-ios] No ios directory; skipping UIScene adoption.');
     return;
   }
   const sceneWritten = writeSceneDelegate();
