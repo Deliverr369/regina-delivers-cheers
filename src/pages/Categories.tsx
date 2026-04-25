@@ -33,7 +33,7 @@ const Categories = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Coral header */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-5 pt-5 pb-16 max-w-2xl">
+        <div className="container mx-auto px-5 pt-4 pb-10 max-w-2xl">
           {/* Top bar: hamburger + chat */}
           <div className="flex items-center justify-between mb-6">
             <button
@@ -51,45 +51,42 @@ const Categories = () => {
             </button>
           </div>
 
-          {/* Address row */}
+          {/* Address row — single clean line */}
           <button
             onClick={() => navigate("/")}
-            className="flex items-start gap-2 text-left w-full group mb-8"
+            className="flex items-center gap-2 text-left w-full group mb-6 bg-white/10 hover:bg-white/15 rounded-full px-4 py-2.5 transition"
           >
-            <MapPin className="h-5 w-5 mt-0.5 shrink-0 fill-white" />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-bold tracking-wide opacity-95">HOME</div>
-              <div className="text-sm font-semibold truncate uppercase opacity-95">
-                {address || "Add your delivery address"}
-              </div>
-            </div>
-            <ChevronDown className="h-5 w-5 mt-1 shrink-0" strokeWidth={2.5} />
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-semibold truncate flex-1">
+              {address || "Add your delivery address"}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2.5} />
           </button>
 
-          <h1 className="text-2xl md:text-3xl font-normal leading-snug">
+          <h1 className="text-xl md:text-2xl font-normal leading-snug">
             Where would you like to shop today?
           </h1>
         </div>
       </div>
 
       {/* Category circles grid */}
-      <div className="container mx-auto px-5 -mt-12 max-w-2xl flex-1">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 pb-10">
+      <div className="container mx-auto px-5 -mt-8 max-w-md flex-1">
+        <div className="grid grid-cols-3 gap-x-4 gap-y-7 pb-8">
           {categories.map((cat) => (
             <Link
               key={cat.id}
               to={cat.to}
               className="flex flex-col items-center group focus:outline-none"
             >
-              <div className="relative aspect-square w-full rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
+              <div className="relative aspect-square w-full max-w-[88px] rounded-full bg-white shadow-[0_6px_18px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="relative w-[72%] h-[72%] object-contain"
+                  className="relative w-[70%] h-[70%] object-contain"
                   loading="lazy"
                 />
               </div>
-              <span className="mt-4 text-base font-bold text-foreground text-center">
+              <span className="mt-2 text-xs font-semibold text-foreground text-center leading-tight">
                 {cat.name}
               </span>
             </Link>
