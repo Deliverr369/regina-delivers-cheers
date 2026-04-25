@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import { useIsNative } from "@/hooks/useIsNative";
 import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2 } from "lucide-react";
 
 interface ProfileData {
