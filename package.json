@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/patch-capacitor-ios.mjs && vite build",
     "build:dev": "vite build --mode development",
     "capacitor:copy:before": "node scripts/patch-capacitor-ios.mjs",
     "capacitor:copy:after": "node scripts/patch-capacitor-ios.mjs",
