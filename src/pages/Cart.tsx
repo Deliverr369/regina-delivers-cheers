@@ -3,12 +3,14 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ArrowLeft } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/hooks/useCart";
+import { haptics } from "@/lib/haptics";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
+import PromoCodeInput from "@/components/PromoCodeInput";
 
 const Cart = () => {
-  const { cartItems, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, getCartTotal, clearCart, getDiscountAmount, appliedPromo } = useCart();
 
   const subtotal = getCartTotal();
   const getStoreFee = (name: string) => {
@@ -23,9 +25,11 @@ const Cart = () => {
   );
   const deliveryFee = uniqueStores.reduce((sum, [, name]) => sum + getStoreFee(name), 0);
   const storeCount = uniqueStores.length;
-  const convenienceFee = subtotal * 0.12;
-  const tax = subtotal * 0.11;
-  const total = subtotal + deliveryFee + convenienceFee + tax;
+  const discount = getDiscountAmount();
+  const discountedSubtotal = Math.max(0, subtotal - discount);
+  const convenienceFee = discountedSubtotal * 0.12;
+  const tax = discountedSubtotal * 0.11;
+  const total = discountedSubtotal + deliveryFee + convenienceFee + tax;
 
   if (cartItems.length === 0) {
     return (
@@ -100,11 +104,11 @@ const Cart = () => {
                     </div>
                     <div className="flex items-center justify-between mt-2 gap-2">
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <Button variant="outline" size="icon" className="h-8 w-8 active:scale-95 transition-transform" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 active:scale-95 transition-transform" onClick={() => { haptics.light(); updateQuantity(item.id, item.quantity - 1); }}>
                           <Minus className="h-3 w-3" />
                         </Button>
                         <span className="font-semibold w-6 text-center text-sm tabular-nums">{item.quantity}</span>
-                        <Button variant="outline" size="icon" className="h-8 w-8 active:scale-95 transition-transform" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 active:scale-95 transition-transform" onClick={() => { haptics.light(); updateQuantity(item.id, item.quantity + 1); }}>
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
@@ -135,10 +139,19 @@ const Cart = () => {
                       </div>
                     )}
                   </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between gap-2 text-success text-sm font-medium">
+                      <span>Discount ({appliedPromo?.code})</span>
+                      <span className="tabular-nums shrink-0">−${discount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span className="tabular-nums shrink-0">${convenienceFee.toFixed(2)}</span></div>
                   <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Tax (GST + PST)</span><span className="tabular-nums shrink-0">${tax.toFixed(2)}</span></div>
                   <Separator />
                   <div className="flex justify-between gap-2 font-bold text-foreground text-base"><span>Total</span><span className="tabular-nums shrink-0">${total.toFixed(2)}</span></div>
+                </div>
+                <div className="mb-4">
+                  <PromoCodeInput />
                 </div>
                 <PriceDisclaimer variant="subtle" className="mb-4" />
                 <Link to="/checkout" className="hidden lg:block">

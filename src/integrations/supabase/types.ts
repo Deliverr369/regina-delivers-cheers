@@ -71,6 +71,27 @@ export type Database = {
         }
         Relationships: []
       }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       image_match_jobs: {
         Row: {
           batch_size: number
@@ -410,6 +431,7 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           delivery_postal_code: string | null
+          discount_amount: number
           estimated_subtotal: number | null
           estimated_total: number | null
           final_confirmed_at: string | null
@@ -419,6 +441,7 @@ export type Database = {
           id: string
           payment_method: string | null
           payment_status: string | null
+          promo_code: string | null
           status: Database["public"]["Enums"]["order_status"] | null
           store_id: string | null
           stripe_payment_intent_id: string | null
@@ -437,6 +460,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_postal_code?: string | null
+          discount_amount?: number
           estimated_subtotal?: number | null
           estimated_total?: number | null
           final_confirmed_at?: string | null
@@ -446,6 +470,7 @@ export type Database = {
           id?: string
           payment_method?: string | null
           payment_status?: string | null
+          promo_code?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           store_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -464,6 +489,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_postal_code?: string | null
+          discount_amount?: number
           estimated_subtotal?: number | null
           estimated_total?: number | null
           final_confirmed_at?: string | null
@@ -473,6 +499,7 @@ export type Database = {
           id?: string
           payment_method?: string | null
           payment_status?: string | null
+          promo_code?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           store_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -676,6 +703,89 @@ export type Database = {
           subtitle?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      promo_code_redemptions: {
+        Row: {
+          created_at: string
+          discount_amount: number
+          id: string
+          order_id: string
+          promo_code_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discount_amount: number
+          id?: string
+          order_id: string
+          promo_code_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          order_id?: string
+          promo_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_amount: number
+          one_per_customer: boolean
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number
+          one_per_customer?: boolean
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number
+          one_per_customer?: boolean
+          updated_at?: string
+          use_count?: number
         }
         Relationships: []
       }
