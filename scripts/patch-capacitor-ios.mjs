@@ -114,12 +114,9 @@ function removeLegacyUISceneAdoption() {
     console.log('[patch-capacitor-ios] No ios directory; skipping legacy UIScene cleanup.');
     return;
   }
-  const sceneRemoved = removeGeneratedSceneDelegates();
-  const plistPatched = removeSceneManifestFromInfoPlist();
-  const appDelegatePatched = removeSceneHooksFromAppDelegate();
-  const pbxPatched = removeSceneDelegateFromPbxproj();
+  const sceneRewritten = rewriteGeneratedSceneDelegates();
   console.log(
-    `[patch-capacitor-ios] Legacy UIScene cleanup: SceneDelegateRemoved=${sceneRemoved} Info.plist=${plistPatched} AppDelegate=${appDelegatePatched} project.pbxproj=${pbxPatched}`
+    `[patch-capacitor-ios] Legacy UIScene cleanup: SceneDelegateRewritten=${sceneRewritten}`
   );
   verifyNoStaleIOSNotificationReferences();
 }
