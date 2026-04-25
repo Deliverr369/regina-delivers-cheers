@@ -156,5 +156,5 @@ if (foundFiles === 0) {
   console.log(`[patch-capacitor-ios] Verified safe Capacitor iOS event dispatch in ${verifiedFiles.length} file${verifiedFiles.length === 1 ? '' : 's'}.`);
 }
 
-applyUISceneAdoption();
+removeLegacyUISceneAdoption();
 
