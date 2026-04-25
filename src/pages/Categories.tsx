@@ -51,22 +51,19 @@ const Categories = () => {
             </button>
           </div>
 
-          {/* Address row */}
+          {/* Address row — single clean line */}
           <button
             onClick={() => navigate("/")}
-            className="flex items-start gap-2 text-left w-full group mb-8"
+            className="flex items-center gap-2 text-left w-full group mb-6 bg-white/10 hover:bg-white/15 rounded-full px-4 py-2.5 transition"
           >
-            <MapPin className="h-5 w-5 mt-0.5 shrink-0 fill-white" />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-bold tracking-wide opacity-95">HOME</div>
-              <div className="text-sm font-semibold truncate uppercase opacity-95">
-                {address || "Add your delivery address"}
-              </div>
-            </div>
-            <ChevronDown className="h-5 w-5 mt-1 shrink-0" strokeWidth={2.5} />
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-semibold truncate flex-1">
+              {address || "Add your delivery address"}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2.5} />
           </button>
 
-          <h1 className="text-2xl md:text-3xl font-normal leading-snug">
+          <h1 className="text-xl md:text-2xl font-normal leading-snug">
             Where would you like to shop today?
           </h1>
         </div>
