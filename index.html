@@ -24,6 +24,9 @@
   <script>
     (function () {
       var pendingEvents = [];
+      var capacitorBridge = window.Capacitor || {};
+      var nativeTriggerEvent = typeof capacitorBridge.triggerEvent === "function" ? capacitorBridge.triggerEvent : null;
+      var flushTimer = null;
 
       function createEvent(eventName, eventData) {
         var event = document.createEvent("Events");
@@ -57,43 +60,69 @@
       }
 
       function flushPending() {
+        if (!isBridgeReady()) return;
         while (pendingEvents.length) {
           var args = pendingEvents.shift();
-          dispatch.apply(null, args);
+          guardedTriggerEvent.apply(null, args);
         }
+      }
+
+      function scheduleFlush() {
+        if (flushTimer) window.clearTimeout(flushTimer);
+        flushTimer = window.setTimeout(function () {
+          flushTimer = null;
+          install();
+          flushPending();
+          if (pendingEvents.length) scheduleFlush();
+        }, document.readyState === "complete" ? 100 : 300);
       }
 
       function guardedTriggerEvent(eventName, target, eventData) {
         if (!isBridgeReady()) {
           pendingEvents.push([eventName, target, eventData]);
+          scheduleFlush();
           return false;
+        }
+        if (typeof nativeTriggerEvent === "function" && nativeTriggerEvent !== guardedTriggerEvent) {
+          try { return nativeTriggerEvent.call(window.Capacitor, eventName, target, eventData); }
+          catch (e) { return dispatch(eventName, target, eventData); }
         }
         return dispatch(eventName, target, eventData);
       }
 
       function install() {
-        window.Capacitor = window.Capacitor || {};
-        if (!window.Capacitor.createEvent) window.Capacitor.createEvent = createEvent;
-        // Always wrap triggerEvent so calls before bridge-ready are queued instead of throwing.
-        var native = window.Capacitor.triggerEvent;
-        window.Capacitor.triggerEvent = function (eventName, target, eventData) {
-          if (!isBridgeReady()) {
-            pendingEvents.push([eventName, target, eventData]);
-            return false;
-          }
-          if (typeof native === "function" && native !== window.Capacitor.triggerEvent) {
-            try { return native.call(window.Capacitor, eventName, target, eventData); }
-            catch (e) { return dispatch(eventName, target, eventData); }
-          }
-          return dispatch(eventName, target, eventData);
-        };
+        var current = window.Capacitor || {};
+        if (current !== capacitorBridge) Object.assign(capacitorBridge, current);
+        if (typeof current.triggerEvent === "function" && current.triggerEvent !== guardedTriggerEvent) nativeTriggerEvent = current.triggerEvent;
+        capacitorBridge.createEvent = capacitorBridge.createEvent || createEvent;
+        capacitorBridge.triggerEvent = guardedTriggerEvent;
+        window.Capacitor = capacitorBridge;
       }
+
+      try {
+        Object.defineProperty(window, "Capacitor", {
+          configurable: true,
+          get: function () { return capacitorBridge; },
+          set: function (nextBridge) {
+            if (nextBridge && typeof nextBridge === "object") {
+              if (typeof nextBridge.triggerEvent === "function" && nextBridge.triggerEvent !== guardedTriggerEvent) {
+                nativeTriggerEvent = nextBridge.triggerEvent;
+              }
+              Object.assign(capacitorBridge, nextBridge);
+            }
+            capacitorBridge.createEvent = capacitorBridge.createEvent || createEvent;
+            capacitorBridge.triggerEvent = guardedTriggerEvent;
+            scheduleFlush();
+          }
+        });
+      } catch (e) {}
 
       install();
       // Re-assert after the native bridge may have replaced window.Capacitor,
       // and flush any queued events once WKWebView finishes loading.
       document.addEventListener("DOMContentLoaded", function () { install(); flushPending(); });
       window.addEventListener("load", function () { install(); flushPending(); });
+      window.addEventListener("pageshow", function () { install(); flushPending(); });
     })();
   </script>
 </head>
