@@ -204,6 +204,24 @@ function collectFiles(root, fileName, results = []) {
   return results;
 }
 
+function collectSwiftFiles(root, results = []) {
+  if (!existsSync(root)) return results;
+  for (const entry of readdirSync(root)) {
+    const fullPath = join(root, entry);
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) collectSwiftFiles(fullPath, results);
+    else if (entry.endsWith('.swift')) results.push(fullPath);
+  }
+  return results;
+}
+
+function verifyNoStaleIOSNotificationReferences() {
+  const staleFiles = collectSwiftFiles(iosRoot).filter((path) => readFileSync(path, 'utf8').includes(staleStatusBarNotificationToken));
+  if (staleFiles.length === 0) return;
+  console.error(`[patch-capacitor-ios] Stale Capacitor status-bar notification reference remains in: ${staleFiles.join(', ')}`);
+  process.exit(1);
+}
+
 function patchSwiftBridge(path) {
   const source = readFileSync(path, 'utf8');
   const patched = source
