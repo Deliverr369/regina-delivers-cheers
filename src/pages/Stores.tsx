@@ -324,10 +324,10 @@ const Stores = () => {
                 <Link
                   key={store.id}
                   to={`/stores/${store.id}`}
-                  className="group bg-card rounded-2xl overflow-hidden border border-border card-hover"
+                  className={`group bg-card overflow-hidden border border-border card-hover ${isNative ? "rounded-xl shadow-sm" : "rounded-2xl"}`}
                 >
                   {/* Hero - storefront photo (liquor) or brand logo (others) */}
-                  <div className={`relative h-44 overflow-hidden ${useStorefrontLayout && heroSrc ? "" : "bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center"}`}>
+                  <div className={`relative overflow-hidden ${isNative ? "h-28" : "h-44"} ${useStorefrontLayout && heroSrc ? "" : "bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center"}`}>
                     {useStorefrontLayout && heroSrc ? (
                       <>
                         <img
@@ -359,9 +359,9 @@ const Stores = () => {
                     </div>
                   </div>
 
-                  {/* Content - overlapping logo only for liquor storefront layout */}
-                  <div className={`relative p-5 ${useStorefrontLayout && heroSrc ? "pt-7" : ""}`}>
-                    {useStorefrontLayout && heroSrc && store.image_url && (
+                  {/* Content - overlapping logo only for liquor storefront layout (web) */}
+                  <div className={`relative ${isNative ? "p-3" : "p-5"} ${useStorefrontLayout && heroSrc && !isNative ? "pt-7" : ""}`}>
+                    {useStorefrontLayout && heroSrc && store.image_url && !isNative && (
                       <div className="absolute -top-8 left-5 h-16 w-16 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center overflow-hidden">
                         <img
                           src={store.image_url}
@@ -370,22 +370,24 @@ const Stores = () => {
                         />
                       </div>
                     )}
-                    <h3 className={`font-display text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors truncate ${useStorefrontLayout && heroSrc ? "pl-20" : ""}`}>
+                    <h3 className={`font-display font-bold text-foreground mb-1 group-hover:text-primary transition-colors truncate ${
+                      isNative
+                        ? "text-sm"
+                        : `text-lg mb-1.5 ${useStorefrontLayout && heroSrc ? "pl-20" : ""}`
+                    }`}>
                       {store.name}
                     </h3>
 
-                    <div className="flex items-center justify-between pt-3 mt-2 border-t border-border">
-                      <div className="flex items-center gap-1.5">
-                        <Star className="h-4 w-4 fill-gold text-gold" />
-                        <span className="font-semibold text-foreground text-sm">{store.rating}</span>
-                        <span className="text-muted-foreground text-xs">({store.reviews_count})</span>
+                    <div className={`flex items-center gap-2 ${isNative ? "text-xs text-muted-foreground" : "justify-between pt-3 mt-2 border-t border-border"}`}>
+                      <div className="flex items-center gap-1">
+                        <Star className={`fill-gold text-gold ${isNative ? "h-3 w-3" : "h-4 w-4"}`} />
+                        <span className={`font-semibold text-foreground ${isNative ? "text-xs" : "text-sm"}`}>{store.rating}</span>
+                        {!isNative && <span className="text-muted-foreground text-xs">({store.reviews_count})</span>}
                       </div>
-                      
-                      <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {store.delivery_time}
-                        </span>
+                      {isNative && <span aria-hidden>•</span>}
+                      <div className={`flex items-center gap-1 text-muted-foreground ${isNative ? "text-xs" : "gap-3 text-sm"}`}>
+                        <Clock className={isNative ? "h-3 w-3" : "h-3.5 w-3.5"} />
+                        {store.delivery_time}
                       </div>
                     </div>
                   </div>
