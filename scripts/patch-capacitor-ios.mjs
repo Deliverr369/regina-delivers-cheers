@@ -50,14 +50,20 @@ function patchCordovaManager(path) {
 
 const bridgePaths = roots.flatMap((root) => collectFiles(root, bridgeFileName));
 const cordovaPaths = roots.flatMap((root) => collectFiles(root, cordovaFileName));
+const foundFiles = bridgePaths.length + cordovaPaths.length;
 const verifiedFiles = [
   ...bridgePaths.filter(patchSwiftBridge),
   ...cordovaPaths.filter(patchCordovaManager),
 ];
 
-if (verifiedFiles.length === 0) {
+if (foundFiles === 0) {
   console.warn('[patch-capacitor-ios] No Capacitor iOS bridge files found; skipping.');
   process.exit(0);
+}
+
+if (verifiedFiles.length !== foundFiles) {
+  console.error(`[patch-capacitor-ios] Patched ${verifiedFiles.length}/${foundFiles} Capacitor iOS bridge files. Please check changed Capacitor source format.`);
+  process.exit(1);
 }
 
 console.log(`[patch-capacitor-ios] Verified safe Capacitor iOS event dispatch in ${verifiedFiles.length} file${verifiedFiles.length === 1 ? '' : 's'}.`);
