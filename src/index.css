@@ -99,12 +99,38 @@
     @apply border-border;
   }
 
+  /* Global overflow & responsive guards — prevents horizontal scrolling on every screen */
+  html, body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100vw;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply font-sans antialiased;
+  }
+
+  /* Allow flex/grid children to shrink below content size so truncation works */
+  main, section, article, header, footer, aside, nav, div {
+    min-width: 0;
+  }
+
+  /* Images & media never overflow their container */
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display font-bold tracking-tight;
+  }
+
+  /* Tap targets — minimum 44px on touch devices */
+  @media (pointer: coarse) {
+    button, a[role="button"], [role="button"] {
+      min-height: 44px;
+    }
   }
 }
 
