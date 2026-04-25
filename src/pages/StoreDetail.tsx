@@ -609,7 +609,7 @@ const StoreDetail = () => {
                 </div>
                 <ManualItemDialog storeId={store.id} storeName={store.name} />
               </div>
-              <TabsList className={`mb-6 w-full justify-start sm:justify-center overflow-x-auto flex-nowrap h-auto p-1.5 gap-1 bg-background/95 border border-border/50 shadow-sm rounded-xl ${availableCategories.length <= 1 ? "hidden" : ""}`}>
+              <TabsList className={`w-full justify-start sm:justify-center overflow-x-auto flex-nowrap h-auto bg-background/95 border border-border/50 shadow-sm rounded-xl ${isNative ? "mb-2 p-1 gap-0.5" : "mb-6 p-1.5 gap-1"} ${availableCategories.length <= 1 ? "hidden" : ""}`}>
                 {availableCategories.includes("beer") && (
                   <TabsTrigger value="beer" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
@@ -635,6 +635,7 @@ const StoreDetail = () => {
                   <TabsTrigger value="takeout" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍔 Menu ({productsByCategory.takeout.length})</TabsTrigger>
                 )}
               </TabsList>
+              </div>
 
               {Object.entries(productsByCategory)
                 .filter(([category]) => availableCategories.includes(category))
