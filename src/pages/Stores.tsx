@@ -292,7 +292,7 @@ const Stores = () => {
 
           {/* Loading State */}
           {isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"}`}>
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse">
                   <div className="h-44 bg-muted" />
@@ -308,7 +308,7 @@ const Stores = () => {
 
           {/* Stores Grid */}
           {!isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"}`}>
               {filteredStores.map((store) => {
                 const heroPerStore: Record<string, string> = {
                   "194b9050-c0b3-4d8a-af11-bb74a480c431": "/images/stores/costco-storefront.png", // Costco
