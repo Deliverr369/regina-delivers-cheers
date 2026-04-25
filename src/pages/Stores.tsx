@@ -128,124 +128,197 @@ const Stores = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className={`pb-16 ${isNative ? "pt-16 safe-top" : "pt-20"}`}>
-        {/* Delivery Address Banner */}
-        {deliveryAddress && (
-          isNative ? (
-            // iOS: compact single-line bar, neutral background
-            <div className="bg-muted/50 border-b border-border">
-              <div className="px-4 py-2 flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="flex-1 text-[13px] font-medium text-foreground truncate">
-                  {deliveryAddress}
-                </span>
+      <main className={`pb-16 ${isNative ? "pt-14 safe-top bg-background" : "pt-20"}`}>
+        {isNative ? (
+          <>
+            {/* iOS: Coral brand header (address + category icons) */}
+            <div className="bg-primary text-primary-foreground">
+              {/* Address row */}
+              {deliveryAddress ? (
                 <button
                   type="button"
                   onClick={() => {
                     setDeliveryAddress("");
                     localStorage.removeItem("delivery_address");
                   }}
-                  className="text-[12px] font-semibold text-primary shrink-0 px-1"
+                  className="w-full px-4 pt-3 pb-2 flex items-center gap-2 text-left active:opacity-80"
                 >
-                  Change
+                  <Home className="h-3.5 w-3.5 shrink-0 opacity-90" />
+                  <span className="text-[11px] font-bold tracking-wider opacity-90">HOME</span>
+                  <span className="opacity-60">·</span>
+                  <span className="flex-1 text-[13px] font-medium truncate">
+                    {deliveryAddress}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-90 shrink-0" />
                 </button>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-primary/10 border-b border-primary/20">
-              <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-muted-foreground">Delivering to:</span>
-                  <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+              ) : (
+                <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-[13px] opacity-90">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Set your delivery address</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-muted-foreground hover:text-foreground shrink-0"
-                  onClick={() => {
-                    setDeliveryAddress("");
-                    localStorage.removeItem("delivery_address");
-                  }}
-                >
-                  Change
-                </Button>
+              )}
+
+              {/* Category icons - horizontal scroll, all 6 tappable */}
+              <div
+                ref={tabsScrollRef}
+                className="flex items-stretch overflow-x-auto gap-1 px-3 pb-3 pt-1"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {tabs.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className="group flex flex-col items-center gap-1 min-w-[68px] py-1.5 px-1 active:opacity-80"
+                    >
+                      <div
+                        className={`h-12 w-12 rounded-full flex items-center justify-center transition-all ${
+                          isActive
+                            ? "bg-white shadow-md ring-2 ring-white/60"
+                            : "bg-white/95"
+                        }`}
+                      >
+                        <img
+                          src={tab.icon}
+                          alt=""
+                          loading="lazy"
+                          width={512}
+                          height={512}
+                          className="h-9 w-9 object-contain"
+                        />
+                      </div>
+                      <span
+                        className={`text-[10.5px] leading-tight text-center whitespace-nowrap ${
+                          isActive ? "font-bold" : "font-semibold opacity-90"
+                        }`}
+                      >
+                        {tab.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          )
-        )}
-        {/* Category Tabs */}
-        <div className="bg-background border-b border-border">
-          <div className={isNative ? "px-2" : "container mx-auto px-4"}>
-            <div
-              ref={tabsScrollRef}
-              className={`flex items-stretch overflow-x-auto ${
-                isNative
-                  ? "justify-start gap-2 py-2"
-                  : "justify-center gap-6 sm:gap-12 py-4"
-              }`}
-            >
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`group relative flex flex-col items-center ${
-                      isNative
-                        ? "gap-1 pt-1 pb-2 min-w-[72px]"
-                        : "gap-2 pt-2 pb-3 min-w-[110px] sm:min-w-[140px]"
-                    }`}
-                  >
-                    <img
-                      src={tab.icon}
-                      alt=""
-                      loading="lazy"
-                      width={512}
-                      height={512}
-                      className={`object-contain transition-transform duration-300 ${
-                        isNative ? "h-12 w-12" : "h-20 w-20 sm:h-24 sm:w-24"
-                      } ${isActive ? "scale-105" : "group-hover:scale-105 opacity-90"}`}
-                    />
-                    <span
-                      className={`font-display whitespace-nowrap transition-colors ${
-                        isNative ? "text-[11px]" : "text-base sm:text-lg"
-                      } ${
-                        isActive
-                          ? "font-bold text-primary"
-                          : "font-semibold text-foreground/80 group-hover:text-foreground"
-                      }`}
-                    >
-                      {tab.label}
-                    </span>
-                    <span
-                      className={`absolute -bottom-px left-1/2 -translate-x-1/2 h-[3px] rounded-full bg-primary transition-all duration-300 ${
-                        isActive ? (isNative ? "w-8 opacity-100" : "w-16 opacity-100") : "w-0 opacity-0"
-                      }`}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
 
-        {/* Page Header */}
-        <div className="bg-secondary/50 border-b border-border">
-          <div className={isNative ? "px-4 py-3" : "container mx-auto px-4 py-8 md:py-10"}>
-            <h1 className={`font-display font-bold text-foreground mb-1.5 ${isNative ? "text-lg" : "text-3xl md:text-4xl"}`}>
-              {activeTab === "liquor" && "Liquor Stores in Regina"}
-              {activeTab === "smoke" && "Smoke and Vape in Regina"}
-              {activeTab === "pharmacy" && "Pharmacies in Regina"}
-              {activeTab === "takeout" && "Takeout in Regina"}
-              {activeTab === "pet" && "Pet Supplies in Regina"}
-              {activeTab === "grocery" && "Grocery Stores in Regina"}
-            </h1>
-            <p className={`text-muted-foreground ${isNative ? "text-xs" : ""}`}>
-              {`Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "restaurant" : tabFilteredStores.length === 0 ? "spots" : activeTab === "takeout" ? "restaurants" : "stores"}`}
-            </p>
-          </div>
-        </div>
+            {/* iOS: Promo banner */}
+            <div className="px-4 pt-3">
+              <div className="rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/15 px-4 py-3 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <Truck className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-bold text-foreground leading-tight">FREE DELIVERY</p>
+                  <p className="text-[11.5px] text-muted-foreground leading-tight mt-0.5">On orders over $100</p>
+                </div>
+                <Tag className="h-4 w-4 text-primary/70 ml-auto shrink-0" />
+              </div>
+            </div>
+
+            {/* iOS: Section title */}
+            <div className="px-4 pt-4 pb-1">
+              <h1 className="text-[17px] font-display font-bold text-foreground">
+                {activeTab === "liquor" && "Featured Liquor Stores"}
+                {activeTab === "smoke" && "Smoke & Vape"}
+                {activeTab === "pharmacy" && "Pharmacies"}
+                {activeTab === "takeout" && "Takeout"}
+                {activeTab === "pet" && "Pet Supplies"}
+                {activeTab === "grocery" && "Grocery Stores"}
+              </h1>
+              <p className="text-[11.5px] text-muted-foreground mt-0.5">
+                {tabFilteredStores.length === 0
+                  ? "Coming soon to Regina"
+                  : `${tabFilteredStores.length} ${tabFilteredStores.length === 1 ? "spot" : "spots"} delivering near you`}
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Delivery Address Banner (web) */}
+            {deliveryAddress && (
+              <div className="bg-primary/10 border-b border-primary/20">
+                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground">Delivering to:</span>
+                    <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+                    onClick={() => {
+                      setDeliveryAddress("");
+                      localStorage.removeItem("delivery_address");
+                    }}
+                  >
+                    Change
+                  </Button>
+                </div>
+              </div>
+            )}
+            {/* Category Tabs (web) */}
+            <div className="bg-background border-b border-border">
+              <div className="container mx-auto px-4">
+                <div
+                  ref={tabsScrollRef}
+                  className="flex items-stretch overflow-x-auto justify-center gap-6 sm:gap-12 py-4"
+                >
+                  {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className="group relative flex flex-col items-center gap-2 pt-2 pb-3 min-w-[110px] sm:min-w-[140px]"
+                      >
+                        <img
+                          src={tab.icon}
+                          alt=""
+                          loading="lazy"
+                          width={512}
+                          height={512}
+                          className={`object-contain transition-transform duration-300 h-20 w-20 sm:h-24 sm:w-24 ${isActive ? "scale-105" : "group-hover:scale-105 opacity-90"}`}
+                        />
+                        <span
+                          className={`font-display whitespace-nowrap transition-colors text-base sm:text-lg ${
+                            isActive
+                              ? "font-bold text-primary"
+                              : "font-semibold text-foreground/80 group-hover:text-foreground"
+                          }`}
+                        >
+                          {tab.label}
+                        </span>
+                        <span
+                          className={`absolute -bottom-px left-1/2 -translate-x-1/2 h-[3px] rounded-full bg-primary transition-all duration-300 ${
+                            isActive ? "w-16 opacity-100" : "w-0 opacity-0"
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Page Header (web) */}
+            <div className="bg-secondary/50 border-b border-border">
+              <div className="container mx-auto px-4 py-8 md:py-10">
+                <h1 className="font-display font-bold text-foreground mb-1.5 text-3xl md:text-4xl">
+                  {activeTab === "liquor" && "Liquor Stores in Regina"}
+                  {activeTab === "smoke" && "Smoke and Vape in Regina"}
+                  {activeTab === "pharmacy" && "Pharmacies in Regina"}
+                  {activeTab === "takeout" && "Takeout in Regina"}
+                  {activeTab === "pet" && "Pet Supplies in Regina"}
+                  {activeTab === "grocery" && "Grocery Stores in Regina"}
+                </h1>
+                <p className="text-muted-foreground">
+                  {`Browse and order from ${tabFilteredStores.length} local ${tabFilteredStores.length === 1 ? "restaurant" : tabFilteredStores.length === 0 ? "spots" : activeTab === "takeout" ? "restaurants" : "stores"}`}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className={isNative ? "px-4 py-4" : "container mx-auto px-4 py-6"}>
           {/* Search and Filters */}
