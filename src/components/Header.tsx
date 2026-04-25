@@ -122,21 +122,27 @@ const Header = () => {
               </div>
             )}
 
-            {/* Mobile Menu */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden h-9 w-9 text-foreground"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            {/* Mobile Menu trigger */}
+            {isNative ? (
+              <div className="md:hidden">
+                <MobileDrawer />
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden h-9 w-9 text-foreground"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
+      {/* Mobile Menu (web only) */}
+      {!isNative && isMenuOpen && (
         <div className="md:hidden bg-background border-t border-border animate-fade-in">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
             {[
