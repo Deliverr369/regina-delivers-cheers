@@ -32,6 +32,7 @@ interface SavedCard {
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const isNative = useIsNative();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<ProfileData>({
