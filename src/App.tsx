@@ -23,6 +23,9 @@ import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import Onboarding from "./pages/Onboarding";
 import OnboardingGate from "./components/OnboardingGate";
+import AgeGate from "./components/AgeGate";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
@@ -49,6 +52,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <AgeGate />
             <OnboardingGate />
             <Routes>
               <Route path="/" element={<Index />} />
@@ -68,6 +72,8 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
 
               {/* Admin Dashboard */}
               <Route path="/dashboard" element={<DashboardLayout />}>
