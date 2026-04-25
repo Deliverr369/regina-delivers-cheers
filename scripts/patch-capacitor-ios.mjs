@@ -1,6 +1,184 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+// ---------- UIScene lifecycle adoption ----------
+// Capacitor's stock iOS template still uses the legacy UIApplicationDelegate
+// lifecycle. Modern iOS prints "UIScene lifecycle will soon be required" and
+// will eventually assert. We retrofit the generated `ios/App/App` project with
+// a SceneDelegate, register it in Info.plist, and forward the legacy
+// AppDelegate lifecycle hooks so Capacitor plugins keep working.
+
+const iosAppRoot = join(process.cwd(), 'ios', 'App', 'App');
+
+const sceneDelegateSwift = `import UIKit
+import Capacitor
+
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+        let window = UIWindow(windowScene: windowScene)
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        window.rootViewController = storyboard.instantiateInitialViewController()
+        self.window = window
+        window.makeKeyAndVisible()
+    }
+
+    func sceneDidDisconnect(_ scene: UIScene) {
+        NotificationCenter.default.post(name: .capacitorStatusBarTappedNotification, object: nil)
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    }
+
+    func sceneWillResignActive(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.willResignActiveNotification, object: nil)
+    }
+
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+    }
+
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.post(name: .capacitorDecidePolicyForNavigationAction, object: nil)
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let urlContext = URLContexts.first else { return }
+        let url = urlContext.url
+        ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+    }
+}
+`;
+
+const sceneManifestPlist = `    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <key>UIWindowSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>Default Configuration</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+                    <key>UISceneStoryboardFile</key>
+                    <string>Main</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
+`;
+
+function patchInfoPlist() {
+  const plistPath = join(iosAppRoot, 'Info.plist');
+  if (!existsSync(plistPath)) return false;
+  const source = readFileSync(plistPath, 'utf8');
+  if (source.includes('UIApplicationSceneManifest')) return true;
+  const patched = source.replace(/<\/dict>\s*<\/plist>\s*$/, `${sceneManifestPlist}</dict>\n</plist>\n`);
+  if (patched === source) return false;
+  writeFileSync(plistPath, patched);
+  return true;
+}
+
+function patchAppDelegate() {
+  const appDelegatePath = join(iosAppRoot, 'AppDelegate.swift');
+  if (!existsSync(appDelegatePath)) return false;
+  const source = readFileSync(appDelegatePath, 'utf8');
+  if (source.includes('configurationForConnecting')) return true;
+
+  const sceneHooks = `
+    // MARK: UISceneSession Lifecycle
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+    }
+
+    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
+    }
+`;
+
+  const patched = source.replace(/(\n\}\s*)$/, `${sceneHooks}$1`);
+  if (patched === source) return false;
+  writeFileSync(appDelegatePath, patched);
+  return true;
+}
+
+function writeSceneDelegate() {
+  if (!existsSync(iosAppRoot)) return false;
+  const scenePath = join(iosAppRoot, 'SceneDelegate.swift');
+  if (existsSync(scenePath)) {
+    // overwrite to keep up to date
+    writeFileSync(scenePath, sceneDelegateSwift);
+    return true;
+  }
+  writeFileSync(scenePath, sceneDelegateSwift);
+  return true;
+}
+
+function patchPbxproj() {
+  const pbxPath = join(process.cwd(), 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+  if (!existsSync(pbxPath)) return false;
+  const source = readFileSync(pbxPath, 'utf8');
+  if (source.includes('SceneDelegate.swift')) return true;
+
+  // Generate stable-ish 24-char hex ids
+  const fileRefId = 'A1B2C3D4E5F6A7B8C9D0E1F2';
+  const buildFileId = 'F2E1D0C9B8A7F6E5D4C3B2A1';
+
+  let patched = source;
+
+  // 1. PBXFileReference entry — inject after AppDelegate.swift file reference
+  patched = patched.replace(
+    /(\/\* AppDelegate\.swift \*\/ = \{isa = PBXFileReference;[^}]*\};)/,
+    `$1\n\t\t${fileRefId} /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };`
+  );
+
+  // 2. PBXBuildFile entry — inject after AppDelegate build file
+  patched = patched.replace(
+    /(\/\* AppDelegate\.swift in Sources \*\/ = \{isa = PBXBuildFile; fileRef = [0-9A-F]+ \/\* AppDelegate\.swift \*\/; \};)/,
+    `$1\n\t\t${buildFileId} /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ${fileRefId} /* SceneDelegate.swift */; };`
+  );
+
+  // 3. Add to App group children (group containing AppDelegate.swift)
+  patched = patched.replace(
+    /([0-9A-F]+ \/\* AppDelegate\.swift \*\/,)/,
+    `$1\n\t\t\t\t${fileRefId} /* SceneDelegate.swift */,`
+  );
+
+  // 4. Add to Sources build phase
+  patched = patched.replace(
+    /([0-9A-F]+ \/\* AppDelegate\.swift in Sources \*\/,)/,
+    `$1\n\t\t\t\t${buildFileId} /* SceneDelegate.swift in Sources */,`
+  );
+
+  if (patched === source) return false;
+  writeFileSync(pbxPath, patched);
+  return true;
+}
+
+function applyUISceneAdoption() {
+  if (!existsSync(iosAppRoot)) {
+    console.log('[patch-capacitor-ios] No ios/App/App directory; skipping UIScene adoption.');
+    return;
+  }
+  const sceneWritten = writeSceneDelegate();
+  const plistPatched = patchInfoPlist();
+  const appDelegatePatched = patchAppDelegate();
+  const pbxPatched = patchPbxproj();
+  console.log(
+    `[patch-capacitor-ios] UIScene adoption: SceneDelegate=${sceneWritten} Info.plist=${plistPatched} AppDelegate=${appDelegatePatched} project.pbxproj=${pbxPatched}`
+  );
+}
+
 const roots = ['node_modules/@capacitor/ios', 'ios'].map((path) => join(process.cwd(), path));
 const bridgeFileName = 'CapacitorBridge.swift';
 const cordovaFileName = 'CDVPluginManager.m';
