@@ -169,6 +169,7 @@ const getSmokesSubcategory = (productName: string): string => {
 
 const StoreDetail = () => {
   const { id } = useParams();
+  const isNative = useIsNative();
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
