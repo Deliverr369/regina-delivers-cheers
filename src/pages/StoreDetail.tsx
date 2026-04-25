@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
-import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Truck, Phone, Search, X } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Truck, Phone, Search, X, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,11 +170,12 @@ const getSmokesSubcategory = (productName: string): string => {
 const StoreDetail = () => {
   const { id } = useParams();
   const isNative = useIsNative();
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedPackSizes, setSelectedPackSizes] = useState<Record<string, string>>({});
   const [openProductId, setOpenProductId] = useState<string | null>(null);
+  const [recentlyAdded, setRecentlyAdded] = useState<Record<string, boolean>>({});
   const [smokesSubcategory, setSmokesSubcategory] = useState<string>("all");
   const [spiritsSubcategory, setSpiritsSubcategory] = useState<string>("all");
   const [wineSubcategory, setWineSubcategory] = useState<string>("all");
@@ -403,7 +404,20 @@ const StoreDetail = () => {
       name: displayName, price: displayPrice,
       image: product.image_url || "", storeId: store?.id || "", storeName: store?.name || "",
     });
-    toast({ title: "Added to cart", description: `${displayName} added` });
+    // Inline button checkmark feedback
+    setRecentlyAdded((prev) => ({ ...prev, [product.id]: true }));
+    setTimeout(() => {
+      setRecentlyAdded((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+    }, 1400);
+    // Non-blocking bottom toast with View Cart action
+    toast.success(`${displayName} added to cart`, {
+      duration: 2000,
+      action: { label: "View Cart", onClick: () => navigate("/cart") },
+    });
   };
 
   const ProductCard = ({ product }: { product: typeof products[0] }) => {
