@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Clock, ArrowLeft, Plus, Minus, ShoppingCart, Loader2, Truck, Phone, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -180,7 +180,6 @@ const StoreDetail = () => {
   const [petSubcategory, setPetSubcategory] = useState<string>("all");
   const [takeoutSubcategory, setTakeoutSubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const tabsListRef = useRef<HTMLDivElement>(null);
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
@@ -348,12 +347,6 @@ const StoreDetail = () => {
 
   const availableCategories = Object.entries(productsByCategory).filter(([_, items]) => items.length > 0).map(([cat]) => cat);
   const defaultCategory = availableCategories.length > 0 ? availableCategories[0] : "beer";
-
-  // Always reset the sticky category tab bar to the first tab on load / store change
-  useEffect(() => {
-    if (tabsListRef.current) tabsListRef.current.scrollLeft = 0;
-    window.scrollTo({ top: 0 });
-  }, [id, availableCategories.join(",")]);
 
   const getQuantity = (productId: string) => quantities[productId] || 0;
   const updateQuantity = (productId: string, delta: number) => {
@@ -586,7 +579,7 @@ const StoreDetail = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Tabs defaultValue={defaultCategory} className="w-full" onValueChange={() => { window.scrollTo({ top: 0, behavior: "smooth" }); if (tabsListRef.current) tabsListRef.current.scrollTo({ left: 0, behavior: "smooth" }); }}>
+            <Tabs defaultValue={defaultCategory} className="w-full" onValueChange={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               {/* Search bar + manual add */}
               <div className="max-w-3xl mx-auto mb-5 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                 <div className="relative flex-1">
@@ -611,7 +604,7 @@ const StoreDetail = () => {
                 </div>
                 <ManualItemDialog storeId={store.id} storeName={store.name} />
               </div>
-              <TabsList ref={tabsListRef} className={`sticky top-16 z-30 mb-6 w-full justify-start overflow-x-auto flex-nowrap h-auto p-1.5 gap-1 bg-background/95 backdrop-blur-md border border-border/50 shadow-sm rounded-xl snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${availableCategories.length <= 1 ? "hidden" : ""}`}>
+              <TabsList className={`sticky top-16 z-30 mb-6 w-full justify-start sm:justify-center overflow-x-auto flex-nowrap h-auto p-1.5 gap-1 bg-background/95 backdrop-blur-md border border-border/50 shadow-sm rounded-xl ${availableCategories.length <= 1 ? "hidden" : ""}`}>
                 {availableCategories.includes("beer") && (
                   <TabsTrigger value="beer" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
