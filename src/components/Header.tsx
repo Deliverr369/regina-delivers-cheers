@@ -64,7 +64,7 @@ const Header = () => {
               </Button>
             </Link>
             
-            {user ? (
+            {user && !isNative ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground">
