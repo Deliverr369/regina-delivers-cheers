@@ -15,6 +15,7 @@ import SuperstoreRequestForm from "@/components/SuperstoreRequestForm";
 import ProductDetailModal from "@/components/ProductDetailModal";
 import { safeImageUrl } from "@/lib/image-url";
 import ManualItemDialog from "@/components/ManualItemDialog";
+import { useIsNative } from "@/hooks/useIsNative";
 
 const SUPERSTORE_ID = "25e9b4a8-850a-4d26-9aad-54c9eb2f183a";
 
