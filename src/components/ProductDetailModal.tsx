@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
+import { safeImageUrl } from "@/lib/image-url";
 
 interface ProductDetailModalProps {
   productId: string | null;
@@ -151,7 +152,7 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
               {/* Image */}
               <div className="aspect-square max-h-80 mx-auto rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center">
                 <img
-                  src={product.image_url || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=600&auto=format"}
+                  src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=600&auto=format&fm=jpg"}
                   alt={product.name}
                   className="w-full h-full object-contain"
                 />
