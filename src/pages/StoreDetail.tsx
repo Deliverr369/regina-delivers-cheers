@@ -492,17 +492,28 @@ const StoreDetail = () => {
           <div className="flex items-center gap-2">
             {getQuantity(product.id) > 0 ? (
               <div className="flex items-center gap-1.5 flex-1">
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQuantity(product.id, -1)}>
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg active:scale-95 transition-transform" onClick={() => updateQuantity(product.id, -1)}>
                   <Minus className="h-3.5 w-3.5" />
                 </Button>
-                <span className="font-semibold w-7 text-center text-sm">{getQuantity(product.id)}</span>
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateQuantity(product.id, 1)}>
+                <span className="font-semibold w-7 text-center text-sm tabular-nums">{getQuantity(product.id)}</span>
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg active:scale-95 transition-transform" onClick={() => updateQuantity(product.id, 1)}>
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
               </div>
             ) : (
-              <Button className="flex-1 h-9 text-sm rounded-lg font-medium" onClick={() => handleAddToCart(product)}>
-                <ShoppingCart className="h-3.5 w-3.5 mr-1.5" /> Add
+              <Button
+                className={`flex-1 h-10 text-sm rounded-lg font-medium transition-all duration-300 active:scale-[0.97] ${
+                  recentlyAdded[product.id]
+                    ? "bg-success hover:bg-success text-white"
+                    : ""
+                }`}
+                onClick={() => handleAddToCart(product)}
+              >
+                {recentlyAdded[product.id] ? (
+                  <><Check className="h-4 w-4 mr-1.5 animate-scale-in" /> Added</>
+                ) : (
+                  <><ShoppingCart className="h-3.5 w-3.5 mr-1.5" /> Add</>
+                )}
               </Button>
             )}
           </div>
