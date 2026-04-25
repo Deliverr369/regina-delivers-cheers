@@ -34,14 +34,64 @@ function removeSceneHooksFromAppDelegate() {
   return true;
 }
 
-function removeGeneratedSceneDelegates() {
+// Safe SceneDelegate template: compiles cleanly on modern Capacitor (no
+// reference to the removed `capacitorStatusBarTappedNotification` symbol)
+// while still satisfying the Info.plist UISceneDelegateClassName entry if it
+// exists. We OVERWRITE rather than delete so that stale Xcode project.pbxproj
+// references (which Xcode aggressively caches) cannot break the build.
+const safeSceneDelegateSwift = `import UIKit
+import Capacitor
+
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let _ = (scene as? UIWindowScene) else { return }
+    }
+
+    func sceneDidDisconnect(_ scene: UIScene) {}
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    }
+
+    func sceneWillResignActive(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.willResignActiveNotification, object: nil)
+    }
+
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+    }
+
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let urlContext = URLContexts.first else { return }
+        let url = urlContext.url
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+    }
+}
+`;
+
+function rewriteGeneratedSceneDelegates() {
   if (!existsSync(iosRoot)) return false;
   const scenePaths = new Set(collectFiles(iosRoot, 'SceneDelegate.swift'));
   if (scenePaths.size === 0) return false;
+  let changed = false;
   for (const scenePath of scenePaths) {
-    unlinkSync(scenePath);
+    const current = readFileSync(scenePath, 'utf8');
+    if (current !== safeSceneDelegateSwift) {
+      writeFileSync(scenePath, safeSceneDelegateSwift);
+      changed = true;
+    }
   }
-  return true;
+  return changed;
 }
 
 function removeSceneDelegateFromPbxproj() {
