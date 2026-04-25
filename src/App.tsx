@@ -42,6 +42,7 @@ import DashboardMatchImages from "./pages/dashboard/DashboardMatchImages";
 import DashboardInventory from "./pages/dashboard/DashboardInventory";
 import DashboardImporter from "./pages/dashboard/DashboardImporter";
 import DashboardSEO from "./pages/dashboard/DashboardSEO";
+import DashboardPushTest from "./pages/dashboard/DashboardPushTest";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => (
                 <Route path="inventory" element={<DashboardInventory />} />
                 <Route path="importer" element={<DashboardImporter />} />
                 <Route path="seo" element={<DashboardSEO />} />
+                <Route path="push-test" element={<DashboardPushTest />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
