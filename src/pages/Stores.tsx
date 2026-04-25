@@ -409,7 +409,7 @@ const Stores = () => {
         </div>
       </main>
 
-      <Footer />
+      {!isNative && <Footer />}
     </div>
   );
 };
