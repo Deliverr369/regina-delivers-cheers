@@ -15,6 +15,7 @@ import SuperstoreRequestForm from "@/components/SuperstoreRequestForm";
 import ProductDetailModal from "@/components/ProductDetailModal";
 import { safeImageUrl } from "@/lib/image-url";
 import ManualItemDialog from "@/components/ManualItemDialog";
+import { useIsNative } from "@/hooks/useIsNative";
 
 const SUPERSTORE_ID = "25e9b4a8-850a-4d26-9aad-54c9eb2f183a";
 
@@ -168,6 +169,7 @@ const getSmokesSubcategory = (productName: string): string => {
 
 const StoreDetail = () => {
   const { id } = useParams();
+  const isNative = useIsNative();
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -513,7 +515,7 @@ const StoreDetail = () => {
             <Link to="/stores"><Button className="rounded-full">Back to Stores</Button></Link>
           </div>
         </main>
-        <Footer />
+        {!isNative && <Footer />}
       </div>
     );
   }
@@ -522,18 +524,19 @@ const StoreDetail = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="pt-16">
+      <main className={isNative ? "pt-16 safe-top" : "pt-16"}>
         {/* Store Header */}
-        <div className="relative h-56 md:h-72 overflow-hidden">
+        <div className={`relative overflow-hidden ${isNative ? "h-40" : "h-56 md:h-72"}`}>
           <img
             src={safeImageUrl(store.image_url) || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=800&auto=format&fm=jpg"}
             alt={store.name}
             className={`w-full h-full ${store.image_url?.includes('.png') ? 'object-contain bg-gradient-to-br from-muted to-muted/50 p-8' : 'object-cover'}`}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent" />
-          
-          <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8">
-            <div className="container mx-auto">
+          {/* Stronger gradient on iOS for guaranteed text contrast */}
+          <div className={`absolute inset-0 ${isNative ? "bg-gradient-to-t from-black/85 via-black/45 to-black/20" : "bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent"}`} />
+
+          <div className={`absolute bottom-0 left-0 right-0 ${isNative ? "p-4" : "p-5 md:p-8"}`}>
+            <div className={isNative ? "" : "container mx-auto"}>
               <Link to="/stores" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white mb-3 transition-colors text-sm">
                 <ArrowLeft className="h-4 w-4" /> All Stores
               </Link>
@@ -541,7 +544,7 @@ const StoreDetail = () => {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2.5 mb-1.5">
-                    <h1 className="font-display text-2xl md:text-3xl font-bold text-white">{store.name}</h1>
+                    <h1 className={`font-display font-bold text-white ${isNative ? "text-xl" : "text-2xl md:text-3xl"}`}>{store.name}</h1>
                     {store.is_open ? (
                       <Badge className="bg-success text-white text-xs">Open</Badge>
                     ) : (
@@ -571,7 +574,7 @@ const StoreDetail = () => {
         </div>
 
         {/* Products */}
-        <div className="container mx-auto px-4 py-6">
+        <div className={isNative ? "px-3 pt-3 pb-4" : "container mx-auto px-4 py-6"}>
           {id === SUPERSTORE_ID ? (
             <SuperstoreRequestForm storeId={store.id} storeName={store.name} />
           ) : productsLoading ? (
@@ -580,8 +583,10 @@ const StoreDetail = () => {
             </div>
           ) : (
             <Tabs defaultValue={defaultCategory} className="w-full">
+              {/* Sticky on iOS so user can switch stores/categories mid-scroll */}
+              <div className={isNative ? "sticky top-16 z-30 bg-background/95 backdrop-blur-md -mx-3 px-3 pb-2 border-b border-border" : ""}>
               {/* Search bar + manual add */}
-              <div className="max-w-3xl mx-auto mb-5 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+              <div className={`flex gap-2 items-stretch sm:items-center ${isNative ? "mb-2" : "max-w-3xl mx-auto mb-5 flex-col sm:flex-row"}`}>
                 <div className="relative flex-1">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
@@ -589,7 +594,7 @@ const StoreDetail = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search products in this store..."
-                    className="pl-10 pr-10 h-11 rounded-full bg-card border-border shadow-sm w-full"
+                    className={`pl-10 pr-10 rounded-full bg-card border-border shadow-sm w-full ${isNative ? "h-9 text-sm" : "h-11"}`}
                   />
                   {searchQuery && (
                     <button
@@ -604,7 +609,7 @@ const StoreDetail = () => {
                 </div>
                 <ManualItemDialog storeId={store.id} storeName={store.name} />
               </div>
-              <TabsList className={`mb-6 w-full justify-start sm:justify-center overflow-x-auto flex-nowrap h-auto p-1.5 gap-1 bg-background/95 border border-border/50 shadow-sm rounded-xl ${availableCategories.length <= 1 ? "hidden" : ""}`}>
+              <TabsList className={`w-full justify-start sm:justify-center overflow-x-auto flex-nowrap h-auto bg-background/95 border border-border/50 shadow-sm rounded-xl ${isNative ? "mb-2 p-1 gap-0.5" : "mb-6 p-1.5 gap-1"} ${availableCategories.length <= 1 ? "hidden" : ""}`}>
                 {availableCategories.includes("beer") && (
                   <TabsTrigger value="beer" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍺 Beer ({productsByCategory.beer.length})</TabsTrigger>
                 )}
@@ -630,6 +635,7 @@ const StoreDetail = () => {
                   <TabsTrigger value="takeout" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍔 Menu ({productsByCategory.takeout.length})</TabsTrigger>
                 )}
               </TabsList>
+              </div>
 
               {Object.entries(productsByCategory)
                 .filter(([category]) => availableCategories.includes(category))
@@ -895,7 +901,7 @@ const StoreDetail = () => {
       </main>
 
 
-      <Footer />
+      {!isNative && <Footer />}
 
       <ProductDetailModal
         productId={openProductId}

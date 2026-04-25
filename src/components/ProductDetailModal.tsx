@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
 import { safeImageUrl } from "@/lib/image-url";
+import { useIsNative } from "@/hooks/useIsNative";
 
 interface ProductDetailModalProps {
   productId: string | null;
@@ -30,8 +31,10 @@ const getPackSortValue = (packSize: string): number => {
 const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }: ProductDetailModalProps) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const isNative = useIsNative();
   const [selectedPackSize, setSelectedPackSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product-detail", productId],
@@ -75,6 +78,7 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
     if (!open) {
       setSelectedPackSize(null);
       setQuantity(1);
+      setDescExpanded(false);
     }
   }, [open, productId]);
 
@@ -216,9 +220,22 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
               {(product.seo_description || product.description) && (
                 <div className="space-y-2 pt-2 border-t border-border">
                   <h3 className="font-semibold text-sm text-foreground">About this product</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  <p
+                    className={`text-sm text-muted-foreground leading-relaxed whitespace-pre-line ${
+                      isNative && !descExpanded ? "line-clamp-3" : ""
+                    }`}
+                  >
                     {product.seo_description || product.description}
                   </p>
+                  {isNative && (product.seo_description || product.description || "").length > 160 && (
+                    <button
+                      type="button"
+                      onClick={() => setDescExpanded((v) => !v)}
+                      className="text-xs font-semibold text-primary"
+                    >
+                      {descExpanded ? "Show less" : "Read more"}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -259,29 +276,36 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
               </div>
             )}
 
-            {/* Sticky add-to-cart footer */}
-            <div className="sticky bottom-0 bg-background border-t border-border px-6 py-4 flex items-center gap-4">
+            {/* Sticky add-to-cart footer (safe-area aware on iOS) */}
+            <div
+              className={`sticky bottom-0 bg-background border-t border-border px-6 py-4 flex items-center gap-4 ${
+                isNative ? "pb-safe-plus" : ""
+              }`}
+            >
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-9 w-9"
+                  className={isNative ? "h-11 w-11 rounded-full" : "h-9 w-9"}
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-8 text-center font-medium">{quantity}</span>
+                <span className={`text-center font-semibold ${isNative ? "w-7" : "w-8 font-medium"}`}>{quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-9 w-9"
+                  className={isNative ? "h-11 w-11 rounded-full" : "h-9 w-9"}
                   onClick={() => setQuantity((q) => q + 1)}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <Button className="flex-1 h-11 gap-2" onClick={handleAddToCart}>
+              <Button
+                className={`flex-1 gap-2 font-bold shadow-md ${isNative ? "h-12 text-base rounded-full" : "h-11"}`}
+                onClick={handleAddToCart}
+              >
                 <ShoppingCart className="h-4 w-4" />
                 Add to Cart
                 <span className="ml-auto font-bold">${totalPrice.toFixed(2)}</span>
