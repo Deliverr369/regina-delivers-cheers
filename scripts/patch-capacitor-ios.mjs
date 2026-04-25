@@ -154,7 +154,15 @@ function collectSwiftFiles(root, results = []) {
 }
 
 function verifyNoStaleIOSNotificationReferences() {
-  const staleFiles = collectSwiftFiles(iosRoot).filter((path) => readFileSync(path, 'utf8').includes(staleStatusBarNotificationToken));
+  const swiftFiles = collectSwiftFiles(iosRoot);
+  for (const path of swiftFiles) {
+    const source = readFileSync(path, 'utf8');
+    if (source.includes(staleStatusBarNotificationToken)) {
+      writeFileSync(path, source.replaceAll(staleStatusBarNotificationToken, 'capacitorStatusBarTapped'));
+    }
+  }
+
+  const staleFiles = swiftFiles.filter((path) => readFileSync(path, 'utf8').includes(staleStatusBarNotificationToken));
   if (staleFiles.length === 0) return;
   console.error(`[patch-capacitor-ios] Stale Capacitor status-bar notification reference remains in: ${staleFiles.join(', ')}`);
   process.exit(1);
