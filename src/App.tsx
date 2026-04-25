@@ -24,6 +24,7 @@ import Favorites from "./pages/Favorites";
 import Onboarding from "./pages/Onboarding";
 import OnboardingGate from "./components/OnboardingGate";
 import AgeGate from "./components/AgeGate";
+import PushNotificationsMount from "./components/PushNotificationsMount";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,7 @@ const App = () => (
           <BrowserRouter>
             <AgeGate />
             <OnboardingGate />
+            <PushNotificationsMount />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/onboarding" element={<Onboarding />} />
