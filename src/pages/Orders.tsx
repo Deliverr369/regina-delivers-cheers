@@ -21,6 +21,7 @@ const statusConfig: Record<string, { bg: string; label: string }> = {
 
 const Orders = () => {
   const { user, loading: authLoading } = useAuth();
+  const isNative = useIsNative();
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders", user?.id],
