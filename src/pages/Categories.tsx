@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { ChevronDown, MapPin, ArrowLeft, X } from "lucide-react";
+import { ChevronDown, MapPin, Menu, MessageSquare, X } from "lucide-react";
 import catLiquor from "@/assets/cat-liquor.png";
 import catSmoke from "@/assets/cat-smoke.png";
 import catPharmacy from "@/assets/cat-pharmacy.png";
@@ -30,55 +30,66 @@ const Categories = () => {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Coral header */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-6 pb-10 max-w-2xl">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 -ml-2 mb-4 rounded-full hover:bg-white/10 transition"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
+        <div className="container mx-auto px-5 pt-5 pb-16 max-w-2xl">
+          {/* Top bar: hamburger + chat */}
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => navigate("/")}
+              className="p-1 -ml-1 rounded hover:bg-white/10 transition"
+              aria-label="Menu"
+            >
+              <Menu className="h-7 w-7" strokeWidth={2.5} />
+            </button>
+            <button
+              className="p-1 -mr-1 rounded hover:bg-white/10 transition"
+              aria-label="Chat"
+            >
+              <MessageSquare className="h-6 w-6" strokeWidth={2} />
+            </button>
+          </div>
 
+          {/* Address row */}
           <button
             onClick={() => navigate("/")}
-            className="flex items-start gap-2 text-left w-full group"
+            className="flex items-start gap-2 text-left w-full group mb-8"
           >
-            <MapPin className="h-5 w-5 mt-0.5 shrink-0" />
+            <MapPin className="h-5 w-5 mt-0.5 shrink-0 fill-white" />
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-bold tracking-wide opacity-90">HOME</div>
+              <div className="text-xs font-bold tracking-wide opacity-95">HOME</div>
               <div className="text-sm font-semibold truncate uppercase opacity-95">
                 {address || "Add your delivery address"}
               </div>
             </div>
-            <ChevronDown className="h-5 w-5 mt-1 shrink-0 opacity-90 group-hover:opacity-100" />
+            <ChevronDown className="h-5 w-5 mt-1 shrink-0" strokeWidth={2.5} />
           </button>
 
-          <h1 className="text-2xl md:text-3xl font-semibold mt-8 leading-snug">
+          <h1 className="text-2xl md:text-3xl font-normal leading-snug">
             Where would you like to shop today?
           </h1>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 -mt-6 max-w-2xl">
-        <div className="grid grid-cols-2 gap-x-5 gap-y-7 pb-10">
+      {/* Category circles grid */}
+      <div className="container mx-auto px-5 -mt-12 max-w-2xl flex-1">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 pb-10">
           {categories.map((cat) => (
             <Link
               key={cat.id}
               to={cat.to}
               className="flex flex-col items-center group focus:outline-none"
             >
-              <div className="relative aspect-square w-full max-w-[180px] rounded-full bg-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
-                <div className={`absolute w-24 h-24 rounded-full ${cat.halo} opacity-70`} />
+              <div className="relative aspect-square w-full rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="relative w-28 h-28 object-contain"
+                  className="relative w-[72%] h-[72%] object-contain"
                   loading="lazy"
                 />
               </div>
-              <span className="mt-3 text-sm md:text-base font-semibold text-foreground text-center">
+              <span className="mt-4 text-base font-bold text-foreground text-center">
                 {cat.name}
               </span>
             </Link>
@@ -86,7 +97,7 @@ const Categories = () => {
         </div>
 
         {showTip && (
-          <div className="bg-teal-600 text-white rounded-lg p-5 mb-10 relative">
+          <div className="bg-teal-600 text-white rounded-md p-5 mb-8 relative shadow-md">
             <button
               onClick={() => setShowTip(false)}
               className="absolute top-3 right-3 p-1 rounded hover:bg-white/10"
@@ -95,7 +106,7 @@ const Categories = () => {
               <X className="h-4 w-4" />
             </button>
             <h3 className="text-lg font-semibold mb-3">It's very simple to use</h3>
-            <ol className="space-y-2 text-sm">
+            <ol className="space-y-2.5 text-sm">
               {[
                 "Select a store & add or type in your items",
                 "Confirm your order & pay online securely",
