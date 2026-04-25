@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, Star, Clock, Search, Filter, ChevronDown, Truck, Store } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsNative } from "@/hooks/useIsNative";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import tabLiquor from "@/assets/tab-liquor.png";
@@ -30,11 +31,20 @@ const sortOptions = [
 
 const Stores = () => {
   const [searchParams] = useSearchParams();
+  const isNative = useIsNative();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "pharmacy" | "takeout" | "pet" | "grocery">("liquor");
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
+
+  // iOS-only: always reset category scroll to the very first tab on mount
+  useEffect(() => {
+    if (isNative && tabsScrollRef.current) {
+      tabsScrollRef.current.scrollLeft = 0;
+    }
+  }, [isNative]);
 
   const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
   const SHELL_ID = "97208ee6-3536-4a61-849f-3dcc3ec0e71b";
