@@ -5,5 +5,16 @@
   "server": {
     "url": "https://regina-delivers-cheers.lovable.app",
     "cleartext": true
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#E63946"
+    }
   }
 }
