@@ -26,7 +26,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
-        NotificationCenter.default.post(name: .capacitorStatusBarTappedNotification, object: nil)
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
@@ -43,17 +42,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneDidEnterBackground(_ scene: UIScene) {
         NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
-        NotificationCenter.default.post(name: .capacitorDecidePolicyForNavigationAction, object: nil)
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let urlContext = URLContexts.first else { return }
         let url = urlContext.url
-        ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
     }
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
     }
 }
 `;
