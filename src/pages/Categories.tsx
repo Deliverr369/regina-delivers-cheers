@@ -124,35 +124,6 @@ const Categories = () => {
         )}
       </div>
     </div>
-
-        {showTip && (
-          <div className="bg-teal-600 text-white rounded-lg p-5 mb-10 relative">
-            <button
-              onClick={() => setShowTip(false)}
-              className="absolute top-3 right-3 p-1 rounded hover:bg-white/10"
-              aria-label="Dismiss"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <h3 className="text-lg font-semibold mb-3">It's very simple to use</h3>
-            <ol className="space-y-2 text-sm">
-              {[
-                "Select a store & add or type in your items",
-                "Confirm your order & pay online securely",
-                "Our shopper shops for & delivers your items",
-              ].map((step, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
-      </div>
-    </div>
   );
 };
 
