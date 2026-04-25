@@ -526,52 +526,61 @@ const StoreDetail = () => {
 
       <main className={isNative ? "pt-16 safe-top" : "pt-16"}>
         {/* Store Header */}
-        <div className={`relative overflow-hidden ${isNative ? "h-40" : "h-56 md:h-72"}`}>
+        <div className={`relative overflow-hidden ${isNative ? "h-44" : "h-56 md:h-72"}`}>
           <img
             src={safeImageUrl(store.image_url) || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=800&auto=format&fm=jpg"}
             alt={store.name}
             className={`w-full h-full ${store.image_url?.includes('.png') ? 'object-contain bg-gradient-to-br from-muted to-muted/50 p-8' : 'object-cover'}`}
           />
           {/* Stronger gradient on iOS for guaranteed text contrast */}
-          <div className={`absolute inset-0 ${isNative ? "bg-gradient-to-t from-black/85 via-black/45 to-black/20" : "bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent"}`} />
+          <div className={`absolute inset-0 ${isNative ? "bg-gradient-to-t from-black/90 via-black/55 to-black/15" : "bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent"}`} />
 
           <div className={`absolute bottom-0 left-0 right-0 ${isNative ? "p-4" : "p-5 md:p-8"}`}>
             <div className={isNative ? "" : "container mx-auto"}>
-              <Link to="/stores" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white mb-3 transition-colors text-sm">
+              <Link to="/stores" className="inline-flex items-center gap-1.5 text-white/80 hover:text-white mb-2.5 transition-colors text-sm">
                 <ArrowLeft className="h-4 w-4" /> All Stores
               </Link>
               
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2.5 mb-1.5">
-                    <h1 className={`font-display font-bold text-white ${isNative ? "text-xl" : "text-2xl md:text-3xl"}`}>{store.name}</h1>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                    <h1 className={`font-display font-bold text-white ${isNative ? "text-[19px] leading-tight" : "text-2xl md:text-3xl"}`}>{store.name}</h1>
                     {store.is_open ? (
-                      <Badge className="bg-success text-white text-xs">Open</Badge>
+                      <Badge className="bg-success text-white text-[10px] px-2 py-0.5">Open</Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-xs">Closed</Badge>
+                      <Badge variant="secondary" className="text-[10px] px-2 py-0.5">Closed</Badge>
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-white/70 text-sm">
-                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />Nearby Location</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{store.hours}</span>
+                  <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-white/85 ${isNative ? "text-[12px]" : "text-sm"}`}>
+                    <span className="flex items-center gap-1"><Truck className="h-3.5 w-3.5" />{store.delivery_time} · {Number(store.delivery_fee) === 0 ? "Free" : `$${Number(store.delivery_fee).toFixed(2)}`}</span>
+                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-gold text-gold" />{store.rating}{!isNative && <span className="text-white/60"> ({store.reviews_count})</span>}</span>
+                    {!isNative && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{store.hours}</span>}
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 text-white text-sm">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-gold text-gold" />
-                    <span className="font-bold">{store.rating}</span>
-                    <span className="text-white/60">({store.reviews_count})</span>
+                {!isNative && (
+                  <div className="flex items-center gap-4 text-white text-sm">
+                    <div className="flex items-center gap-1 text-white/70">
+                      <MapPin className="h-3.5 w-3.5" />Nearby Location
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-white/70">
-                    <Truck className="h-3.5 w-3.5" />
-                    {store.delivery_time} • {Number(store.delivery_fee) === 0 ? "Free" : `$${Number(store.delivery_fee).toFixed(2)}`} delivery
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+
+        {/* iOS: promo strip under hero */}
+        {isNative && (
+          <div className="px-3 pt-3">
+            <div className="rounded-xl bg-primary/10 border border-primary/15 px-3 py-2 flex items-center gap-2">
+              <Truck className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-[12px] text-foreground leading-tight">
+                <span className="font-bold">Free delivery</span> on orders over <span className="font-bold">$100</span>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Products */}
         <div className={isNative ? "px-3 pt-3 pb-4" : "container mx-auto px-4 py-6"}>

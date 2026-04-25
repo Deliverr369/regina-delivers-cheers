@@ -126,7 +126,11 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+      <DialogContent
+        className={`max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0 ${
+          isNative ? "rounded-t-2xl rounded-b-none sm:rounded-2xl" : ""
+        }`}
+      >
         {isLoading || !product ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -145,16 +149,16 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
               inStock={product.in_stock !== false}
             />
 
-            <DialogHeader className="px-6 pt-6 pb-4 border-b">
-              <DialogTitle className="text-2xl font-display font-bold">{product.name}</DialogTitle>
+            <DialogHeader className={isNative ? "px-5 pt-5 pb-3 border-b" : "px-6 pt-6 pb-4 border-b"}>
+              <DialogTitle className={`font-display font-bold ${isNative ? "text-lg leading-tight pr-6" : "text-2xl"}`}>{product.name}</DialogTitle>
               {(product.stores as any)?.name && (
-                <p className="text-sm text-muted-foreground">From {(product.stores as any).name}</p>
+                <p className={`text-muted-foreground ${isNative ? "text-[12px]" : "text-sm"}`}>From {(product.stores as any).name}</p>
               )}
             </DialogHeader>
 
-            <div className="px-6 py-6 space-y-6">
+            <div className={isNative ? "px-5 py-4 space-y-4" : "px-6 py-6 space-y-6"}>
               {/* Image */}
-              <div className="aspect-square max-h-80 mx-auto rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center">
+              <div className={`mx-auto rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center ${isNative ? "aspect-square max-h-56" : "aspect-square max-h-80 rounded-lg"}`}>
                 <img
                   src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=600&auto=format&fm=jpg"}
                   alt={product.name}
@@ -278,11 +282,11 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
 
             {/* Sticky add-to-cart footer (safe-area aware on iOS) */}
             <div
-              className={`sticky bottom-0 bg-background border-t border-border px-6 py-4 flex items-center gap-4 ${
-                isNative ? "pb-safe-plus" : ""
+              className={`sticky bottom-0 bg-background/98 backdrop-blur border-t border-border flex items-center gap-3 ${
+                isNative ? "px-4 pt-3 pb-safe-plus" : "px-6 py-4 gap-4"
               }`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <Button
                   variant="outline"
                   size="icon"
@@ -303,7 +307,7 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
                 </Button>
               </div>
               <Button
-                className={`flex-1 gap-2 font-bold shadow-md ${isNative ? "h-12 text-base rounded-full" : "h-11"}`}
+                className={`flex-1 gap-2 font-bold shadow-md ${isNative ? "h-12 text-[15px] rounded-full" : "h-11"}`}
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="h-4 w-4" />
