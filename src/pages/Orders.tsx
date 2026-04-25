@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsNative } from "@/hooks/useIsNative";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
@@ -20,6 +21,7 @@ const statusConfig: Record<string, { bg: string; label: string }> = {
 
 const Orders = () => {
   const { user, loading: authLoading } = useAuth();
+  const isNative = useIsNative();
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders", user?.id],
@@ -63,26 +65,28 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-20 pb-16">
-        <div className="bg-secondary/50 border-b border-border">
-          <div className="container mx-auto px-4 py-8">
-            <h1 className="font-display text-3xl font-bold text-foreground mb-1">My Orders</h1>
-            <p className="text-muted-foreground text-sm">{orders.length} order{orders.length !== 1 ? "s" : ""}</p>
+      <main className={isNative ? "pt-16 safe-top pb-16" : "pt-20 pb-16"}>
+        <div className={isNative ? "bg-primary text-primary-foreground" : "bg-secondary/50 border-b border-border"}>
+          <div className={isNative ? "px-4 pt-4 pb-4" : "container mx-auto px-4 py-8"}>
+            <h1 className={`font-display font-bold ${isNative ? "text-[20px] text-primary-foreground" : "text-3xl text-foreground"} mb-1`}>My Orders</h1>
+            <p className={isNative ? "text-[12.5px] text-primary-foreground/85" : "text-muted-foreground text-sm"}>
+              {orders.length} order{orders.length !== 1 ? "s" : ""}
+            </p>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-6 max-w-3xl">
+        <div className={isNative ? "px-3 py-3" : "container mx-auto px-4 py-6 max-w-3xl"}>
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : orders.length === 0 ? (
-            <div className="text-center py-20">
+            <div className="text-center py-16">
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <ShoppingBag className="h-8 w-8 text-muted-foreground" />
               </div>
               <h2 className="font-display text-xl font-bold text-foreground mb-1.5">No orders yet</h2>
-              <p className="text-muted-foreground text-sm mb-6">Start ordering from your favourite stores!</p>
+              <p className="text-muted-foreground text-sm mb-6 px-6">Start ordering from your favourite stores!</p>
               <Link to="/stores">
                 <Button className="gap-2 rounded-full">
                   Browse Stores <ArrowRight className="h-4 w-4" />
@@ -90,23 +94,26 @@ const Orders = () => {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className={isNative ? "space-y-2.5" : "space-y-4"}>
               <PriceDisclaimer variant="subtle" />
               {orders.map((order) => {
                 const status = statusConfig[order.status || "pending"];
                 return (
-                  <div key={order.id} className="bg-card rounded-2xl border border-border p-5 hover:border-primary/10 transition-colors">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-                      <div>
-                        <div className="flex items-center gap-2.5 mb-1.5">
-                          <h3 className="font-display text-base font-bold text-foreground">
-                            #{order.id.slice(0, 8).toUpperCase()}
+                  <div key={order.id} className={`bg-card rounded-2xl border border-border ${isNative ? "p-4 shadow-sm" : "p-5 hover:border-primary/10 transition-colors"}`}>
+                    <div className={`flex justify-between gap-3 ${isNative ? "items-start mb-2.5" : "flex-col md:flex-row md:items-center mb-3"}`}>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <h3 className={`font-display font-bold text-foreground ${isNative ? "text-[14px]" : "text-base"}`}>
+                            {order.stores?.name || `Order`}
                           </h3>
                           <Badge className={`${status.bg} text-white text-[10px] font-medium px-2 py-0.5`}>
                             {status.label}
                           </Badge>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <p className={`text-muted-foreground ${isNative ? "text-[11px]" : "text-xs"} mb-1`}>
+                          #{order.id.slice(0, 8).toUpperCase()}
+                        </p>
+                        <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground ${isNative ? "text-[11px]" : "text-xs"}`}>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
                             {new Date(order.created_at).toLocaleDateString("en-CA", {
@@ -114,33 +121,28 @@ const Orders = () => {
                               hour: "2-digit", minute: "2-digit",
                             })}
                           </span>
-                          {order.stores && (
+                          {!isNative && (
                             <span className="flex items-center gap-1">
-                              <Package className="h-3.5 w-3.5" /> {order.stores.name}
+                              <MapPin className="h-3.5 w-3.5" /> {order.delivery_address}
                             </span>
                           )}
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5" /> {order.delivery_address}
-                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-primary">${Number(order.total).toFixed(2)}</p>
-                          <p className="text-xs text-muted-foreground">{order.order_items?.length || 0} items</p>
-                        </div>
+                      <div className="text-right shrink-0">
+                        <p className={`font-bold text-primary ${isNative ? "text-base" : "text-xl"}`}>${Number(order.total).toFixed(2)}</p>
+                        <p className={`text-muted-foreground ${isNative ? "text-[10.5px]" : "text-xs"}`}>{order.order_items?.length || 0} items</p>
                       </div>
                     </div>
 
                     {order.order_items && order.order_items.length > 0 && (
-                      <div className="pt-3 border-t border-border flex flex-wrap gap-1.5">
-                        {order.order_items.slice(0, 4).map((item: any) => (
-                          <Badge key={item.id} variant="secondary" className="text-xs font-normal">
+                      <div className={`pt-2.5 border-t border-border flex flex-wrap gap-1.5 ${isNative ? "" : "pt-3"}`}>
+                        {order.order_items.slice(0, isNative ? 3 : 4).map((item: any) => (
+                          <Badge key={item.id} variant="secondary" className="text-[10.5px] font-normal">
                             {item.quantity}× {item.product_name}
                           </Badge>
                         ))}
-                        {order.order_items.length > 4 && (
-                          <Badge variant="outline" className="text-xs">+{order.order_items.length - 4} more</Badge>
+                        {order.order_items.length > (isNative ? 3 : 4) && (
+                          <Badge variant="outline" className="text-[10.5px]">+{order.order_items.length - (isNative ? 3 : 4)} more</Badge>
                         )}
                       </div>
                     )}
@@ -151,7 +153,7 @@ const Orders = () => {
           )}
         </div>
       </main>
-      <Footer />
+      {!isNative && <Footer />}
     </div>
   );
 };

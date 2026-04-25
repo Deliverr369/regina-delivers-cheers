@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import { useIsNative } from "@/hooks/useIsNative";
 import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2 } from "lucide-react";
 
 interface ProfileData {
@@ -31,6 +32,7 @@ interface SavedCard {
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const isNative = useIsNative();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<ProfileData>({
@@ -124,24 +126,24 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-20 pb-16">
-        <div className="bg-secondary/50 border-b border-border">
-          <div className="container mx-auto px-4 py-8">
-            <h1 className="font-display text-3xl font-bold text-foreground mb-1">My Profile</h1>
-            <p className="text-muted-foreground text-sm">{profile.email}</p>
+      <main className={isNative ? "pt-16 safe-top pb-32" : "pt-20 pb-16"}>
+        <div className={isNative ? "bg-primary text-primary-foreground" : "bg-secondary/50 border-b border-border"}>
+          <div className={isNative ? "px-4 pt-4 pb-4" : "container mx-auto px-4 py-8"}>
+            <h1 className={`font-display font-bold ${isNative ? "text-[20px] text-primary-foreground" : "text-3xl text-foreground"} mb-1`}>My Profile</h1>
+            <p className={`${isNative ? "text-[12.5px] text-primary-foreground/80" : "text-muted-foreground text-sm"} truncate`}>{profile.email}</p>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <div className={isNative ? "px-3 py-3 space-y-3" : "container mx-auto px-4 py-6 max-w-2xl"}>
           {/* Personal Information */}
-          <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="flex items-center gap-2.5 mb-5">
+          <div className={`bg-card rounded-2xl border border-border ${isNative ? "p-4" : "p-6 mb-5"}`}>
+            <div className={`flex items-center gap-2.5 ${isNative ? "mb-3" : "mb-5"}`}>
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <User className="h-4.5 w-4.5 text-primary" />
               </div>
-              <h2 className="font-display text-lg font-bold text-foreground">Personal Information</h2>
+              <h2 className={`font-display font-bold text-foreground ${isNative ? "text-[15px]" : "text-lg"}`}>Personal Information</h2>
             </div>
-            <div className="space-y-4">
+            <div className={isNative ? "space-y-3" : "space-y-4"}>
               <div>
                 <Label htmlFor="full_name" className="text-sm">Full Name</Label>
                 <Input id="full_name" value={profile.full_name} onChange={(e) => handleChange("full_name", e.target.value)} placeholder="Enter your full name" className="mt-1.5 h-10" />
@@ -165,14 +167,14 @@ const Profile = () => {
           </div>
 
           {/* Delivery Address */}
-          <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="flex items-center gap-2.5 mb-5">
+          <div className={`bg-card rounded-2xl border border-border ${isNative ? "p-4" : "p-6 mb-5"}`}>
+            <div className={`flex items-center gap-2.5 ${isNative ? "mb-3" : "mb-5"}`}>
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <MapPin className="h-4.5 w-4.5 text-primary" />
               </div>
-              <h2 className="font-display text-lg font-bold text-foreground">Delivery Address</h2>
+              <h2 className={`font-display font-bold text-foreground ${isNative ? "text-[15px]" : "text-lg"}`}>Delivery Address</h2>
             </div>
-            <div className="space-y-4">
+            <div className={isNative ? "space-y-3" : "space-y-4"}>
               <div>
                 <Label htmlFor="address" className="text-sm">Street Address</Label>
                 <Input id="address" value={profile.address} onChange={(e) => handleChange("address", e.target.value)} placeholder="123 Main St" className="mt-1.5 h-10" />
@@ -192,12 +194,12 @@ const Profile = () => {
           </div>
 
           {/* Payment */}
-          <div className="bg-card rounded-2xl border border-border p-6 mb-6">
-            <div className="flex items-center gap-2.5 mb-4">
+          <div className={`bg-card rounded-2xl border border-border ${isNative ? "p-4" : "p-6 mb-6"}`}>
+            <div className={`flex items-center gap-2.5 ${isNative ? "mb-3" : "mb-4"}`}>
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <CreditCard className="h-4.5 w-4.5 text-primary" />
               </div>
-              <h2 className="font-display text-lg font-bold text-foreground">Saved Cards</h2>
+              <h2 className={`font-display font-bold text-foreground ${isNative ? "text-[15px]" : "text-lg"}`}>Saved Cards</h2>
             </div>
 
             {cardsLoading ? (
@@ -247,13 +249,25 @@ const Profile = () => {
             )}
           </div>
 
-          <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-full font-semibold" size="lg">
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? "Saving..." : "Save Profile"}
-          </Button>
+          {!isNative && (
+            <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-full font-semibold" size="lg">
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Saving..." : "Save Profile"}
+            </Button>
+          )}
         </div>
+
+        {/* iOS: sticky save bar */}
+        {isNative && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/98 backdrop-blur border-t border-border px-4 pt-3 pb-safe-plus">
+            <Button onClick={handleSave} disabled={saving} className="w-full h-12 rounded-full font-semibold text-[15px] shadow-md">
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Saving..." : "Save Profile"}
+            </Button>
+          </div>
+        )}
       </main>
-      <Footer />
+      {!isNative && <Footer />}
     </div>
   );
 };
