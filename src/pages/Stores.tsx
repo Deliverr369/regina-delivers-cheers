@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsNative } from "@/hooks/useIsNative";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/seo/SEO";
 import tabLiquor from "@/assets/tab-liquor.png";
 import tabSmoke from "@/assets/tab-smoke.png";
 import tabTakeout from "@/assets/tab-takeout.png";
@@ -126,6 +127,11 @@ const Stores = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Liquor Stores in Regina | Order for Delivery | Deliverr"
+        description="Browse Regina's top liquor, smoke, pharmacy, pet and grocery stores. Order online for fast same-day delivery across Regina, SK."
+        canonical="https://regina-delivers-cheers.lovable.app/stores"
+      />
       <Header />
       
       <main className={`pb-16 ${isNative ? "pt-header bg-background" : "pt-20"}`}>
