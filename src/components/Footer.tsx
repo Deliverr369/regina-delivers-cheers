@@ -155,29 +155,29 @@ const Footer = () => {
 
           {/* Get the App */}
           <div className="md:col-span-3">
-            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-5 flex items-center gap-2">
+            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
               <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
               Get the App
             </h4>
-            <div className="space-y-3 mb-7">
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 sm:gap-3 mb-6 sm:mb-7">
               <a
                 href="#"
-                className="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
-                <Apple className="h-7 w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                <div className="leading-tight">
-                  <div className="text-[10px] opacity-75">Download on the</div>
-                  <div className="text-sm font-bold">App Store</div>
+                <Apple className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="leading-tight min-w-0">
+                  <div className="text-[9px] sm:text-[10px] opacity-75">Download on the</div>
+                  <div className="text-xs sm:text-sm font-bold">App Store</div>
                 </div>
               </a>
               <a
                 href="#"
-                className="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
-                <Smartphone className="h-7 w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                <div className="leading-tight">
-                  <div className="text-[10px] opacity-75">Get it on</div>
-                  <div className="text-sm font-bold">Google Play</div>
+                <Smartphone className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="leading-tight min-w-0">
+                  <div className="text-[9px] sm:text-[10px] opacity-75">Get it on</div>
+                  <div className="text-xs sm:text-sm font-bold">Google Play</div>
                 </div>
               </a>
             </div>
@@ -190,7 +190,7 @@ const Footer = () => {
                 {
                   label: "Visa",
                   svg: (
-                    <svg viewBox="0 0 48 16" className="h-5" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 48 16" className="h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg">
                       <text x="24" y="13" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="14" fontStyle="italic" fill="#1A1F71">VISA</text>
                     </svg>
                   ),
@@ -198,7 +198,7 @@ const Footer = () => {
                 {
                   label: "Mastercard",
                   svg: (
-                    <svg viewBox="0 0 36 22" className="h-6" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 36 22" className="h-5 sm:h-6" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="14" cy="11" r="9" fill="#EB001B" />
                       <circle cx="22" cy="11" r="9" fill="#F79E1B" />
                       <path d="M18 4.5a9 9 0 0 0 0 13 9 9 0 0 0 0-13z" fill="#FF5F00" />
@@ -208,7 +208,7 @@ const Footer = () => {
                 {
                   label: "Amex",
                   svg: (
-                    <svg viewBox="0 0 48 16" className="h-5" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 48 16" className="h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg">
                       <rect width="48" height="16" rx="2" fill="#2E77BC" />
                       <text x="24" y="11" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="7" fill="#fff">AMERICAN</text>
                       <text x="24" y="14.5" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="3.5" fill="#fff">EXPRESS</text>
@@ -218,7 +218,7 @@ const Footer = () => {
                 {
                   label: "Interac",
                   svg: (
-                    <svg viewBox="0 0 56 22" className="h-6" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 56 22" className="h-5 sm:h-6" xmlns="http://www.w3.org/2000/svg">
                       <rect width="22" height="22" rx="3" fill="#FFB800" />
                       <text x="11" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="7" fill="#000">I</text>
                       <text x="40" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="9" fill="#000">erac</text>
@@ -229,7 +229,7 @@ const Footer = () => {
                 <div
                   key={label}
                   title={label}
-                  className="h-11 w-16 rounded-lg bg-white border border-border flex items-center justify-center px-2 hover:border-primary/40 hover:shadow-md transition-all"
+                  className="h-10 w-14 sm:h-11 sm:w-16 rounded-lg bg-white border border-border flex items-center justify-center px-2 hover:border-primary/40 hover:shadow-md transition-all"
                 >
                   {svg}
                 </div>
@@ -241,9 +241,9 @@ const Footer = () => {
 
       {/* Bottom bar */}
       <div className="relative border-t border-border bg-gradient-to-r from-primary/5 via-background to-primary/5 backdrop-blur">
-        <div className="container mx-auto px-5 py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
+        <div className="container mx-auto px-4 sm:px-5 py-4 sm:py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] sm:text-xs text-muted-foreground text-center md:text-left">
           <p>© {year} <span className="font-bold text-foreground">Deliverr</span> Delivery Services Inc. All rights reserved.</p>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-5">
             <Link to="/privacy" className="hover:text-primary transition-colors font-medium">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors font-medium">Terms of Service</Link>
             <span className="inline-flex items-center gap-1.5">
