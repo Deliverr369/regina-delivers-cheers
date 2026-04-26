@@ -41,43 +41,43 @@ const Footer = () => {
       </div>
 
       {/* Main grid */}
-      <div className="relative container mx-auto px-5 py-14 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
+      <div className="relative container mx-auto px-4 sm:px-5 py-10 sm:py-14 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10 md:gap-8">
           {/* Brand / Contact */}
           <div className="md:col-span-4">
-            <Link to="/" className="inline-block mb-5">
-              <span className="font-display font-extrabold text-4xl tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <Link to="/" className="inline-block mb-4">
+              <span className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Deliverr
               </span>
             </Link>
-            <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
+            <p className="text-muted-foreground text-sm leading-relaxed mb-5 max-w-sm">
               Fast, reliable delivery from your favourite local stores in Saskatchewan. ⚡
             </p>
 
             <div className="space-y-3 mb-6">
               <a
                 href="tel:+18552352205"
-                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group"
+                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Phone className="h-4 w-4" />
                 </span>
-                <span className="font-semibold">+1 (855) 235-2205</span>
+                <span className="font-semibold truncate">+1 (855) 235-2205</span>
               </a>
               <a
                 href="mailto:support@deliverr.ca"
-                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group"
+                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Mail className="h-4 w-4" />
                 </span>
-                <span className="font-semibold">support@deliverr.ca</span>
+                <span className="font-semibold truncate">support@deliverr.ca</span>
               </a>
-              <div className="flex items-center gap-3 text-sm text-foreground">
-                <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30">
+              <div className="flex items-center gap-3 text-sm text-foreground min-w-0">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30">
                   <MapPin className="h-4 w-4" />
                 </span>
-                <span className="font-semibold">Regina &amp; Saskatoon, SK</span>
+                <span className="font-semibold truncate">Regina &amp; Saskatoon, SK</span>
               </div>
             </div>
 
