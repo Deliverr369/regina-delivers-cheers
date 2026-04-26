@@ -183,12 +183,52 @@ const Footer = () => {
               We Accept
             </h5>
             <div className="flex flex-wrap gap-2">
-              {["Visa", "Mastercard", "Amex", "Interac"].map((label) => (
+              {[
+                {
+                  label: "Visa",
+                  svg: (
+                    <svg viewBox="0 0 48 16" className="h-5" xmlns="http://www.w3.org/2000/svg">
+                      <text x="24" y="13" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="14" fontStyle="italic" fill="#1A1F71">VISA</text>
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Mastercard",
+                  svg: (
+                    <svg viewBox="0 0 36 22" className="h-6" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="14" cy="11" r="9" fill="#EB001B" />
+                      <circle cx="22" cy="11" r="9" fill="#F79E1B" />
+                      <path d="M18 4.5a9 9 0 0 0 0 13 9 9 0 0 0 0-13z" fill="#FF5F00" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Amex",
+                  svg: (
+                    <svg viewBox="0 0 48 16" className="h-5" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="48" height="16" rx="2" fill="#2E77BC" />
+                      <text x="24" y="11" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="7" fill="#fff">AMERICAN</text>
+                      <text x="24" y="14.5" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="3.5" fill="#fff">EXPRESS</text>
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Interac",
+                  svg: (
+                    <svg viewBox="0 0 56 22" className="h-6" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="22" height="22" rx="3" fill="#FFB800" />
+                      <text x="11" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="7" fill="#000">I</text>
+                      <text x="40" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="9" fill="#000">erac</text>
+                    </svg>
+                  ),
+                },
+              ].map(({ label, svg }) => (
                 <div
                   key={label}
-                  className="h-9 px-3 rounded-lg bg-card border border-border flex items-center justify-center text-[11px] font-bold text-foreground/70 hover:border-primary/40 hover:text-primary transition-colors"
+                  title={label}
+                  className="h-11 w-16 rounded-lg bg-white border border-border flex items-center justify-center px-2 hover:border-primary/40 hover:shadow-md transition-all"
                 >
-                  {label}
+                  {svg}
                 </div>
               ))}
             </div>
