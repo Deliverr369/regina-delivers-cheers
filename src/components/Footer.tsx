@@ -101,53 +101,56 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Service Areas */}
-          <div className="md:col-span-3">
-            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-5 flex items-center gap-2">
-              <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-              Service Areas
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {[
-                "Liquor in Regina",
-                "Grocery in Regina",
-                "Takeout in Regina",
-                "Liquor in Saskatoon",
-                "Grocery in Saskatoon",
-              ].map((label) => (
-                <li key={label}>
-                  <Link to="/stores" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
-                    <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Links wrapper - 2 cols on mobile */}
+          <div className="md:col-span-5 grid grid-cols-2 gap-8 sm:gap-6">
+            {/* Service Areas */}
+            <div>
+              <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
+                Service Areas
+              </h4>
+              <ul className="space-y-2.5 sm:space-y-3 text-sm">
+                {[
+                  "Liquor in Regina",
+                  "Grocery in Regina",
+                  "Takeout in Regina",
+                  "Liquor in Saskatoon",
+                  "Grocery in Saskatoon",
+                ].map((label) => (
+                  <li key={label}>
+                    <Link to="/stores" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                      <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Company */}
-          <div className="md:col-span-2">
-            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-5 flex items-center gap-2">
-              <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-              Company
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {[
-                "About Us",
-                "Help Center",
-                "Support",
-                "Careers",
-                "Become a Shopper",
-                "Partner with Us",
-              ].map((label) => (
-                <li key={label}>
-                  <Link to="/how-it-works" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
-                    <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* Company */}
+            <div>
+              <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
+                Company
+              </h4>
+              <ul className="space-y-2.5 sm:space-y-3 text-sm">
+                {[
+                  "About Us",
+                  "Help Center",
+                  "Support",
+                  "Careers",
+                  "Become a Shopper",
+                  "Partner with Us",
+                ].map((label) => (
+                  <li key={label}>
+                    <Link to="/how-it-works" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                      <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Get the App */}
