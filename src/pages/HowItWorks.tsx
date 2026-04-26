@@ -1,10 +1,25 @@
 import Header from "@/components/Header";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/seo/SEO";
 
 const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="How It Works — Liquor Delivery in Regina | Deliverr"
+        description="Learn how Deliverr delivers liquor and smokes across Regina in under 60 minutes. Order, verify ID on delivery, enjoy at home."
+        canonical="https://regina-delivers-cheers.lovable.app/how-it-works"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            { "@type": "Question", name: "What are your delivery hours?", acceptedAnswer: { "@type": "Answer", text: "We deliver from 10:00 AM to 10:00 PM, 7 days a week throughout Regina." } },
+            { "@type": "Question", name: "Do I need to show ID?", acceptedAnswer: { "@type": "Answer", text: "Yes. All customers must show valid government-issued photo ID proving they are 19+ at the time of delivery." } },
+            { "@type": "Question", name: "What areas do you deliver to?", acceptedAnswer: { "@type": "Answer", text: "We deliver throughout Regina, Saskatchewan only." } },
+          ],
+        }}
+      />
       <Header />
       <main className="pt-header">
         <HowItWorksSection />

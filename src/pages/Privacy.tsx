@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/seo/SEO";
 
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Privacy Policy | Deliverr Regina"
+        description="How Deliverr collects, uses, and protects your personal information when you order liquor and tobacco delivery in Regina."
+        canonical="https://regina-delivers-cheers.lovable.app/privacy"
+      />
       <Header />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
