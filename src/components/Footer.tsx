@@ -12,27 +12,27 @@ const Footer = () => {
       <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-secondary/10 blur-3xl" />
 
       {/* Newsletter / CTA strip */}
-      <div className="relative container mx-auto px-5 pt-14 md:pt-16">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-primary via-primary to-primary/80 p-8 md:p-10 shadow-2xl shadow-primary/30">
+      <div className="relative container mx-auto px-4 sm:px-5 pt-10 sm:pt-14 md:pt-16">
+        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-primary via-primary to-primary/80 p-6 sm:p-8 md:p-10 shadow-2xl shadow-primary/30">
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.2) 0%, transparent 50%)'
           }} />
-          <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="text-primary-foreground">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-bold uppercase tracking-wider mb-3">
-                <Sparkles className="h-3.5 w-3.5" />
+          <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
+            <div className="text-primary-foreground w-full md:w-auto">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-3">
+                <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Exclusive Offers
               </div>
-              <h3 className="font-display font-extrabold text-2xl md:text-3xl leading-tight">
+              <h3 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl leading-tight">
                 Get $10 off your first order
               </h3>
-              <p className="text-primary-foreground/90 text-sm md:text-base mt-1">
+              <p className="text-primary-foreground/90 text-xs sm:text-sm md:text-base mt-1.5">
                 Join thousands shopping with Deliverr today.
               </p>
             </div>
             <Link
               to="/signup"
-              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all whitespace-nowrap"
+              className="w-full md:w-auto justify-center inline-flex items-center gap-2 bg-white text-primary font-bold px-6 py-3.5 sm:px-7 sm:py-4 rounded-full shadow-lg hover:shadow-xl active:scale-95 md:hover:scale-105 transition-all whitespace-nowrap"
             >
               Sign Up Free <ArrowRight className="h-4 w-4" />
             </Link>
@@ -41,43 +41,43 @@ const Footer = () => {
       </div>
 
       {/* Main grid */}
-      <div className="relative container mx-auto px-5 py-14 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
+      <div className="relative container mx-auto px-4 sm:px-5 py-10 sm:py-14 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10 md:gap-8">
           {/* Brand / Contact */}
           <div className="md:col-span-4">
-            <Link to="/" className="inline-block mb-5">
-              <span className="font-display font-extrabold text-4xl tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <Link to="/" className="inline-block mb-4">
+              <span className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Deliverr
               </span>
             </Link>
-            <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
+            <p className="text-muted-foreground text-sm leading-relaxed mb-5 max-w-sm">
               Fast, reliable delivery from your favourite local stores in Saskatchewan. ⚡
             </p>
 
             <div className="space-y-3 mb-6">
               <a
                 href="tel:+18552352205"
-                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group"
+                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Phone className="h-4 w-4" />
                 </span>
-                <span className="font-semibold">+1 (855) 235-2205</span>
+                <span className="font-semibold truncate">+1 (855) 235-2205</span>
               </a>
               <a
                 href="mailto:support@deliverr.ca"
-                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group"
+                className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Mail className="h-4 w-4" />
                 </span>
-                <span className="font-semibold">support@deliverr.ca</span>
+                <span className="font-semibold truncate">support@deliverr.ca</span>
               </a>
-              <div className="flex items-center gap-3 text-sm text-foreground">
-                <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30">
+              <div className="flex items-center gap-3 text-sm text-foreground min-w-0">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30">
                   <MapPin className="h-4 w-4" />
                 </span>
-                <span className="font-semibold">Regina &amp; Saskatoon, SK</span>
+                <span className="font-semibold truncate">Regina &amp; Saskatoon, SK</span>
               </div>
             </div>
 
@@ -101,80 +101,83 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Service Areas */}
-          <div className="md:col-span-3">
-            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-5 flex items-center gap-2">
-              <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-              Service Areas
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {[
-                "Liquor in Regina",
-                "Grocery in Regina",
-                "Takeout in Regina",
-                "Liquor in Saskatoon",
-                "Grocery in Saskatoon",
-              ].map((label) => (
-                <li key={label}>
-                  <Link to="/stores" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
-                    <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Links wrapper - 2 cols on mobile */}
+          <div className="md:col-span-5 grid grid-cols-2 gap-8 sm:gap-6">
+            {/* Service Areas */}
+            <div>
+              <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
+                Service Areas
+              </h4>
+              <ul className="space-y-2.5 sm:space-y-3 text-sm">
+                {[
+                  "Liquor in Regina",
+                  "Grocery in Regina",
+                  "Takeout in Regina",
+                  "Liquor in Saskatoon",
+                  "Grocery in Saskatoon",
+                ].map((label) => (
+                  <li key={label}>
+                    <Link to="/stores" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                      <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Company */}
-          <div className="md:col-span-2">
-            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-5 flex items-center gap-2">
-              <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-              Company
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {[
-                "About Us",
-                "Help Center",
-                "Support",
-                "Careers",
-                "Become a Shopper",
-                "Partner with Us",
-              ].map((label) => (
-                <li key={label}>
-                  <Link to="/how-it-works" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
-                    <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* Company */}
+            <div>
+              <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
+                Company
+              </h4>
+              <ul className="space-y-2.5 sm:space-y-3 text-sm">
+                {[
+                  "About Us",
+                  "Help Center",
+                  "Support",
+                  "Careers",
+                  "Become a Shopper",
+                  "Partner with Us",
+                ].map((label) => (
+                  <li key={label}>
+                    <Link to="/how-it-works" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                      <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Get the App */}
           <div className="md:col-span-3">
-            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-5 flex items-center gap-2">
+            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
               <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
               Get the App
             </h4>
-            <div className="space-y-3 mb-7">
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 sm:gap-3 mb-6 sm:mb-7">
               <a
                 href="#"
-                className="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
-                <Apple className="h-7 w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                <div className="leading-tight">
-                  <div className="text-[10px] opacity-75">Download on the</div>
-                  <div className="text-sm font-bold">App Store</div>
+                <Apple className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="leading-tight min-w-0">
+                  <div className="text-[9px] sm:text-[10px] opacity-75">Download on the</div>
+                  <div className="text-xs sm:text-sm font-bold">App Store</div>
                 </div>
               </a>
               <a
                 href="#"
-                className="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
-                <Smartphone className="h-7 w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                <div className="leading-tight">
-                  <div className="text-[10px] opacity-75">Get it on</div>
-                  <div className="text-sm font-bold">Google Play</div>
+                <Smartphone className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="leading-tight min-w-0">
+                  <div className="text-[9px] sm:text-[10px] opacity-75">Get it on</div>
+                  <div className="text-xs sm:text-sm font-bold">Google Play</div>
                 </div>
               </a>
             </div>
@@ -187,7 +190,7 @@ const Footer = () => {
                 {
                   label: "Visa",
                   svg: (
-                    <svg viewBox="0 0 48 16" className="h-5" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 48 16" className="h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg">
                       <text x="24" y="13" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="14" fontStyle="italic" fill="#1A1F71">VISA</text>
                     </svg>
                   ),
@@ -195,7 +198,7 @@ const Footer = () => {
                 {
                   label: "Mastercard",
                   svg: (
-                    <svg viewBox="0 0 36 22" className="h-6" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 36 22" className="h-5 sm:h-6" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="14" cy="11" r="9" fill="#EB001B" />
                       <circle cx="22" cy="11" r="9" fill="#F79E1B" />
                       <path d="M18 4.5a9 9 0 0 0 0 13 9 9 0 0 0 0-13z" fill="#FF5F00" />
@@ -205,7 +208,7 @@ const Footer = () => {
                 {
                   label: "Amex",
                   svg: (
-                    <svg viewBox="0 0 48 16" className="h-5" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 48 16" className="h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg">
                       <rect width="48" height="16" rx="2" fill="#2E77BC" />
                       <text x="24" y="11" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="7" fill="#fff">AMERICAN</text>
                       <text x="24" y="14.5" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="3.5" fill="#fff">EXPRESS</text>
@@ -215,7 +218,7 @@ const Footer = () => {
                 {
                   label: "Interac",
                   svg: (
-                    <svg viewBox="0 0 56 22" className="h-6" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 56 22" className="h-5 sm:h-6" xmlns="http://www.w3.org/2000/svg">
                       <rect width="22" height="22" rx="3" fill="#FFB800" />
                       <text x="11" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="7" fill="#000">I</text>
                       <text x="40" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="9" fill="#000">erac</text>
@@ -226,7 +229,7 @@ const Footer = () => {
                 <div
                   key={label}
                   title={label}
-                  className="h-11 w-16 rounded-lg bg-white border border-border flex items-center justify-center px-2 hover:border-primary/40 hover:shadow-md transition-all"
+                  className="h-10 w-14 sm:h-11 sm:w-16 rounded-lg bg-white border border-border flex items-center justify-center px-2 hover:border-primary/40 hover:shadow-md transition-all"
                 >
                   {svg}
                 </div>
@@ -238,9 +241,9 @@ const Footer = () => {
 
       {/* Bottom bar */}
       <div className="relative border-t border-border bg-gradient-to-r from-primary/5 via-background to-primary/5 backdrop-blur">
-        <div className="container mx-auto px-5 py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
+        <div className="container mx-auto px-4 sm:px-5 py-4 sm:py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] sm:text-xs text-muted-foreground text-center md:text-left">
           <p>© {year} <span className="font-bold text-foreground">Deliverr</span> Delivery Services Inc. All rights reserved.</p>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-5">
             <Link to="/privacy" className="hover:text-primary transition-colors font-medium">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors font-medium">Terms of Service</Link>
             <span className="inline-flex items-center gap-1.5">
