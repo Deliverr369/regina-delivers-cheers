@@ -325,6 +325,7 @@ const StoreDetail = () => {
     const convenience: typeof products = [];
     const pet_supplies: typeof products = [];
     const takeout: typeof products = [];
+    const grocery: typeof products = [];
     for (const p of products) {
       if (p.category === "beer") beer.push(p);
       else if (p.category === "wine") wine.push(p);
@@ -334,6 +335,7 @@ const StoreDetail = () => {
       else if ((p.category as string) === "convenience") convenience.push(p);
       else if ((p.category as string) === "pet_supplies") pet_supplies.push(p);
       else if ((p.category as string) === "takeout") takeout.push(p);
+      else if ((p.category as string) === "grocery") grocery.push(p);
     }
     return {
       beer: beer.sort(sortByLargestPack),
@@ -344,6 +346,7 @@ const StoreDetail = () => {
       convenience: convenience.sort(sortByOrder),
       pet_supplies: pet_supplies.sort(sortByOrder),
       takeout: takeout.sort(sortByOrder),
+      grocery: grocery.sort(sortByOrder),
     };
   }, [products, maxPackCountByProductId]);
 
@@ -667,6 +670,9 @@ const StoreDetail = () => {
                 )}
                 {availableCategories.includes("takeout") && (
                   <TabsTrigger value="takeout" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🍔 Menu ({productsByCategory.takeout.length})</TabsTrigger>
+                )}
+                {availableCategories.includes("grocery") && (
+                  <TabsTrigger value="grocery" className="text-sm font-semibold px-5 py-2.5 gap-1.5 data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">🛒 Grocery ({productsByCategory.grocery.length})</TabsTrigger>
                 )}
               </TabsList>
               </div>

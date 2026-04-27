@@ -98,7 +98,13 @@ const Stores = () => {
     },
   });
 
-  const GROCERY_IDS: string[] = [];
+  const GROCERY_IDS: string[] = [
+    "a995b76a-8803-48de-b113-71e5c2dc76c7", // Walmart
+    "caca1d1d-b3d2-4d9a-958f-c82b28a07733", // Your Independent Grocer
+    "9ac0c80e-7c15-43ad-945f-614db9f92e58", // M&M Food Market
+    "a74d6912-0e46-4c31-8a93-3dbfbfca6526", // No Frills
+    "b38a57c1-507f-4431-938b-5b0fc3cee1be", // Real Canadian Superstore
+  ];
 
   const tabFilteredStores = stores.filter((store) => {
     if (activeTab === "smoke") return SMOKE_VAPE_IDS.includes(store.id);
