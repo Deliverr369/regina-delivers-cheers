@@ -182,6 +182,7 @@ const StoreDetail = () => {
   const [convenienceSubcategory, setConvenienceSubcategory] = useState<string>("all");
   const [petSubcategory, setPetSubcategory] = useState<string>("all");
   const [takeoutSubcategory, setTakeoutSubcategory] = useState<string>("all");
+  const [grocerySubcategory, setGrocerySubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
@@ -686,6 +687,7 @@ const StoreDetail = () => {
                     const isSmokes = category === "smokes";
                     const isPet = category === "pet_supplies";
                     const isTakeout = category === "takeout";
+                    const isGrocery = category === "grocery";
                     const petEmoji = (v: string) => {
                       const n = v.toLowerCase();
                       if (n.includes("dog")) return "🐶";
@@ -748,12 +750,12 @@ const StoreDetail = () => {
                       accessories: "🔥",
                     } as Record<string, string>)[v] || "🚬";
 
-                    const subs = isConv || isPet || isTakeout
+                    const subs = isConv || isPet || isTakeout || isGrocery
                       ? (Array.from(new Set(items.map(p => (p as any).subcategory).filter(Boolean))).sort() as string[])
                       : isSmokes
                       ? SMOKES_SUBCATEGORIES.filter(s => s.value !== "all" && items.some(p => getSmokesSubcategory(p.name) === s.value)).map(s => s.value)
                       : [];
-                    const hasSidebar = (isConv || isSmokes || isPet || isTakeout) && subs.length > 0;
+                    const hasSidebar = (isConv || isSmokes || isPet || isTakeout || isGrocery) && subs.length > 0;
 
                     const q = searchQuery.trim().toLowerCase();
                     let displayItems = category === "wine" && wineSubcategory !== "all"
@@ -768,6 +770,8 @@ const StoreDetail = () => {
                       ? items.filter(p => (p as any).subcategory === petSubcategory)
                       : category === "takeout" && takeoutSubcategory !== "all"
                       ? items.filter(p => (p as any).subcategory === takeoutSubcategory)
+                      : category === "grocery" && grocerySubcategory !== "all"
+                      ? items.filter(p => (p as any).subcategory === grocerySubcategory)
                       : items;
                     if (q) {
                       displayItems = displayItems.filter(p =>
@@ -849,15 +853,36 @@ const StoreDetail = () => {
                       if (n.includes("sandwich") || n.includes("wrap")) return "🥪";
                       return "🍽️";
                     };
-                    const currentValue = isConv ? convenienceSubcategory : isPet ? petSubcategory : isTakeout ? takeoutSubcategory : smokesSubcategory;
-                    const setCurrent = isConv ? setConvenienceSubcategory : isPet ? setPetSubcategory : isTakeout ? setTakeoutSubcategory : setSmokesSubcategory;
-                    const allLabel = isConv ? "All Departments" : isPet ? "All Pets" : isTakeout ? "Full Menu" : "All Smokes";
-                    const allItemsLabel = isConv ? "All Items" : isPet ? "All Pet Supplies" : isTakeout ? "Full Menu" : "All Smokes";
-                    const allEmoji = isConv ? "🏪" : isPet ? "🐾" : isTakeout ? "🍽️" : "🚬";
-                    const sidebarTitle = isConv ? "Departments" : isPet ? "Pet Type" : isTakeout ? "Menu" : "Categories";
-                    const aisleWord = isConv ? "aisles" : isPet ? "categories" : isTakeout ? "sections" : "categories";
-                    const labelFor = (v: string) => isConv || isPet || isTakeout ? v : (SMOKES_SUBCATEGORIES.find(s => s.value === v)?.label || v);
-                    const iconFor = (v: string) => isConv ? subEmoji(v) : isPet ? petEmoji(v) : isTakeout ? takeoutEmoji(v) : smokeEmoji(v);
+                    const groceryEmoji = (v: string) => {
+                      const n = v.toLowerCase();
+                      if (n === "baby care") return "👶";
+                      if (n === "beverages") return "🥤";
+                      if (n === "candy") return "🍬";
+                      if (n === "chocolate") return "🍫";
+                      if (n === "cleaning") return "✨";
+                      if (n === "first aid") return "🩹";
+                      if (n === "grocery") return "🛒";
+                      if (n === "hair care") return "💇‍♀️";
+                      if (n === "health & wellness") return "💊";
+                      if (n === "household") return "🧹";
+                      if (n === "medicine") return "💊";
+                      if (n === "oral care") return "🦷";
+                      if (n === "personal care") return "🧼";
+                      if (n === "pet care") return "🐾";
+                      if (n === "school & office") return "✏️";
+                      if (n === "skincare") return "🧴";
+                      if (n === "snacks") return "🍿";
+                      return "✨";
+                    };
+                    const currentValue = isConv ? convenienceSubcategory : isPet ? petSubcategory : isTakeout ? takeoutSubcategory : isGrocery ? grocerySubcategory : smokesSubcategory;
+                    const setCurrent = isConv ? setConvenienceSubcategory : isPet ? setPetSubcategory : isTakeout ? setTakeoutSubcategory : isGrocery ? setGrocerySubcategory : setSmokesSubcategory;
+                    const allLabel = isConv ? "All Departments" : isPet ? "All Pets" : isTakeout ? "Full Menu" : isGrocery ? "All Items" : "All Smokes";
+                    const allItemsLabel = isConv ? "All Items" : isPet ? "All Pet Supplies" : isTakeout ? "Full Menu" : isGrocery ? "All Items" : "All Smokes";
+                    const allEmoji = isConv ? "🏪" : isPet ? "🐾" : isTakeout ? "🍽️" : isGrocery ? "🛒" : "🚬";
+                    const sidebarTitle = isConv ? "Departments" : isPet ? "Pet Type" : isTakeout ? "Menu" : isGrocery ? "Aisles" : "Categories";
+                    const aisleWord = isConv ? "aisles" : isPet ? "categories" : isTakeout ? "sections" : isGrocery ? "aisles" : "categories";
+                    const labelFor = (v: string) => isConv || isPet || isTakeout || isGrocery ? v : (SMOKES_SUBCATEGORIES.find(s => s.value === v)?.label || v);
+                    const iconFor = (v: string) => isConv ? subEmoji(v) : isPet ? petEmoji(v) : isTakeout ? takeoutEmoji(v) : isGrocery ? groceryEmoji(v) : smokeEmoji(v);
                     const activeLabel = currentValue === "all" ? allLabel : labelFor(currentValue);
                     const activeEmoji = currentValue === "all" ? allEmoji : iconFor(currentValue);
 
@@ -886,7 +911,7 @@ const StoreDetail = () => {
                                 </span>
                               </button>
                               {subs.map((sub) => {
-                                const count = isConv || isPet || isTakeout
+                                const count = isConv || isPet || isTakeout || isGrocery
                                   ? items.filter(p => (p as any).subcategory === sub).length
                                   : items.filter(p => getSmokesSubcategory(p.name) === sub).length;
                                 const active = currentValue === sub;
@@ -924,7 +949,7 @@ const StoreDetail = () => {
                             </div>
                             {currentValue !== "all" && (
                               <button onClick={() => setCurrent("all")} className="text-xs font-semibold text-primary hover:underline">
-                                ← Back to {isConv ? "all departments" : isPet ? "all pet supplies" : isTakeout ? "full menu" : "all smokes"}
+                                ← Back to {isConv ? "all departments" : isPet ? "all pet supplies" : isTakeout ? "full menu" : isGrocery ? "all aisles" : "all smokes"}
                               </button>
                             )}
                           </div>
