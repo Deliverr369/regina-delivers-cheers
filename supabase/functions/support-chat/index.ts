@@ -65,21 +65,26 @@ async function fetchOrderContext(orderRef: string, userJwt: string | null) {
     userId = data.user?.id ?? null;
   }
 
-  const ref = orderRef.trim().replace(/^#/, "");
-  // Match either full UUID or 8-char short prefix (case-insensitive)
-  const isUuid = /^[0-9a-f-]{32,36}$/i.test(ref);
-  let query = admin
-    .from("orders")
-    .select(
-      "id,user_id,status,created_at,updated_at,total,estimated_total,final_total,subtotal,delivery_fee,tax,delivery_address,delivery_city,delivery_postal_code,payment_status,store_id,order_items(product_name,quantity,price,final_price)",
-    )
-    .limit(1);
+  const ref = orderRef.trim().replace(/^#/, "").toLowerCase();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref);
+  const isShort = /^[0-9a-f]{8}$/i.test(ref);
+
+  if (!isUuid && !isShort) {
+    return { found: false as const, reason: "not_found" };
+  }
+
+  const select =
+    "id,user_id,status,created_at,updated_at,total,estimated_total,final_total,subtotal,delivery_fee,tax,delivery_address,delivery_city,delivery_postal_code,payment_status,store_id,order_items(product_name,quantity,price,final_price)";
+
+  let query = admin.from("orders").select(select).limit(2);
 
   if (isUuid) {
     query = query.eq("id", ref);
   } else {
-    // short id: match prefix on text-cast id
-    query = query.ilike("id::text", `${ref.toLowerCase()}%`);
+    // Short ID = first 8 hex chars of UUID. Build a UUID range filter.
+    const start = `${ref}-0000-0000-0000-000000000000`;
+    const end = `${ref}-ffff-ffff-ffff-ffffffffffff`;
+    query = query.gte("id", start).lte("id", end);
   }
 
   const { data: orders, error } = await query;
