@@ -56,13 +56,13 @@ const Footer = () => {
 
             <div className="space-y-3 mb-6">
               <a
-                href="tel:+18552352205"
+                href="tel:+13065333333"
                 className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
                 <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Phone className="h-4 w-4" />
                 </span>
-                <span className="font-semibold truncate">+1 (855) 235-2205</span>
+                <span className="font-semibold truncate">+1 (306) 533-3333</span>
               </a>
               <a
                 href="mailto:support@deliverr.ca"
