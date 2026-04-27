@@ -135,15 +135,15 @@ const Footer = () => {
               </h4>
               <ul className="space-y-2.5 sm:space-y-3 text-sm">
                 {[
-                  "About Us",
-                  "Help Center",
-                  "Support",
-                  "Careers",
-                  "Become a Shopper",
-                  "Partner with Us",
-                ].map((label) => (
+                  { label: "About Us", to: "/about" },
+                  { label: "How It Works", to: "/how-it-works" },
+                  { label: "Help Center", to: "/how-it-works" },
+                  { label: "Support", to: "/how-it-works" },
+                  { label: "Privacy Policy", to: "/privacy" },
+                  { label: "Terms of Use", to: "/terms" },
+                ].map(({ label, to }) => (
                   <li key={label}>
-                    <Link to="/how-it-works" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                    <Link to={to} className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
                       <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
                       <span className="truncate">{label}</span>
                     </Link>
