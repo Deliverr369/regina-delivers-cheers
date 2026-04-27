@@ -25,6 +25,7 @@ import Onboarding from "./pages/Onboarding";
 import OnboardingGate from "./components/OnboardingGate";
 import AgeGate from "./components/AgeGate";
 import PushNotificationsMount from "./components/PushNotificationsMount";
+import SupportChatbot from "./components/SupportChatbot";
 import About from "./pages/About";
 import Help from "./pages/Help";
 import Privacy from "./pages/Privacy";
@@ -59,6 +60,7 @@ const App = () => (
             <AgeGate />
             <OnboardingGate />
             <PushNotificationsMount />
+            <SupportChatbot />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/onboarding" element={<Onboarding />} />
