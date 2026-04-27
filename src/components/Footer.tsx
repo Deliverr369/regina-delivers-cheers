@@ -137,8 +137,8 @@ const Footer = () => {
                 {[
                   { label: "About Us", to: "/about" },
                   { label: "How It Works", to: "/how-it-works" },
-                  { label: "Help Center", to: "/how-it-works" },
-                  { label: "Support", to: "/how-it-works" },
+                  { label: "Help Center", to: "/help" },
+                  { label: "Support", to: "/help#contact" },
                   { label: "Privacy Policy", to: "/privacy" },
                   { label: "Terms of Use", to: "/terms" },
                 ].map(({ label, to }) => (
