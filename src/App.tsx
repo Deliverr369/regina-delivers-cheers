@@ -26,6 +26,7 @@ import OnboardingGate from "./components/OnboardingGate";
 import AgeGate from "./components/AgeGate";
 import PushNotificationsMount from "./components/PushNotificationsMount";
 import About from "./pages/About";
+import Help from "./pages/Help";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,8 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/about" element={<About />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/need-help" element={<Help />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
 
