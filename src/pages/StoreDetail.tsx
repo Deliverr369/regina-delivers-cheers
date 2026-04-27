@@ -911,7 +911,7 @@ const StoreDetail = () => {
                                 </span>
                               </button>
                               {subs.map((sub) => {
-                                const count = isConv || isPet || isTakeout
+                                const count = isConv || isPet || isTakeout || isGrocery
                                   ? items.filter(p => (p as any).subcategory === sub).length
                                   : items.filter(p => getSmokesSubcategory(p.name) === sub).length;
                                 const active = currentValue === sub;
