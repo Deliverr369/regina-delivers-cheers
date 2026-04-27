@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Sparkles, Loader2, Phone, Mail } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Loader2, Phone, Mail, Package, ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
+type Mode = "general" | "order_status";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
 const PUBLIC_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -18,11 +20,20 @@ const STARTER_QUESTIONS = [
 const WELCOME: ChatMsg = {
   role: "assistant",
   content:
-    "👋 Hi! I'm the **Deliverr Assistant**. Ask me anything about ordering, delivery, payments, or your account in Regina. For order-specific issues I'll point you to our support team.",
+    "👋 Hi! I'm the **Deliverr Assistant**. Ask me anything about ordering, delivery, payments, or your account in Regina. Need help with a specific order? Tap **Check order status** below.",
+};
+
+const ORDER_INTRO: ChatMsg = {
+  role: "assistant",
+  content:
+    "📦 **Order Status mode.** Please paste your **order number** (the 8-character code from your confirmation email or the Orders page). I'll look it up and tell you the best next steps.",
 };
 
 const SupportChatbot = () => {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>("general");
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderInput, setOrderInput] = useState("");
   const [messages, setMessages] = useState<ChatMsg[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,13 +49,51 @@ const SupportChatbot = () => {
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
-  }, [open]);
+  }, [open, mode, orderId]);
 
-  const send = async (text: string) => {
+  const resetToGeneral = () => {
+    setMode("general");
+    setOrderId(null);
+    setOrderInput("");
+    setMessages([WELCOME]);
+    setError(null);
+  };
+
+  const enterOrderMode = () => {
+    setMode("order_status");
+    setOrderId(null);
+    setOrderInput("");
+    setError(null);
+    setMessages([ORDER_INTRO]);
+  };
+
+  const submitOrderId = async (raw: string) => {
+    const cleaned = raw.trim().replace(/^#/, "");
+    if (!cleaned) return;
+    setOrderId(cleaned);
+    // Kick off automatically with a default question
+    await sendChat(`Look up my order ${cleaned} and tell me what to do next.`, {
+      mode: "order_status",
+      orderId: cleaned,
+      seedMessages: [ORDER_INTRO, { role: "user", content: `Order #${cleaned}` }],
+    });
+  };
+
+  const sendChat = async (
+    text: string,
+    opts?: {
+      mode?: Mode;
+      orderId?: string | null;
+      seedMessages?: ChatMsg[];
+    },
+  ) => {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
     setError(null);
-    const next: ChatMsg[] = [...messages, { role: "user", content: trimmed }];
+
+    const baseMessages = opts?.seedMessages ?? [...messages, { role: "user" as const, content: trimmed }];
+    // If we're appending normally, the user message is already in baseMessages; if seeded, we don't double-add.
+    const next: ChatMsg[] = opts?.seedMessages ? baseMessages : baseMessages;
     setMessages(next);
     setInput("");
     setLoading(true);
@@ -54,7 +103,7 @@ const SupportChatbot = () => {
       assistantSoFar += chunk;
       setMessages((prev) => {
         const last = prev[prev.length - 1];
-        if (last?.role === "assistant" && last !== WELCOME && prev.length > next.length) {
+        if (last?.role === "assistant" && prev.length > next.length) {
           return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
         }
         return [...prev, { role: "assistant", content: assistantSoFar }];
@@ -62,14 +111,21 @@ const SupportChatbot = () => {
     };
 
     try {
+      // Use the user's session token if available so the edge function can verify ownership
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token ?? PUBLIC_KEY;
+
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${PUBLIC_KEY}`,
+          Authorization: `Bearer ${token}`,
+          apikey: PUBLIC_KEY,
         },
         body: JSON.stringify({
           messages: next.map(({ role, content }) => ({ role, content })),
+          mode: opts?.mode ?? mode,
+          orderId: opts?.orderId ?? orderId,
         }),
       });
 
@@ -118,12 +174,27 @@ const SupportChatbot = () => {
     }
   };
 
+  const send = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+    sendChat(trimmed, { seedMessages: [...messages, { role: "user", content: trimmed }] });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send(input);
     }
   };
+
+  const handleOrderIdKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitOrderId(orderInput);
+    }
+  };
+
+  const showOrderIdPrompt = mode === "order_status" && !orderId;
 
   return (
     <>
@@ -156,16 +227,25 @@ const SupportChatbot = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
+              {mode === "order_status" && (
+                <button
+                  onClick={resetToGeneral}
+                  aria-label="Back to general chat"
+                  className="p-1 rounded-md hover:bg-white/20 transition-colors shrink-0"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
               <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                <Sparkles className="h-5 w-5" />
+                {mode === "order_status" ? <Package className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
               </div>
               <div className="min-w-0">
                 <h3 className="font-display font-bold text-base leading-tight truncate">
-                  Deliverr Assistant
+                  {mode === "order_status" ? "Order Status" : "Deliverr Assistant"}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-primary-foreground/90">
                   <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                  Online · Replies instantly
+                  {orderId ? `Order #${orderId.slice(0, 8).toUpperCase()}` : "Online · Replies instantly"}
                 </div>
               </div>
             </div>
@@ -217,10 +297,17 @@ const SupportChatbot = () => {
               </div>
             )}
 
-            {/* Starter questions (only on welcome state) */}
-            {messages.length === 1 && !loading && (
+            {/* Mode entry CTA + starter questions on welcome */}
+            {mode === "general" && messages.length === 1 && !loading && (
               <div className="pt-2 space-y-2">
-                <p className="text-xs text-muted-foreground font-medium px-1">Quick questions:</p>
+                <button
+                  onClick={enterOrderMode}
+                  className="w-full flex items-center gap-2 bg-primary/10 border border-primary/30 hover:bg-primary/15 text-foreground rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+                >
+                  <Package className="h-4 w-4 text-primary" />
+                  Check order status
+                </button>
+                <p className="text-xs text-muted-foreground font-medium px-1 pt-1">Quick questions:</p>
                 {STARTER_QUESTIONS.map((q) => (
                   <button
                     key={q}
@@ -244,31 +331,59 @@ const SupportChatbot = () => {
             </a>
           </div>
 
-          {/* Input */}
-          <div className="border-t border-border bg-card p-3">
-            <div className="flex items-end gap-2">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your question…"
-                rows={1}
-                className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 max-h-32"
-              />
-              <button
-                onClick={() => send(input)}
-                disabled={!input.trim() || loading}
-                aria-label="Send message"
-                className="h-10 w-10 shrink-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
+          {/* Input area: either order-id prompt or chat input */}
+          {showOrderIdPrompt ? (
+            <div className="border-t border-border bg-card p-3">
+              <label className="text-xs text-muted-foreground font-medium mb-1.5 block">
+                Order number
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  value={orderInput}
+                  onChange={(e) => setOrderInput(e.target.value)}
+                  onKeyDown={handleOrderIdKeyDown}
+                  placeholder="e.g. A1B2C3D4"
+                  autoFocus
+                  className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 font-mono uppercase"
+                />
+                <button
+                  onClick={() => submitOrderId(orderInput)}
+                  disabled={!orderInput.trim() || loading}
+                  className="h-10 px-4 shrink-0 rounded-xl bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Look up"}
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Find this in your confirmation email or the <a href="/orders" className="underline">Orders page</a>.
+              </p>
             </div>
-            <p className="text-[10px] text-muted-foreground text-center mt-2">
-              AI assistant · For order issues call 306-533-3333
-            </p>
-          </div>
+          ) : (
+            <div className="border-t border-border bg-card p-3">
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={mode === "order_status" ? "Ask a follow-up about this order…" : "Type your question…"}
+                  rows={1}
+                  className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 max-h-32"
+                />
+                <button
+                  onClick={() => send(input)}
+                  disabled={!input.trim() || loading}
+                  aria-label="Send message"
+                  className="h-10 w-10 shrink-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">
+                AI assistant · For order issues call 306-533-3333
+              </p>
+            </div>
+          )}
         </div>
       )}
     </>

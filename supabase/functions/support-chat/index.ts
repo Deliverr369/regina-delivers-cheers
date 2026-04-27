@@ -1,4 +1,5 @@
 // Streaming support chatbot powered by Lovable AI Gateway
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are "Deliverr Assistant", the friendly support chatbot for Deliverr — a same-day liquor, smokes, and lifestyle delivery service operating ONLY in Regina, Saskatchewan, Canada.
+const BASE_PROMPT = `You are "Deliverr Assistant", the friendly support chatbot for Deliverr — a same-day liquor, smokes, and lifestyle delivery service operating ONLY in Regina, Saskatchewan, Canada.
 
 Voice: warm, concise, helpful. Use short paragraphs and bullet lists. Never make up information you don't know — if unsure, suggest contacting human support.
 
@@ -32,11 +33,108 @@ Helpful behaviour:
 - Never promise alcohol delivery to minors. Never bypass the 19+ rule.
 - Keep responses under ~6 short sentences unless the user asks for detail.`;
 
+const ORDER_STATUS_GUIDANCE = `
+You are now in ORDER STATUS MODE. The user has provided an order reference and you have the order's current data below. Your job:
+
+1. Greet briefly and confirm the order short ID.
+2. Summarise current status in plain English (e.g. "We've confirmed your order and a shopper is on the way to the store").
+3. Give the BEST NEXT STEPS the user can take right now, tailored to the status:
+   - pending → reassure, ETA window, mention they can still cancel for a full refund.
+   - confirmed → store is being notified; ETA window; ID reminder.
+   - shopping → shopper is picking items; substitutions may happen; final total may shift slightly.
+   - out_for_delivery → driver on the way; have ID + payment card holder ready; track via Orders page.
+   - delivered → confirm receipt; how to report missing/damaged items within 24h.
+   - cancelled → refund timing (3–5 business days) and how to reorder.
+4. If anything seems wrong (very old, payment failed, missing items), tell them to call 306-533-3333 or email support@deliverr.ca and quote the short ID.
+5. Keep it under 6 short sentences plus a tight bullet list. Use markdown.
+6. NEVER invent items, totals, or addresses that aren't in the order data provided.`;
+
+function shortId(id: string) {
+  return id.slice(0, 8).toUpperCase();
+}
+
+async function fetchOrderContext(orderRef: string, userJwt: string | null) {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // Resolve user from JWT (optional but enforced if present)
+  let userId: string | null = null;
+  if (userJwt) {
+    const { data } = await admin.auth.getUser(userJwt);
+    userId = data.user?.id ?? null;
+  }
+
+  const ref = orderRef.trim().replace(/^#/, "").toLowerCase();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref);
+  const isShort = /^[0-9a-f]{8}$/i.test(ref);
+
+  if (!isUuid && !isShort) {
+    return { found: false as const, reason: "not_found" };
+  }
+
+  const select =
+    "id,user_id,status,created_at,updated_at,total,estimated_total,final_total,subtotal,delivery_fee,tax,delivery_address,delivery_city,delivery_postal_code,payment_status,store_id,order_items(product_name,quantity,price,final_price)";
+
+  let query = admin.from("orders").select(select).limit(2);
+
+  if (isUuid) {
+    query = query.eq("id", ref);
+  } else {
+    // Short ID = first 8 hex chars of UUID. Build a UUID range filter.
+    const start = `${ref}-0000-0000-0000-000000000000`;
+    const end = `${ref}-ffff-ffff-ffff-ffffffffffff`;
+    query = query.gte("id", start).lte("id", end);
+  }
+
+  const { data: orders, error } = await query;
+  if (error || !orders || orders.length === 0) {
+    return { found: false as const, reason: "not_found" };
+  }
+  const order = orders[0];
+
+  if (userId && order.user_id !== userId) {
+    return { found: false as const, reason: "not_authorized" };
+  }
+
+  // Optional store name
+  let storeName: string | null = null;
+  if (order.store_id) {
+    const { data: store } = await admin
+      .from("stores")
+      .select("name")
+      .eq("id", order.store_id)
+      .maybeSingle();
+    storeName = store?.name ?? null;
+  }
+
+  return {
+    found: true as const,
+    order: {
+      short_id: shortId(order.id),
+      status: order.status,
+      payment_status: order.payment_status,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+      total: order.final_total ?? order.estimated_total ?? order.total,
+      delivery_fee: order.delivery_fee,
+      tax: order.tax,
+      address: `${order.delivery_address}, ${order.delivery_city ?? "Regina"}${order.delivery_postal_code ? " " + order.delivery_postal_code : ""}`,
+      store_name: storeName,
+      items: (order.order_items || []).map((i: any) => ({
+        name: i.product_name,
+        qty: i.quantity,
+        price: i.final_price ?? i.price,
+      })),
+    },
+  };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, mode, orderId } = await req.json();
 
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages must be an array" }), {
@@ -53,6 +151,27 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    let systemPrompt = BASE_PROMPT;
+
+    if (mode === "order_status" && typeof orderId === "string" && orderId.trim()) {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const jwt = authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader.slice(7)
+        : null;
+
+      const result = await fetchOrderContext(orderId, jwt);
+
+      if (!result.found) {
+        const reason =
+          result.reason === "not_authorized"
+            ? "The order exists but does not belong to the signed-in account. Politely ask the user to sign in with the account that placed the order, or call 306-533-3333."
+            : `We could not find an order matching "${orderId}". Politely ask the user to double-check the order # (8-character code from their confirmation email) or to contact 306-533-3333.`;
+        systemPrompt = `${BASE_PROMPT}\n\n${ORDER_STATUS_GUIDANCE}\n\nORDER LOOKUP RESULT: NOT FOUND.\n${reason}`;
+      } else {
+        systemPrompt = `${BASE_PROMPT}\n\n${ORDER_STATUS_GUIDANCE}\n\nORDER DATA (JSON):\n${JSON.stringify(result.order, null, 2)}`;
+      }
+    }
+
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -63,8 +182,8 @@ Deno.serve(async (req: Request) => {
         model: "google/gemini-3-flash-preview",
         stream: true,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...messages.slice(-20), // keep last 20 turns
+          { role: "system", content: systemPrompt },
+          ...messages.slice(-20),
         ],
       }),
     });
