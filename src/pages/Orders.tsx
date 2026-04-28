@@ -160,6 +160,11 @@ const Orders = () => {
                       <div className="text-right shrink-0">
                         <p className={`font-bold text-primary ${isNative ? "text-base" : "text-xl"}`}>${Number(order.total).toFixed(2)}</p>
                         <p className={`text-muted-foreground ${isNative ? "text-[10.5px]" : "text-xs"}`}>{order.order_items?.length || 0} items</p>
+                        {Number((order as any).delivery_fee) > 0 && (
+                          <p className={`text-muted-foreground ${isNative ? "text-[10px]" : "text-[11px]"} mt-0.5`}>
+                            incl. ${Number((order as any).delivery_fee).toFixed(2)} delivery
+                          </p>
+                        )}
                       </div>
                     </div>
 
