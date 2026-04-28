@@ -384,6 +384,7 @@ const DashboardOrders = () => {
                               {new Date(order.delivery_scheduled_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                               {order.delivery_window ? ` · ${order.delivery_window}` : ""}
                             </Badge>
+                          )}
                           {isSplit(order) && (
                             <Badge
                               variant="outline"
