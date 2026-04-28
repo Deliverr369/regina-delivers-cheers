@@ -135,8 +135,9 @@ const BulkImageUploadModal = ({ open, onClose, allGroups, onRefresh }: Props) =>
       setProgress(Math.round(((i + 1) / matched.length) * 100));
       try {
         const blob = await processProductImage(img.file, () => {});
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
-        await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: "image/jpeg" });
+        const ext = blob.type === "image/webp" ? "webp" : "jpg";
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+        await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: blob.type || "image/jpeg" });
         const { data: { publicUrl } } = supabase.storage.from("store-images").getPublicUrl(`products/${fileName}`);
         const ids = img.matchedGroup!.products.map(p => p.id);
         await supabase.from("products").update({ image_url: publicUrl }).in("id", ids);

@@ -57,8 +57,9 @@ const ProductDetailDrawer = ({ group, stores, packsByProduct, onClose, onRefresh
     toast({ title: "Processing image..." });
     try {
       const blob = await processProductImage(file, () => {});
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
-      await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: "image/jpeg" });
+      const ext = blob.type === "image/webp" ? "webp" : "jpg";
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+      await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: blob.type || "image/jpeg" });
       const { data: { publicUrl } } = supabase.storage.from("store-images").getPublicUrl(`products/${fileName}`);
       await supabase.from("products").update({ image_url: publicUrl }).in("id", group.products.map(p => p.id));
       toast({ title: "Image updated across all stores" });
