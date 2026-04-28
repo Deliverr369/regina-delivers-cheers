@@ -90,12 +90,15 @@ const DashboardOrders = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("active");
+  const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [stores, setStores] = useState<StoreOption[]>([]);
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [advancingId, setAdvancingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
+    fetchStores();
   }, []);
 
   // Realtime: any change to any order triggers a refetch.
