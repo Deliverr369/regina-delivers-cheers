@@ -13,7 +13,6 @@ const categories = [
     name: "Liquor Stores",
     description: "Wine, Beer & Spirits",
     image: catLiquor,
-    halo: "bg-rose-100",
     to: "/stores?category=liquor",
   },
   {
@@ -21,7 +20,6 @@ const categories = [
     name: "Smoke & Vape",
     description: "Cigarettes, Vapes & More",
     image: catSmoke,
-    halo: "bg-purple-100",
     to: "/products?category=smokes",
   },
   {
@@ -29,7 +27,6 @@ const categories = [
     name: "Pharmacy",
     description: "Health & Wellness",
     image: catPharmacy,
-    halo: "bg-teal-100",
     to: "/stores?category=pharmacy",
   },
   {
@@ -37,7 +34,6 @@ const categories = [
     name: "Pet Supplies",
     description: "Food, Toys & More",
     image: catPet,
-    halo: "bg-orange-100",
     to: "/products?category=pet_supplies",
   },
   {
@@ -45,7 +41,6 @@ const categories = [
     name: "Takeout",
     description: "Food & Beverages",
     image: catTakeout,
-    halo: "bg-amber-100",
     to: "/stores?category=takeout",
   },
   {
@@ -53,7 +48,6 @@ const categories = [
     name: "Grocery Stores",
     description: "Fresh Groceries & Essentials",
     image: catGrocery,
-    halo: "bg-emerald-100",
     to: "/stores?category=grocery",
   },
 ];
@@ -76,11 +70,11 @@ const CategoriesSection = () => {
             <Link
               key={category.id}
               to={category.to}
-              className="group relative flex flex-col items-center justify-between rounded-3xl bg-card border border-border/60 hover:border-primary hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_20px_40px_-20px_hsl(var(--primary)/0.35)] transition-all duration-300 p-6 md:p-8 text-center min-h-[280px] md:min-h-[320px]"
+              className="group relative flex flex-col items-center justify-between rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-[0_18px_40px_-22px_hsl(var(--primary)/0.35)] transition-all duration-300 p-6 md:p-8 text-center min-h-[280px] md:min-h-[320px]"
             >
-              {/* Illustration with halo */}
+              {/* Illustration with neutral halo */}
               <div className="relative flex items-center justify-center w-full h-32 md:h-40 mb-4">
-                <div className={`absolute w-28 h-28 md:w-36 md:h-36 rounded-full ${category.halo} opacity-70`} />
+                <div className="absolute w-28 h-28 md:w-36 md:h-36 rounded-full bg-secondary group-hover:bg-primary/5 transition-colors duration-500" />
                 <img
                   src={category.image}
                   alt={category.name}
@@ -102,7 +96,7 @@ const CategoriesSection = () => {
               </div>
 
               {/* Arrow button */}
-              <div className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-foreground/60 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
+              <div className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center text-foreground/60 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
                 <ChevronRight className="h-4 w-4" />
               </div>
             </Link>

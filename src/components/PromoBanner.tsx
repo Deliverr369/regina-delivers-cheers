@@ -35,30 +35,29 @@ const PromoBanner = () => {
   if (isLoading || !banner) return null;
 
   return (
-    <section className="py-6 md:py-10">
+    <section className="pt-10 md:pt-14 pb-2">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 md:p-12 text-center shadow-xl shadow-primary/20">
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-56 h-56 bg-white/5 rounded-full translate-x-1/3 translate-y-1/3" />
-          <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-white/5 rounded-full" />
+        <div className="relative overflow-hidden rounded-2xl bg-primary-gradient p-8 md:p-12 text-center shadow-[0_20px_50px_-25px_hsl(var(--primary)/0.5)]">
+          {/* Subtle decorative glow */}
+          <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-black/10 rounded-full blur-3xl" />
 
           <div className="relative z-10">
             {/* Icon badge */}
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm mb-5">
-              <Sparkles className="h-6 w-6 text-primary-foreground" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 mb-5">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
 
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-primary-foreground mb-2 tracking-tight">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-2 tracking-tight">
               {banner.title}
             </h2>
             {banner.subtitle && (
-              <h3 className="text-xl md:text-2xl font-display font-semibold text-primary-foreground/90 mb-3">
+              <h3 className="font-display text-xl md:text-2xl font-semibold text-primary-foreground/90 mb-3">
                 {banner.subtitle}
               </h3>
             )}
             {banner.description && (
-              <p className="text-primary-foreground/70 text-base md:text-lg max-w-lg mx-auto mt-2 leading-relaxed">
+              <p className="text-primary-foreground/80 text-base md:text-lg max-w-lg mx-auto mt-2 leading-relaxed">
                 {banner.description}
               </p>
             )}
@@ -66,8 +65,7 @@ const PromoBanner = () => {
               <Link to={banner.button_link}>
                 <Button
                   size="lg"
-                  variant="secondary"
-                  className="mt-6 px-10 rounded-full font-bold gap-2 text-base shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-white text-primary hover:bg-white/90"
+                  className="mt-7 px-9 rounded-full font-semibold gap-2 text-base bg-white text-primary hover:bg-white/95 hover:shadow-xl transition-all"
                 >
                   {banner.button_text}
                   <ArrowRight className="h-4 w-4" />

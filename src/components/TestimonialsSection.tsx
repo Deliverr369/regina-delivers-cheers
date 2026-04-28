@@ -23,50 +23,42 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-background via-muted/30 to-background">
-      {/* Decorative background blobs */}
-      <div className="absolute top-0 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" aria-hidden />
-      <div className="absolute bottom-0 -right-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl" aria-hidden />
-
-      <div className="container mx-auto px-4 relative">
+    <section className="py-16 md:py-24 bg-secondary/40">
+      <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14 md:mb-20">
+        <div className="text-center max-w-2xl mx-auto mb-12 md:mb-14">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-4">
             Testimonials
           </span>
-          <h2 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
             People <span className="text-primary">love</span> us
           </h2>
-          <p className="text-muted-foreground text-base md:text-lg">
+          <p className="text-muted-foreground text-base">
             Real words from Regina locals who trust Deliverr to bring the good times home.
           </p>
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {testimonials.map((t, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-6xl mx-auto">
+          {testimonials.map((t) => (
             <article
               key={t.name}
-              className="group relative bg-card border border-border/60 rounded-2xl p-7 md:p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
-              style={{ animationDelay: `${i * 100}ms` }}
+              className="group relative bg-card border border-border rounded-2xl p-7 md:p-8 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30 transition-all duration-300"
             >
-              {/* Top accent bar */}
-              <div className="absolute top-0 left-7 right-7 h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
-
               {/* Quote icon */}
               <div className="flex items-center justify-between mb-5">
-                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Quote className="w-5 h-5 text-primary" fill="currentColor" />
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Quote className="w-4 h-4 text-primary" fill="currentColor" />
                 </div>
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, idx) => (
-                    <Star key={idx} className="w-4 h-4 text-primary" fill="currentColor" />
+                    <Star key={idx} className="w-4 h-4 text-gold" fill="currentColor" />
                   ))}
                 </div>
               </div>
 
               {/* Title */}
-              <h3 className="font-heading text-lg md:text-xl font-bold text-foreground mb-3">
+              <h3 className="font-display text-lg font-bold text-foreground mb-3">
                 {t.title}
               </h3>
 
@@ -76,8 +68,8 @@ const TestimonialsSection = () => {
               </p>
 
               {/* Author */}
-              <div className="flex items-center gap-3 pt-5 border-t border-border/50">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-bold text-sm">
+              <div className="flex items-center gap-3 pt-5 border-t border-border">
+                <div className="w-10 h-10 rounded-full bg-primary-gradient flex items-center justify-center text-primary-foreground font-bold text-sm">
                   {t.initials}
                 </div>
                 <div>

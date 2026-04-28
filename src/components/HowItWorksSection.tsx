@@ -25,9 +25,12 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section className="section-padding bg-foreground text-background overflow-hidden">
+    <section className="section-padding bg-charcoal text-background overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center mb-14">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-primary-foreground/90 text-xs font-semibold tracking-widest uppercase mb-4">
+            Simple Process
+          </span>
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-3">
             How It Works
           </h2>
@@ -36,18 +39,18 @@ const HowItWorksSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-5xl mx-auto">
           {steps.map((step, index) => (
             <div key={index} className="relative text-center">
               {/* Connector Line */}
               {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-px bg-background/15" />
+                <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-px bg-background/10" />
               )}
-              
+
               {/* Step Circle */}
-              <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-5">
+              <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-gradient mb-5 shadow-lg shadow-primary/20">
                 <step.icon className="h-7 w-7 text-primary-foreground" />
-                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-background text-foreground flex items-center justify-center text-xs font-bold">
+                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-background text-foreground flex items-center justify-center text-xs font-bold shadow">
                   {index + 1}
                 </div>
               </div>
