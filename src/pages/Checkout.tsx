@@ -103,6 +103,12 @@ const Checkout = () => {
 
   const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax + tip;
 
+  // Delivery scheduling
+  const [deliveryType, setDeliveryType] = useState<"asap" | "scheduled">("asap");
+  const [scheduledDate, setScheduledDate] = useState<string>(""); // YYYY-MM-DD
+  const [scheduledSlot, setScheduledSlot] = useState<string>(""); // e.g. "10:00-11:00"
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<FormData>(() => {
     const savedAddress = typeof window !== "undefined" ? localStorage.getItem("delivery_address") || "" : "";
     return {
