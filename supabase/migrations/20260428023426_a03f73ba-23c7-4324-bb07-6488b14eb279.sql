@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.ensure_order_store_id() FROM PUBLIC, anon, authenticated;
