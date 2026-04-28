@@ -215,6 +215,13 @@ const Checkout = () => {
         delivery_city: formData.city,
         delivery_postal_code: formData.postalCode,
         delivery_instructions: formData.deliveryInstructions,
+        delivery_type: deliveryType,
+        delivery_scheduled_at: deliveryType === "scheduled" && scheduledDate && scheduledSlot
+          ? new Date(`${scheduledDate}T${scheduledSlot.split("-")[0]}:00`).toISOString()
+          : null,
+        delivery_window: deliveryType === "scheduled" && scheduledSlot
+          ? formatSlotLabel(scheduledSlot)
+          : null,
         payment_method: isCod ? "cod" : "card",
         status: "pending",
       }).select().single();
