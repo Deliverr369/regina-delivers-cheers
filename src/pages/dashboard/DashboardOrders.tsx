@@ -10,6 +10,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmFinalPriceDrawer } from "@/components/dashboard/ConfirmFinalPriceDrawer";
 import OrderTimeline from "@/components/OrderTimeline";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Layers } from "lucide-react";
 
 type OrderStatus = Database["public"]["Enums"]["order_status"];
 
@@ -106,6 +108,7 @@ const DashboardOrders = () => {
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [advancingId, setAdvancingId] = useState<string | null>(null);
+  const [groupIntentId, setGroupIntentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -356,7 +359,8 @@ const DashboardOrders = () => {
                 return (
                   <div
                     key={order.id}
-                    className="rounded-xl border border-border/70 bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all"
+                    className={`rounded-xl border border-border/70 bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all ${isSplit(order) ? "cursor-pointer" : ""}`}
+                    onClick={isSplit(order) ? () => setGroupIntentId(order.stripe_payment_intent_id) : undefined}
                   >
                     {/* Top row: ID, status, total, scheduled time */}
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 mb-3">
@@ -372,7 +376,10 @@ const DashboardOrders = () => {
                           <Badge
                             variant="secondary"
                             className="text-[10px] font-medium gap-1 cursor-pointer hover:bg-secondary/80"
-                            onClick={() => order.store_id && setStoreFilter(order.store_id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (order.store_id) setStoreFilter(order.store_id);
+                            }}
                             title={order.stores?.name ? `Filter by ${order.stores.name}` : "No store assigned"}
                           >
                             <StoreIcon className="h-3 w-3" />
@@ -388,12 +395,15 @@ const DashboardOrders = () => {
                           {isSplit(order) && (
                             <Badge
                               variant="outline"
-                              className="text-[10px] border-amber-400/60 bg-amber-50 text-amber-800 cursor-pointer"
-                              title="Part of a multi-store checkout — click to filter all split orders"
-                              onClick={() => setSplitOnly(true)}
+                              className="text-[10px] border-amber-400/60 bg-amber-50 text-amber-800 cursor-pointer hover:bg-amber-100"
+                              title="Part of a multi-store checkout — click to view all orders in this group"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setGroupIntentId(order.stripe_payment_intent_id);
+                              }}
                             >
-                              <StoreIcon className="h-3 w-3 mr-1 inline" />
-                              Split
+                              <Layers className="h-3 w-3 mr-1 inline" />
+                              Split group
                             </Badge>
                           )}
                           <Badge
@@ -442,7 +452,7 @@ const DashboardOrders = () => {
                     </div>
 
                     {/* Action row */}
-                    <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/60">
+                    <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
                       {next && status !== "cancelled" && (
                         <Button
                           size="sm"
@@ -501,7 +511,216 @@ const DashboardOrders = () => {
         onOpenChange={setConfirmOpen}
         onCaptured={fetchOrders}
       />
+
+      <SplitGroupDrawer
+        intentId={groupIntentId}
+        orders={orders}
+        onOpenChange={(open) => { if (!open) setGroupIntentId(null); }}
+      />
     </div>
+  );
+};
+
+const ETA_BY_STORE: Record<string, string> = {
+  Costco: "45–60 min",
+  Superstore: "35–50 min",
+};
+const etaFor = (storeName?: string | null) => {
+  if (!storeName) return "30–45 min";
+  for (const k of Object.keys(ETA_BY_STORE)) if (storeName.includes(k)) return ETA_BY_STORE[k];
+  return "30–45 min";
+};
+
+interface SplitGroupDrawerProps {
+  intentId: string | null;
+  orders: Order[];
+  onOpenChange: (open: boolean) => void;
+}
+
+const SplitGroupDrawer = ({ intentId, orders, onOpenChange }: SplitGroupDrawerProps) => {
+  const group = useMemo(
+    () => (intentId ? orders.filter((o) => o.stripe_payment_intent_id === intentId) : []),
+    [intentId, orders]
+  );
+
+  const totals = useMemo(() => {
+    const subtotal = group.reduce((s, o) => s + Number(o.subtotal || 0), 0);
+    const delivery = group.reduce((s, o) => s + Number(o.delivery_fee || 0), 0);
+    const tax = group.reduce((s, o) => s + Number(o.tax || 0), 0);
+    const grand = group.reduce((s, o) => s + Number(o.final_total ?? o.total ?? 0), 0);
+    const auth = group.reduce((s, o) => s + Number(o.authorized_amount || 0), 0);
+    return { subtotal, delivery, tax, grand, auth };
+  }, [group]);
+
+  const placedAt = group[0]?.created_at;
+  const paymentStatuses = Array.from(new Set(group.map((o) => o.payment_status || "pending")));
+
+  return (
+    <Sheet open={!!intentId} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-amber-600" />
+            Split checkout · {group.length} orders
+          </SheetTitle>
+          <SheetDescription className="text-xs">
+            {intentId ? <>Intent <span className="font-mono">{intentId.slice(0, 18)}…</span></> : null}
+            {placedAt ? <> · Placed {new Date(placedAt).toLocaleString()}</> : null}
+          </SheetDescription>
+        </SheetHeader>
+
+        {/* Group totals */}
+        <div className="mt-5 rounded-xl border border-border/70 bg-muted/30 p-4">
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
+            Group totals
+          </p>
+          <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="text-right font-medium">${totals.subtotal.toFixed(2)}</span>
+            <span className="text-muted-foreground">Delivery (sum)</span>
+            <span className="text-right font-medium">${totals.delivery.toFixed(2)}</span>
+            <span className="text-muted-foreground">Tax</span>
+            <span className="text-right font-medium">${totals.tax.toFixed(2)}</span>
+            <span className="font-semibold pt-1 border-t border-border/60 mt-1">Grand total</span>
+            <span className="text-right font-bold text-base pt-1 border-t border-border/60 mt-1">
+              ${totals.grand.toFixed(2)}
+            </span>
+            {totals.auth > 0 && (
+              <>
+                <span className="text-muted-foreground text-xs">Authorized</span>
+                <span className="text-right text-xs">${totals.auth.toFixed(2)}</span>
+              </>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {paymentStatuses.map((p) => (
+              <Badge
+                key={p}
+                variant="outline"
+                className={`text-[10px] capitalize ${
+                  p === "captured"
+                    ? "border-emerald-400/60 bg-emerald-50 text-emerald-800"
+                    : p === "authorized"
+                      ? "border-blue-400/60 bg-blue-50 text-blue-800"
+                      : p === "failed"
+                        ? "border-red-400/60 bg-red-50 text-red-800"
+                        : "border-amber-400/60 bg-amber-50 text-amber-800"
+                }`}
+              >
+                <DollarSign className="h-3 w-3 mr-0.5 inline" />
+                {p}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Per-store orders */}
+        <div className="mt-5 space-y-3">
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+            Per-store orders
+          </p>
+          {group.map((o) => {
+            const status = (o.status || "pending") as OrderStatus;
+            const StatusIcon = statusIcon[status as keyof typeof statusIcon] || Clock;
+            const eta = o.delivery_type === "scheduled" && o.delivery_scheduled_at
+              ? `${new Date(o.delivery_scheduled_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}${o.delivery_window ? ` · ${o.delivery_window}` : ""}`
+              : etaFor(o.stores?.name);
+            return (
+              <div key={o.id} className="rounded-xl border border-border/70 bg-card p-3.5">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-mono text-xs font-semibold">#{o.id.slice(0, 8).toUpperCase()}</p>
+                      <Badge className={`${statusColors[status]} text-[10px] font-medium capitalize border`}>
+                        <StatusIcon className="h-3 w-3 mr-1 inline" />
+                        {status.replace(/_/g, " ")}
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px] gap-1">
+                        <StoreIcon className="h-3 w-3" />
+                        {o.stores?.name || "Unassigned"}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                      <Truck className="h-3 w-3" />
+                      ETA · {eta}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-sm">${Number(o.final_total ?? o.total).toFixed(2)}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Sub ${Number(o.subtotal).toFixed(2)}
+                      {Number(o.delivery_fee) > 0 && <> · Del ${Number(o.delivery_fee).toFixed(2)}</>}
+                    </p>
+                  </div>
+                </div>
+                <div className="px-1 mt-1">
+                  <OrderTimeline status={status} />
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
+                  <span>{o.delivery_address}{o.delivery_city ? `, ${o.delivery_city}` : ""}</span>
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] capitalize ${
+                      o.payment_status === "captured"
+                        ? "border-emerald-400/60 bg-emerald-50 text-emerald-800"
+                        : o.payment_status === "authorized"
+                          ? "border-blue-400/60 bg-blue-50 text-blue-800"
+                          : o.payment_status === "failed"
+                            ? "border-red-400/60 bg-red-50 text-red-800"
+                            : "border-amber-400/60 bg-amber-50 text-amber-800"
+                    }`}
+                  >
+                    {o.payment_status || "pending"}
+                  </Badge>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Payment timeline */}
+        <div className="mt-5 rounded-xl border border-border/70 bg-card p-4">
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3">
+            Payment timeline
+          </p>
+          <ol className="relative border-l border-border/60 ml-2 space-y-3">
+            {placedAt && (
+              <li className="ml-4">
+                <div className="absolute -left-[5px] mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                <p className="text-xs font-medium">Checkout placed</p>
+                <p className="text-[11px] text-muted-foreground">{new Date(placedAt).toLocaleString()}</p>
+              </li>
+            )}
+            {paymentStatuses.includes("authorized") && (
+              <li className="ml-4">
+                <div className="absolute -left-[5px] mt-1 h-2.5 w-2.5 rounded-full bg-blue-500" />
+                <p className="text-xs font-medium">Authorized · ${totals.auth.toFixed(2)}</p>
+                <p className="text-[11px] text-muted-foreground">Funds reserved across split orders</p>
+              </li>
+            )}
+            {paymentStatuses.includes("captured") && (
+              <li className="ml-4">
+                <div className="absolute -left-[5px] mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                <p className="text-xs font-medium">Captured</p>
+                <p className="text-[11px] text-muted-foreground">Final amounts charged after confirmation</p>
+              </li>
+            )}
+            {paymentStatuses.includes("refunded") && (
+              <li className="ml-4">
+                <div className="absolute -left-[5px] mt-1 h-2.5 w-2.5 rounded-full bg-muted-foreground" />
+                <p className="text-xs font-medium">Refunded</p>
+              </li>
+            )}
+            {paymentStatuses.includes("failed") && (
+              <li className="ml-4">
+                <div className="absolute -left-[5px] mt-1 h-2.5 w-2.5 rounded-full bg-red-500" />
+                <p className="text-xs font-medium">Failed</p>
+              </li>
+            )}
+          </ol>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
