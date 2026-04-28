@@ -20,13 +20,13 @@ const AsSeenOnSection = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10 md:mb-12">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-[hsl(var(--primary-strong))] text-xs font-semibold tracking-widest uppercase mb-4">
             Press
           </span>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
             As seen on
           </h2>
-          <div className="mt-4 mx-auto w-12 h-0.5 bg-primary/60 rounded-full" />
+          <div className="mt-4 mx-auto w-12 h-0.5 bg-primary rounded-full" />
         </div>
 
         {/* Logos grid */}
