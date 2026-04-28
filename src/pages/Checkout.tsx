@@ -490,6 +490,17 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       props.setCityError("We only deliver within Regina.");
       return;
     }
+    if (props.deliveryType === "scheduled") {
+      if (!props.scheduledDate || !props.scheduledSlot) {
+        props.setScheduleError("Please pick a delivery date and time slot.");
+        return;
+      }
+      if (isSlotInPast(props.scheduledDate, props.scheduledSlot)) {
+        props.setScheduleError("That time has passed — please choose a later slot.");
+        return;
+      }
+      props.setScheduleError(null);
+    }
     props.setIsSubmitting(true);
     props.setError(null);
 
