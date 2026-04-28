@@ -391,12 +391,15 @@ const DashboardOrders = () => {
                           {isSplit(order) && (
                             <Badge
                               variant="outline"
-                              className="text-[10px] border-amber-400/60 bg-amber-50 text-amber-800 cursor-pointer"
-                              title="Part of a multi-store checkout — click to filter all split orders"
-                              onClick={() => setSplitOnly(true)}
+                              className="text-[10px] border-amber-400/60 bg-amber-50 text-amber-800 cursor-pointer hover:bg-amber-100"
+                              title="Part of a multi-store checkout — click to view all orders in this group"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setGroupIntentId(order.stripe_payment_intent_id);
+                              }}
                             >
-                              <StoreIcon className="h-3 w-3 mr-1 inline" />
-                              Split
+                              <Layers className="h-3 w-3 mr-1 inline" />
+                              Split group
                             </Badge>
                           )}
                           <Badge
