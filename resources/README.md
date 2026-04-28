@@ -20,6 +20,8 @@ After editing `icon.png` or `splash.png`, regenerate all platform-specific sizes
 npm run mobile:sync
 ```
 
+If an emulator or simulator still shows the old icon/name, uninstall the app from the device first, then run `npm run mobile:sync` and rebuild from Android Studio/Xcode.
+
 This populates:
 - `ios/App/App/Assets.xcassets/AppIcon.appiconset/` — all iOS icon sizes
 - `ios/App/App/Assets.xcassets/Splash.imageset/` — iOS splash images
