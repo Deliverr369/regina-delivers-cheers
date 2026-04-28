@@ -58,7 +58,7 @@ const Footer = () => {
                 href="tel:+13065333333"
                 className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))] group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Phone className="h-4 w-4" />
                 </span>
                 <span className="font-semibold truncate">+1 (306) 533-3333</span>
@@ -67,13 +67,13 @@ const Footer = () => {
                 href="mailto:support@deliverr.ca"
                 className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))] group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Mail className="h-4 w-4" />
                 </span>
                 <span className="font-semibold truncate">support@deliverr.ca</span>
               </a>
               <div className="flex items-center gap-3 text-sm text-foreground min-w-0">
-                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))]">
                   <MapPin className="h-4 w-4" />
                 </span>
                 <span className="font-semibold truncate">Regina &amp; Saskatoon, SK</span>
@@ -161,7 +161,7 @@ const Footer = () => {
             <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 sm:gap-3 mb-6 sm:mb-7">
               <a
                 href="#"
-                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-foreground text-background hover:shadow-lg active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
                 <Apple className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <div className="leading-tight min-w-0">
@@ -171,7 +171,7 @@ const Footer = () => {
               </a>
               <a
                 href="#"
-                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-foreground text-background hover:shadow-lg active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
                 <Smartphone className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <div className="leading-tight min-w-0">
