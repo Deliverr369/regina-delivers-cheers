@@ -47,8 +47,8 @@ const TestimonialsSection = () => {
             >
               {/* Quote icon */}
               <div className="flex items-center justify-between mb-5">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Quote className="w-4 h-4 text-primary" fill="currentColor" />
+                <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
+                  <Quote className="w-4 h-4 text-[hsl(var(--primary-strong))]" fill="currentColor" />
                 </div>
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, idx) => (
