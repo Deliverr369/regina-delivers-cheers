@@ -83,11 +83,12 @@ const OrderConfirmation = () => {
   }, [user, orderIds.join(",")]);
 
   // Realtime: keep status in sync as the dashboard advances each order.
+  // Topic must include the user's id so it passes realtime.messages RLS.
   useEffect(() => {
-    if (orders.length === 0) return;
+    if (orders.length === 0 || !user) return;
     const ids = orders.map((o) => o.id);
     const channel = supabase
-      .channel(`order-confirmation-${ids[0]}`)
+      .channel(`order-confirmation-${user.id}-${ids[0]}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `id=in.(${ids.join(",")})` },
@@ -98,7 +99,7 @@ const OrderConfirmation = () => {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [orders.map((o) => o.id).join(",")]);
+  }, [orders.map((o) => o.id).join(","), user?.id]);
 
   const isSplit = orders.length > 1;
   const grandTotal = orders.reduce((s, o) => s + Number(o.total || 0), 0);
