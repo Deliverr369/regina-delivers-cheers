@@ -11,4 +11,4 @@ Disallow: /login
 Disallow: /signup
 Disallow: /onboarding
 
-Sitemap: https://regina-delivers-cheers.lovable.app/sitemap.xml
+Sitemap: https://deliverr.app/sitemap.xml
