@@ -42,13 +42,15 @@
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --hero-overlay: 222 30% 6%;
+    --hero-overlay: 357 40% 18%;
     --gold: 42 88% 50%;
-    --success: 152 60% 38%;
+    --success: 152 50% 42%;
     --wine: 350 50% 38%;
     --beer: 35 75% 48%;
     --spirits: 220 30% 32%;
-    --charcoal: 222 25% 12%;
+    --charcoal: 356 100% 97%;
+    --soft-grey: 240 6% 97%;
+    --blush: 356 100% 97%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
