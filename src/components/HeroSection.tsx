@@ -45,27 +45,28 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1597290282695-edc43d0e7129?q=80&w=2070&auto=format&fit=crop')`,
+          filter: 'blur(3px)',
         }}
       />
       <div className="absolute inset-0 hero-overlay" />
 
       <div className="relative z-10 container mx-auto px-4 pt-20 pb-12">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-md px-4 py-2 rounded-full mb-8 border border-primary/30">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md px-4 py-2 rounded-full mb-8 border border-white/25">
             <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
-            <span className="text-white/90 text-sm font-medium">Now delivering in Regina</span>
+            <span className="text-white text-sm font-medium">Now delivering in Regina</span>
           </div>
 
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-5 leading-[1.1]">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white mb-5 leading-[1.1] drop-shadow-lg">
             Beer, Wine & Spirits
-            <span className="block text-primary">Delivered Fast</span>
+            <span className="block text-primary drop-shadow-md">Delivered Fast</span>
           </h1>
-          
-          <p className="text-lg md:text-xl text-white/75 mb-10 max-w-xl mx-auto leading-relaxed">
+
+          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-xl mx-auto leading-relaxed drop-shadow">
             Order from Regina's top liquor stores and get it delivered to your door in under 60 minutes — at store prices.
           </p>
 
