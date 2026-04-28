@@ -1,10 +1,17 @@
+import globalRegina from "@/assets/press-global-regina.png";
+import cbc from "@/assets/press-cbc.png";
+import innovationSk from "@/assets/press-innovation-sk.png";
+import morningstar from "@/assets/press-morningstar.png";
+import marketsInsider from "@/assets/press-markets-insider.png";
+import canadianInsider from "@/assets/press-canadian-insider.png";
+
 const pressLogos = [
-  { name: "Global Regina" },
-  { name: "CBC Saskatchewan" },
-  { name: "Innovation Saskatchewan" },
-  { name: "Morningstar" },
-  { name: "Markets Insider" },
-  { name: "Canadian Insider" },
+  { name: "Global Regina", src: globalRegina },
+  { name: "CBC Saskatchewan", src: cbc },
+  { name: "Innovation Saskatchewan", src: innovationSk },
+  { name: "Morningstar", src: morningstar },
+  { name: "Markets Insider", src: marketsInsider },
+  { name: "Canadian Insider", src: canadianInsider },
 ];
 
 const AsSeenOnSection = () => {
@@ -23,15 +30,20 @@ const AsSeenOnSection = () => {
         </div>
 
         {/* Logos grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-4 max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 md:gap-6 max-w-6xl mx-auto">
           {pressLogos.map((logo) => (
             <div
               key={logo.name}
-              className="group relative aspect-[3/2] flex items-center justify-center rounded-xl bg-card border border-border/60 hover:border-primary/40 hover:shadow-md transition-all duration-300"
+              className="group relative aspect-[3/2] flex items-center justify-center rounded-xl bg-card border border-border/60 hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 p-4"
             >
-              <span className="font-heading text-sm md:text-base font-bold text-muted-foreground/70 group-hover:text-primary text-center px-2 transition-colors duration-300 tracking-wide">
-                {logo.name}
-              </span>
+              <img
+                src={logo.src}
+                alt={`${logo.name} logo`}
+                loading="lazy"
+                width={512}
+                height={512}
+                className="max-h-full max-w-full object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+              />
             </div>
           ))}
         </div>
