@@ -359,7 +359,8 @@ const DashboardOrders = () => {
                 return (
                   <div
                     key={order.id}
-                    className="rounded-xl border border-border/70 bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all"
+                    className={`rounded-xl border border-border/70 bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all ${isSplit(order) ? "cursor-pointer" : ""}`}
+                    onClick={isSplit(order) ? () => setGroupIntentId(order.stripe_payment_intent_id) : undefined}
                   >
                     {/* Top row: ID, status, total, scheduled time */}
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 mb-3">
