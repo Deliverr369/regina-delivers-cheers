@@ -196,82 +196,120 @@ const Checkout = () => {
   const handleSuccess = async () => {
     if (!user) return;
     try {
-      // Always resolve a store_id for the order. If the cart contains items from
-      // multiple stores, pick the store with the highest line-item value (qty * price)
-      // so the order is attributed to the dominant fulfilling store.
-      const storeTotals = new Map<string, number>();
+      // Group cart items by storeId so we can split the cart into one order per store.
+      const groups = new Map<string, { storeId: string; storeName: string; items: typeof cartItems }>();
       for (const item of cartItems) {
-        if (!item.storeId) continue;
-        const value = (Number(item.price) || 0) * (Number(item.quantity) || 0);
-        storeTotals.set(item.storeId, (storeTotals.get(item.storeId) || 0) + value);
-      }
-      let storeId: string | null = null;
-      let bestValue = -1;
-      for (const [sid, val] of storeTotals.entries()) {
-        if (val > bestValue) { bestValue = val; storeId = sid; }
-      }
-      // Fallback: first item with a storeId, then look up by storeName as a last resort.
-      if (!storeId) {
-        storeId = cartItems.find((i) => i.storeId)?.storeId ?? null;
-      }
-      if (!storeId) {
-        const fallbackName = cartItems.find((i) => i.storeName)?.storeName;
-        if (fallbackName) {
-          const { data: matchedStore } = await supabase
-            .from("stores")
-            .select("id")
-            .ilike("name", fallbackName)
-            .maybeSingle();
-          storeId = matchedStore?.id ?? null;
+        const sid = item.storeId;
+        if (!sid) continue;
+        if (!groups.has(sid)) {
+          groups.set(sid, { storeId: sid, storeName: item.storeName || "", items: [] });
         }
+        groups.get(sid)!.items.push(item);
       }
-      if (!storeId) {
+      if (groups.size === 0) {
         throw new Error("Could not determine the store for this order. Please re-add items to your cart.");
       }
-      const isCod = paymentMode === "cod";
-      const { data: order, error: orderError } = await supabase.from("orders").insert({
-        user_id: user.id,
-        store_id: storeId,
-        subtotal,
-        delivery_fee: deliveryFee,
-        tax,
-        total: estimatedTotal,
-        estimated_subtotal: subtotal,
-        estimated_total: estimatedTotal,
-        authorized_amount: isCod ? 0 : authorizedAmount,
-        convenience_fee: convenienceFee,
-        stripe_payment_intent_id: isCod ? null : paymentIntentId,
-        payment_status: isCod ? "pending" : "authorized",
-        delivery_address: formData.address,
-        delivery_city: formData.city,
-        delivery_postal_code: formData.postalCode,
-        delivery_instructions: formData.deliveryInstructions,
-        delivery_type: deliveryType,
-        delivery_scheduled_at: deliveryType === "scheduled" && scheduledDate && scheduledSlot
-          ? new Date(`${scheduledDate}T${scheduledSlot.split("-")[0]}:00`).toISOString()
-          : null,
-        delivery_window: deliveryType === "scheduled" && scheduledSlot
-          ? formatSlotLabel(scheduledSlot)
-          : null,
-        payment_method: isCod ? "cod" : "card",
-        status: "pending",
-      }).select().single();
-      if (orderError) throw orderError;
 
+      const isCod = paymentMode === "cod";
       const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-      const orderItems = cartItems.map((item) => {
-        const match = String(item.id).match(UUID_RE);
+
+      // Pre-compute per-store financials so we can attribute the single payment
+      // authorization across the split orders proportionally.
+      type GroupCalc = {
+        storeId: string;
+        storeName: string;
+        items: typeof cartItems;
+        subtotal: number;
+        deliveryFee: number;
+        convenienceFee: number;
+        tax: number;
+        tip: number;
+        total: number;
+      };
+      const calcs: GroupCalc[] = Array.from(groups.values()).map((g) => {
+        const sub = g.items.reduce((s, i) => s + i.price * i.quantity, 0);
+        const fee = getDeliveryFee(g.storeName);
+        const conv = sub * 0.12;
+        const tx = sub * 0.11;
         return {
-          order_id: order.id,
-          product_id: match ? match[0] : null,
-          product_name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-          estimated_price: item.price,
+          ...g,
+          subtotal: sub,
+          deliveryFee: fee,
+          convenienceFee: conv,
+          tax: tx,
+          tip: 0, // assigned below
+          total: sub + fee + conv + tx,
         };
       });
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-      if (itemsError) throw itemsError;
+      // Apply the tip to the largest order so totals reconcile to the single payment.
+      if (tip > 0 && calcs.length > 0) {
+        const idx = calcs.reduce((best, c, i, arr) => (c.subtotal > arr[best].subtotal ? i : best), 0);
+        calcs[idx].tip = tip;
+        calcs[idx].total += tip;
+      }
+
+      // Distribute the single Stripe authorization across the split orders proportionally.
+      const totalsSum = calcs.reduce((s, c) => s + c.total, 0) || 1;
+      const authorizations = calcs.map((c) =>
+        isCod ? 0 : Math.round((authorizedAmount * (c.total / totalsSum)) * 100) / 100,
+      );
+
+      const scheduledAt =
+        deliveryType === "scheduled" && scheduledDate && scheduledSlot
+          ? new Date(`${scheduledDate}T${scheduledSlot.split("-")[0]}:00`).toISOString()
+          : null;
+      const window = deliveryType === "scheduled" && scheduledSlot ? formatSlotLabel(scheduledSlot) : null;
+
+      // Insert one order per store, then its items.
+      const createdOrderIds: string[] = [];
+      for (let i = 0; i < calcs.length; i++) {
+        const c = calcs[i];
+        const { data: order, error: orderError } = await supabase
+          .from("orders")
+          .insert({
+            user_id: user.id,
+            store_id: c.storeId,
+            subtotal: c.subtotal,
+            delivery_fee: c.deliveryFee,
+            tax: c.tax,
+            total: c.total,
+            estimated_subtotal: c.subtotal,
+            estimated_total: c.total,
+            authorized_amount: authorizations[i],
+            convenience_fee: c.convenienceFee,
+            // The same payment intent backs every split order so admins can
+            // reconcile the single authorization across the group.
+            stripe_payment_intent_id: isCod ? null : paymentIntentId,
+            payment_status: isCod ? "pending" : "authorized",
+            delivery_address: formData.address,
+            delivery_city: formData.city,
+            delivery_postal_code: formData.postalCode,
+            delivery_instructions: formData.deliveryInstructions,
+            delivery_type: deliveryType,
+            delivery_scheduled_at: scheduledAt,
+            delivery_window: window,
+            payment_method: isCod ? "cod" : "card",
+            status: "pending",
+          })
+          .select()
+          .single();
+        if (orderError) throw orderError;
+        createdOrderIds.push(order.id);
+
+        const orderItems = c.items.map((item) => {
+          const match = String(item.id).match(UUID_RE);
+          return {
+            order_id: order.id,
+            product_id: match ? match[0] : null,
+            product_name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            estimated_price: item.price,
+          };
+        });
+        const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+        if (itemsError) throw itemsError;
+      }
 
       await supabase.from("profiles").update({
         full_name: `${formData.firstName} ${formData.lastName}`,
@@ -282,11 +320,14 @@ const Checkout = () => {
       }).eq("id", user.id);
 
       clearCart();
+      const multi = createdOrderIds.length > 1;
       toast({
-        title: "Order placed!",
+        title: multi ? `${createdOrderIds.length} orders placed!` : "Order placed!",
         description: isCod
           ? "Cash on delivery — please have exact amount ready."
-          : "Card authorized — final amount confirmed by your store.",
+          : multi
+            ? `Card authorized — ${createdOrderIds.length} stores will fulfill your items separately.`
+            : "Card authorized — final amount confirmed by your store.",
       });
       navigate("/order-confirmation");
     } catch (err: any) {
@@ -959,7 +1000,17 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
                 <Separator className="mb-4" />
 
-                {/* Total */}
+                {props.storeBreakdown.length > 1 && (
+                  <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-foreground/80">
+                    <p className="font-semibold text-foreground mb-0.5">
+                      {props.storeBreakdown.length} separate orders
+                    </p>
+                    <p className="leading-snug">
+                      Items from different stores ship as their own orders. You'll be charged once, but each store fulfills its part separately.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-end justify-between mb-5">
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Estimated total</p>
