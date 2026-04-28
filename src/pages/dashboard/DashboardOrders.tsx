@@ -384,7 +384,32 @@ const DashboardOrders = () => {
                               {new Date(order.delivery_scheduled_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                               {order.delivery_window ? ` · ${order.delivery_window}` : ""}
                             </Badge>
+                          {isSplit(order) && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] border-amber-400/60 bg-amber-50 text-amber-800 cursor-pointer"
+                              title="Part of a multi-store checkout — click to filter all split orders"
+                              onClick={() => setSplitOnly(true)}
+                            >
+                              <StoreIcon className="h-3 w-3 mr-1 inline" />
+                              Split
+                            </Badge>
                           )}
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] capitalize ${
+                              order.payment_status === "captured"
+                                ? "border-emerald-400/60 bg-emerald-50 text-emerald-800"
+                                : order.payment_status === "authorized"
+                                  ? "border-blue-400/60 bg-blue-50 text-blue-800"
+                                  : order.payment_status === "failed"
+                                    ? "border-red-400/60 bg-red-50 text-red-800"
+                                    : "border-amber-400/60 bg-amber-50 text-amber-800"
+                            }`}
+                          >
+                            <DollarSign className="h-3 w-3 mr-0.5 inline" />
+                            {order.payment_status || "pending"}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1.5 truncate">
                           {order.delivery_address}{order.delivery_city ? `, ${order.delivery_city}` : ""}
