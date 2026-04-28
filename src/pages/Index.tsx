@@ -8,6 +8,8 @@ import CategoriesSection from "@/components/CategoriesSection";
 import FeaturedStoresSection from "@/components/FeaturedStoresSection";
 import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import AsSeenOnSection from "@/components/AsSeenOnSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
@@ -46,6 +48,8 @@ const Index = () => {
         <FeaturedStoresSection />
         <WhyChooseUsSection />
         <HowItWorksSection />
+        <TestimonialsSection />
+        <AsSeenOnSection />
         <CTASection />
       </main>
       <Footer />
