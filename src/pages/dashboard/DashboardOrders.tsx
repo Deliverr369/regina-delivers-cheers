@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, Search, Filter, DollarSign, ArrowRight, CalendarClock, Clock, CheckCircle2, ShoppingBasket, Truck, PackageCheck, XCircle, Radio } from "lucide-react";
+import { ShoppingCart, Search, Filter, DollarSign, ArrowRight, CalendarClock, Clock, CheckCircle2, ShoppingBasket, Truck, PackageCheck, XCircle, Radio, Store as StoreIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmFinalPriceDrawer } from "@/components/dashboard/ConfirmFinalPriceDrawer";
