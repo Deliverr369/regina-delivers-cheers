@@ -7,13 +7,13 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 22% 14%;
+    --foreground: 240 9% 19%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 22% 14%;
+    --card-foreground: 240 9% 19%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 22% 14%;
+    --popover-foreground: 240 9% 19%;
 
     /* Soft premium rose — main brand around #F78B8E */
     --primary: 358 84% 76%;
