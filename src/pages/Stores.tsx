@@ -432,7 +432,7 @@ const Stores = () => {
                   }`}
                 >
                   {/* Hero - storefront photo (liquor) or brand logo (others) */}
-                  <div className={`relative overflow-hidden shrink-0 ${isNative ? "h-28" : "h-48"} ${useStorefrontLayout && heroSrc ? "" : "bg-gradient-to-br from-secondary/60 to-muted/40 flex items-center justify-center"}`}>
+                  <div className={`relative overflow-hidden shrink-0 ${isNative ? "h-28" : "h-48"} ${useStorefrontLayout && heroSrc ? "" : "bg-[hsl(var(--primary-soft))] flex items-center justify-center p-4"}`}>
                     {useStorefrontLayout && heroSrc ? (
                       <>
                         <img
