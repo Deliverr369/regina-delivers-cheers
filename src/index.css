@@ -15,27 +15,29 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 22% 14%;
 
-    /* Refined deep, premium red — less neon, more elegant */
-    --primary: 354 68% 47%;
+    /* Soft premium rose — main brand around #F78B8E */
+    --primary: 358 84% 76%;
     --primary-foreground: 0 0% 100%;
-    --primary-dark: 354 72% 38%;
-    --primary-soft: 354 60% 96%;
+    --primary-dark: 357 70% 64%;
+    --primary-hover: 357 75% 67%;
+    --primary-soft: 356 100% 97%;
+    --primary-strong: 357 65% 55%;
 
-    --secondary: 220 16% 97%;
-    --secondary-foreground: 222 22% 14%;
+    --secondary: 240 6% 97%;
+    --secondary-foreground: 240 8% 18%;
 
-    --muted: 220 16% 97%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 240 6% 97%;
+    --muted-foreground: 240 5% 46%;
 
-    --accent: 354 68% 47%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 358 84% 76%;
+    --accent-foreground: 240 8% 18%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 92%;
-    --input: 220 14% 92%;
-    --ring: 354 68% 47%;
+    --border: 355 30% 92%;
+    --input: 355 30% 92%;
+    --ring: 358 84% 76%;
 
     --radius: 0.75rem;
 
