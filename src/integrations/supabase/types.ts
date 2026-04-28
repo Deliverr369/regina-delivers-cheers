@@ -909,6 +909,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_promo_code: {
+        Args: { _code: string; _order_amount: number }
+        Returns: {
+          code: string
+          discount_type: string
+          discount_value: number
+          id: string
+          min_order_amount: number
+          reason: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
