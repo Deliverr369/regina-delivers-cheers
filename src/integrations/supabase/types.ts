@@ -464,6 +464,9 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           delivery_postal_code: string | null
+          delivery_scheduled_at: string | null
+          delivery_type: string
+          delivery_window: string | null
           discount_amount: number
           estimated_subtotal: number | null
           estimated_total: number | null
@@ -493,6 +496,9 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_postal_code?: string | null
+          delivery_scheduled_at?: string | null
+          delivery_type?: string
+          delivery_window?: string | null
           discount_amount?: number
           estimated_subtotal?: number | null
           estimated_total?: number | null
@@ -522,6 +528,9 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_postal_code?: string | null
+          delivery_scheduled_at?: string | null
+          delivery_type?: string
+          delivery_window?: string | null
           discount_amount?: number
           estimated_subtotal?: number | null
           estimated_total?: number | null
