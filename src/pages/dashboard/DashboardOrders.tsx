@@ -452,7 +452,7 @@ const DashboardOrders = () => {
                     </div>
 
                     {/* Action row */}
-                    <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/60">
+                    <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
                       {next && status !== "cancelled" && (
                         <Button
                           size="sm"
