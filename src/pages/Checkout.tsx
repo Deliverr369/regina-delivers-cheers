@@ -1000,7 +1000,17 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
                 <Separator className="mb-4" />
 
-                {/* Total */}
+                {props.storeBreakdown.length > 1 && (
+                  <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-foreground/80">
+                    <p className="font-semibold text-foreground mb-0.5">
+                      {props.storeBreakdown.length} separate orders
+                    </p>
+                    <p className="leading-snug">
+                      Items from different stores ship as their own orders. You'll be charged once, but each store fulfills its part separately.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-end justify-between mb-5">
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Estimated total</p>
