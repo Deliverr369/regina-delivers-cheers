@@ -16,6 +16,7 @@ import ProductDetailModal from "@/components/ProductDetailModal";
 import { safeImageUrl } from "@/lib/image-url";
 import ManualItemDialog from "@/components/ManualItemDialog";
 import { useIsNative } from "@/hooks/useIsNative";
+import { VirtualizedProductGrid } from "@/components/VirtualizedProductGrid";
 
 const SUPERSTORE_ID = "25e9b4a8-850a-4d26-9aad-54c9eb2f183a";
 
@@ -796,11 +797,11 @@ const StoreDetail = () => {
 
                     const grid = items.length > 0 ? (
                       displayItems.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                          {displayItems.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                          ))}
-                        </div>
+                        <VirtualizedProductGrid
+                          items={displayItems}
+                          getKey={(product) => product.id}
+                          renderItem={(product) => <ProductCard product={product} />}
+                        />
                       ) : (
                         <div className="text-center py-12 text-muted-foreground text-sm">
                           {q ? `No products match "${searchQuery}"` : "No products available in this category"}
