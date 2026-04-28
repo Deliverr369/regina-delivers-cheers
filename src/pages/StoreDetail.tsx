@@ -924,6 +924,7 @@ const StoreDetail = () => {
                       return (
                         <>
                           {renderLegacyPills()}
+                          {renderQuickFilters()}
                           {grid}
                         </>
                       );
