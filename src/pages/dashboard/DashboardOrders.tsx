@@ -10,6 +10,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmFinalPriceDrawer } from "@/components/dashboard/ConfirmFinalPriceDrawer";
 import OrderTimeline from "@/components/OrderTimeline";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Layers } from "lucide-react";
 
 type OrderStatus = Database["public"]["Enums"]["order_status"];
 
