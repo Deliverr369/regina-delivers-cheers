@@ -354,6 +354,14 @@ const Checkout = () => {
               clientSecret: clientSecret || "",
               paymentMode,
               setPaymentMode,
+              deliveryType,
+              setDeliveryType,
+              scheduledDate,
+              setScheduledDate,
+              scheduledSlot,
+              setScheduledSlot,
+              scheduleError,
+              setScheduleError,
             };
 
             if (paymentMode === "cod") {
