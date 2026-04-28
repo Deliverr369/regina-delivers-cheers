@@ -5,10 +5,10 @@ const Footer = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden bg-secondary/50 border-t border-border">
+    <footer className="relative overflow-hidden bg-background border-t border-border">
       {/* Decorative glows — subtle */}
-      <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
 
       {/* Newsletter / CTA strip */}
       <div className="relative container mx-auto px-4 sm:px-5 pt-10 sm:pt-14 md:pt-16">
