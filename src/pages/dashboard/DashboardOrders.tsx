@@ -175,10 +175,12 @@ const DashboardOrders = () => {
   }, [orders]);
 
   const filtered = orders.filter((o) => {
+    const storeName = o.stores?.name || "";
     const matchSearch =
       search === "" ||
       o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.delivery_address.toLowerCase().includes(search.toLowerCase());
+      o.delivery_address.toLowerCase().includes(search.toLowerCase()) ||
+      storeName.toLowerCase().includes(search.toLowerCase());
     const status = o.status || "pending";
     const matchStatus =
       statusFilter === "all"
@@ -186,7 +188,13 @@ const DashboardOrders = () => {
         : statusFilter === "active"
           ? status !== "delivered" && status !== "cancelled"
           : status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchStore =
+      storeFilter === "all"
+        ? true
+        : storeFilter === "unassigned"
+          ? !o.store_id
+          : o.store_id === storeFilter;
+    return matchSearch && matchStatus && matchStore;
   });
 
   if (loading) {
