@@ -329,7 +329,7 @@ const Checkout = () => {
             ? `Card authorized — ${createdOrderIds.length} stores will fulfill your items separately.`
             : "Card authorized — final amount confirmed by your store.",
       });
-      navigate("/order-confirmation");
+      navigate("/order-confirmation", { state: { orderIds: createdOrderIds } });
     } catch (err: any) {
       setError(err.message);
       setIsSubmitting(false);
