@@ -1,6 +1,6 @@
 # App Icons & Splash Screen Source Assets
 
-This folder contains the master source images used to generate native iOS and Android app icons and splash screens for Regina Delivers.
+This folder contains the master source images used to generate native iOS and Android app icons and splash screens for Deliverr.
 
 ## Files
 
@@ -17,9 +17,10 @@ This folder contains the master source images used to generate native iOS and An
 After editing `icon.png` or `splash.png`, regenerate all platform-specific sizes with:
 
 ```bash
-npx @capacitor/assets generate --iconBackgroundColor "#E63946" --iconBackgroundColorDark "#E63946" --splashBackgroundColor "#E63946" --splashBackgroundColorDark "#E63946"
-npx cap sync
+npm run mobile:sync
 ```
+
+If an emulator or simulator still shows the old icon/name, uninstall the app from the device first, then run `npm run mobile:sync` and rebuild from Android Studio/Xcode.
 
 This populates:
 - `ios/App/App/Assets.xcassets/AppIcon.appiconset/` — all iOS icon sizes

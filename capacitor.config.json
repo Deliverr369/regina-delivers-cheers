@@ -1,6 +1,6 @@
 {
   "appId": "app.lovable.reginadeliverscheers",
-  "appName": "regina-delivers-cheers",
+  "appName": "Deliverr",
   "webDir": "dist",
   "server": {
     "url": "https://regina-delivers-cheers.lovable.app",
