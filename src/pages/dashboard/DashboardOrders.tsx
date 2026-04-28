@@ -108,6 +108,7 @@ const DashboardOrders = () => {
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [advancingId, setAdvancingId] = useState<string | null>(null);
+  const [groupIntentId, setGroupIntentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
