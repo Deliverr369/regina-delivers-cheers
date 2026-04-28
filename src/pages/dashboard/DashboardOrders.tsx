@@ -84,6 +84,15 @@ const nextStatus = (s: OrderStatus | null): OrderStatus | null => {
   return STATUS_FLOW[idx + 1];
 };
 
+const PAYMENT_OPTIONS: { value: string; label: string }[] = [
+  { value: "all", label: "All payments" },
+  { value: "pending", label: "Pending" },
+  { value: "authorized", label: "Authorized" },
+  { value: "captured", label: "Captured" },
+  { value: "refunded", label: "Refunded" },
+  { value: "failed", label: "Failed" },
+];
+
 const DashboardOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -91,6 +100,8 @@ const DashboardOrders = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [splitOnly, setSplitOnly] = useState<boolean>(false);
   const [stores, setStores] = useState<StoreOption[]>([]);
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -174,6 +185,21 @@ const DashboardOrders = () => {
     return c;
   }, [orders]);
 
+  // Build a set of payment_intent_ids that appear on more than one order so
+  // we can flag split orders (one checkout → multiple per-store orders share
+  // the same intent).
+  const splitIntentIds = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const o of orders) {
+      const id = o.stripe_payment_intent_id;
+      if (!id) continue;
+      counts[id] = (counts[id] || 0) + 1;
+    }
+    return new Set(Object.entries(counts).filter(([, n]) => n > 1).map(([id]) => id));
+  }, [orders]);
+
+  const isSplit = (o: Order) => !!o.stripe_payment_intent_id && splitIntentIds.has(o.stripe_payment_intent_id);
+
   const filtered = orders.filter((o) => {
     const storeName = o.stores?.name || "";
     const matchSearch =
@@ -194,7 +220,10 @@ const DashboardOrders = () => {
         : storeFilter === "unassigned"
           ? !o.store_id
           : o.store_id === storeFilter;
-    return matchSearch && matchStatus && matchStore;
+    const matchPayment =
+      paymentFilter === "all" ? true : (o.payment_status || "pending") === paymentFilter;
+    const matchSplit = !splitOnly || isSplit(o);
+    return matchSearch && matchStatus && matchStore && matchPayment && matchSplit;
   });
 
   if (loading) {
@@ -280,6 +309,31 @@ const DashboardOrders = () => {
             ))}
           </SelectContent>
         </Select>
+        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <SelectTrigger className="w-44">
+            <DollarSign className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Payment" />
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_OPTIONS.map((p) => (
+              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant={splitOnly ? "default" : "outline"}
+          size="sm"
+          className="h-10 gap-1.5"
+          onClick={() => setSplitOnly((v) => !v)}
+          title="Show only orders that are part of a multi-store checkout"
+        >
+          <StoreIcon className="h-3.5 w-3.5" />
+          Split orders
+          <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+            {orders.filter((o) => isSplit(o)).length}
+          </Badge>
+        </Button>
       </div>
 
       <Card className="border-border/50">
@@ -331,6 +385,32 @@ const DashboardOrders = () => {
                               {order.delivery_window ? ` · ${order.delivery_window}` : ""}
                             </Badge>
                           )}
+                          {isSplit(order) && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] border-amber-400/60 bg-amber-50 text-amber-800 cursor-pointer"
+                              title="Part of a multi-store checkout — click to filter all split orders"
+                              onClick={() => setSplitOnly(true)}
+                            >
+                              <StoreIcon className="h-3 w-3 mr-1 inline" />
+                              Split
+                            </Badge>
+                          )}
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] capitalize ${
+                              order.payment_status === "captured"
+                                ? "border-emerald-400/60 bg-emerald-50 text-emerald-800"
+                                : order.payment_status === "authorized"
+                                  ? "border-blue-400/60 bg-blue-50 text-blue-800"
+                                  : order.payment_status === "failed"
+                                    ? "border-red-400/60 bg-red-50 text-red-800"
+                                    : "border-amber-400/60 bg-amber-50 text-amber-800"
+                            }`}
+                          >
+                            <DollarSign className="h-3 w-3 mr-0.5 inline" />
+                            {order.payment_status || "pending"}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1.5 truncate">
                           {order.delivery_address}{order.delivery_city ? `, ${order.delivery_city}` : ""}
