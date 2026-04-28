@@ -22,34 +22,34 @@ const FeaturedStoresSection = () => {
   });
 
   return (
-    <section className="section-padding bg-secondary/50">
+    <section className="section-padding bg-[hsl(var(--soft-grey))]">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
               Popular Stores
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm md:text-base">
               Order from Regina's top-rated liquor stores
             </p>
           </div>
           <Link to="/stores">
-            <Button variant="outline" className="gap-2 rounded-full">
+            <Button variant="outline" className="gap-2 rounded-full border-primary/40 text-[hsl(var(--primary-strong))] hover:bg-primary/10 hover:text-[hsl(var(--primary-strong))]">
               View All Stores
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border">
-                <Skeleton className="h-44 w-full" />
-                <div className="p-5 space-y-3">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-32 w-full" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-1/2" />
                 </div>
               </div>
             ))
@@ -58,55 +58,55 @@ const FeaturedStoresSection = () => {
               <Link
                 key={store.id}
                 to={`/stores/${store.id}`}
-                className="group bg-card rounded-2xl overflow-hidden border border-border card-hover"
+                className="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border card-hover h-full"
               >
-                {/* Image/Logo */}
-                <div className="relative h-44 overflow-hidden bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center p-6">
+                {/* Image/Logo — compact */}
+                <div className="relative h-28 md:h-32 overflow-hidden bg-[hsl(var(--primary-soft))] flex items-center justify-center p-4">
                   <img
                     src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
                     alt={store.name}
                     className={`max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500 ${
-                      store.image_url?.includes('.png') ? 'drop-shadow-lg' : 'w-full h-full object-cover rounded-lg'
+                      store.image_url?.includes('.png') ? '' : 'w-full h-full object-cover rounded-lg'
                     }`}
                   />
-                  <div className="absolute top-3 left-3 flex gap-2">
+                  <div className="absolute top-2.5 left-2.5 flex gap-2">
                     {store.is_open ? (
-                      <Badge className="bg-success text-white text-xs font-medium shadow-sm">Open Now</Badge>
+                      <Badge className="bg-[hsl(var(--success))] text-white text-[10px] font-medium shadow-sm px-2 py-0.5">Open</Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-xs font-medium">Closed</Badge>
+                      <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5">Closed</Badge>
                     )}
                   </div>
                   {Number(store.delivery_fee) === 0 && (
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-primary text-primary-foreground text-xs font-medium shadow-sm">
+                    <div className="absolute top-2.5 right-2.5">
+                      <Badge className="bg-primary text-primary-foreground text-[10px] font-medium shadow-sm px-2 py-0.5">
                         <Truck className="h-3 w-3 mr-1" />
-                        Free Delivery
+                        Free
                       </Badge>
                     </div>
                   )}
                 </div>
 
-                {/* Content */}
-                <div className="p-5">
-                  <h3 className="font-display text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
+                {/* Content — compact */}
+                <div className="flex-1 flex flex-col p-4">
+                  <h3 className="font-display text-base font-bold text-foreground mb-1 group-hover:text-[hsl(var(--primary-strong))] transition-colors line-clamp-1">
                     {store.name}
                   </h3>
-                  
+
                   <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
-                    <MapPin className="h-3.5 w-3.5" />
-                    <span className="text-sm">{store.address}</span>
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-xs line-clamp-1">{store.address}</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-border">
-                    <div className="flex items-center gap-1.5">
-                      <Star className="h-4 w-4 fill-gold text-gold" />
-                      <span className="font-semibold text-foreground text-sm">{store.rating || 0}</span>
-                      <span className="text-muted-foreground text-xs">({store.reviews_count || 0})</span>
+                  <div className="mt-auto flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3.5 w-3.5 fill-gold text-gold" />
+                      <span className="font-semibold text-foreground text-xs">{store.rating || 0}</span>
+                      <span className="text-muted-foreground text-[11px]">({store.reviews_count || 0})</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="h-3.5 w-3.5" />
-                      <span className="text-sm">{store.delivery_time || "30-45 min"}</span>
+                      <span className="text-xs">{store.delivery_time || "30-45 min"}</span>
                     </div>
                   </div>
                 </div>

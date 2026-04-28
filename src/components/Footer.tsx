@@ -5,33 +5,33 @@ const Footer = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden bg-secondary/50 border-t border-border">
+    <footer className="relative overflow-hidden bg-background border-t border-border">
       {/* Decorative glows — subtle */}
-      <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
 
       {/* Newsletter / CTA strip */}
       <div className="relative container mx-auto px-4 sm:px-5 pt-10 sm:pt-14 md:pt-16">
-        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-primary-gradient p-6 sm:p-8 md:p-10 shadow-[0_20px_50px_-25px_hsl(var(--primary)/0.5)]">
-          <div className="absolute inset-0 opacity-15" style={{
-            backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.15) 0%, transparent 50%)'
+        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary-soft))] via-background to-[hsl(var(--primary-soft))] border border-[hsl(var(--primary)/0.25)] p-6 sm:p-8 md:p-10 shadow-sm">
+          <div className="absolute inset-0 opacity-40" style={{
+            backgroundImage: 'radial-gradient(circle at 20% 30%, hsl(var(--primary) / 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary) / 0.1) 0%, transparent 50%)'
           }} />
           <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
-            <div className="text-primary-foreground w-full md:w-auto">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-3">
+            <div className="text-foreground w-full md:w-auto">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 text-[hsl(var(--primary-strong))] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-3">
                 <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Exclusive Offers
               </div>
-              <h3 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl leading-tight">
+              <h3 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl leading-tight text-foreground">
                 Get $10 off your first order
               </h3>
-              <p className="text-primary-foreground/90 text-xs sm:text-sm md:text-base mt-1.5">
+              <p className="text-muted-foreground text-xs sm:text-sm md:text-base mt-1.5">
                 Join thousands shopping with Deliverr today.
               </p>
             </div>
             <Link
               to="/signup"
-              className="w-full md:w-auto justify-center inline-flex items-center gap-2 bg-white text-primary font-bold px-6 py-3.5 sm:px-7 sm:py-4 rounded-full shadow-lg hover:shadow-xl active:scale-95 md:hover:scale-105 transition-all whitespace-nowrap"
+              className="w-full md:w-auto justify-center inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-[hsl(var(--primary-hover))] font-bold px-6 py-3.5 sm:px-7 sm:py-4 rounded-full shadow-md hover:shadow-lg active:scale-95 md:hover:scale-105 transition-all whitespace-nowrap"
             >
               Sign Up Free <ArrowRight className="h-4 w-4" />
             </Link>
@@ -58,7 +58,7 @@ const Footer = () => {
                 href="tel:+13065333333"
                 className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))] group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Phone className="h-4 w-4" />
                 </span>
                 <span className="font-semibold truncate">+1 (306) 533-3333</span>
@@ -67,13 +67,13 @@ const Footer = () => {
                 href="mailto:support@deliverr.ca"
                 className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
-                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))] group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Mail className="h-4 w-4" />
                 </span>
                 <span className="font-semibold truncate">support@deliverr.ca</span>
               </a>
               <div className="flex items-center gap-3 text-sm text-foreground min-w-0">
-                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30">
+                <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))]">
                   <MapPin className="h-4 w-4" />
                 </span>
                 <span className="font-semibold truncate">Regina &amp; Saskatoon, SK</span>
@@ -161,7 +161,7 @@ const Footer = () => {
             <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 sm:gap-3 mb-6 sm:mb-7">
               <a
                 href="#"
-                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-foreground text-background hover:shadow-lg active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
                 <Apple className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <div className="leading-tight min-w-0">
@@ -171,7 +171,7 @@ const Footer = () => {
               </a>
               <a
                 href="#"
-                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background hover:shadow-2xl hover:shadow-foreground/30 active:scale-95 md:hover:-translate-y-0.5 transition-all"
+                className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-foreground text-background hover:shadow-lg active:scale-95 md:hover:-translate-y-0.5 transition-all"
               >
                 <Smartphone className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <div className="leading-tight min-w-0">

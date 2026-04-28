@@ -7,46 +7,50 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 22% 14%;
+    --foreground: 240 9% 19%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 22% 14%;
+    --card-foreground: 240 9% 19%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 22% 14%;
+    --popover-foreground: 240 9% 19%;
 
-    /* Refined deep, premium red — less neon, more elegant */
-    --primary: 354 68% 47%;
+    /* Soft premium rose — main brand around #F78B8E */
+    --primary: 358 84% 76%;
     --primary-foreground: 0 0% 100%;
-    --primary-dark: 354 72% 38%;
-    --primary-soft: 354 60% 96%;
+    --primary-dark: 357 70% 64%;
+    --primary-hover: 357 75% 67%;
+    --primary-soft: 356 100% 97%;
+    --primary-strong: 357 65% 55%;
 
-    --secondary: 220 16% 97%;
-    --secondary-foreground: 222 22% 14%;
+    --secondary: 240 6% 97%;
+    --secondary-foreground: 240 8% 18%;
 
-    --muted: 220 16% 97%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 240 6% 97%;
+    --muted-foreground: 240 5% 46%;
 
-    --accent: 354 68% 47%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 358 84% 76%;
+    --accent-foreground: 240 8% 18%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 92%;
-    --input: 220 14% 92%;
-    --ring: 354 68% 47%;
+    --border: 355 30% 92%;
+    --input: 355 30% 92%;
+    --ring: 358 84% 76%;
 
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --hero-overlay: 222 30% 6%;
+    --hero-overlay: 357 40% 18%;
     --gold: 42 88% 50%;
-    --success: 152 60% 38%;
+    --success: 152 50% 42%;
     --wine: 350 50% 38%;
     --beer: 35 75% 48%;
     --spirits: 220 30% 32%;
-    --charcoal: 222 25% 12%;
+    --charcoal: 356 100% 97%;
+    --soft-grey: 240 6% 97%;
+    --blush: 356 100% 97%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -146,18 +150,28 @@
   .hero-overlay {
     background: linear-gradient(
       to bottom,
-      hsl(var(--hero-overlay) / 0.78) 0%,
-      hsl(var(--hero-overlay) / 0.62) 45%,
-      hsl(var(--hero-overlay) / 0.88) 100%
+      hsl(240 12% 8% / 0.55) 0%,
+      hsl(357 40% 18% / 0.45) 45%,
+      hsl(240 12% 8% / 0.7) 100%
     );
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
   }
 
   .bg-primary-gradient {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-dark)) 100%);
   }
 
+  .bg-soft-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary-soft)) 0%, hsl(var(--background)) 100%);
+  }
+
   .bg-charcoal {
-    background-color: hsl(var(--charcoal));
+    background-color: hsl(var(--blush));
+  }
+
+  .bg-blush {
+    background-color: hsl(var(--blush));
   }
 
   .glass {
@@ -169,11 +183,11 @@
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/20;
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/40;
   }
 
   .section-padding {
-    @apply py-16 md:py-24;
+    @apply py-14 md:py-20;
   }
 
   /* iPhone / Android safe-area helpers (Capacitor app + notched browsers) */

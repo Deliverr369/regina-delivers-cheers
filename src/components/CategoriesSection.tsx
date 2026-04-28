@@ -70,33 +70,33 @@ const CategoriesSection = () => {
             <Link
               key={category.id}
               to={category.to}
-              className="group relative flex flex-col items-center justify-between rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-[0_18px_40px_-22px_hsl(var(--primary)/0.35)] transition-all duration-300 p-6 md:p-8 text-center min-h-[280px] md:min-h-[320px]"
+              className="group relative flex flex-col items-center justify-between rounded-2xl bg-card border border-[hsl(var(--primary)/0.15)] hover:border-primary/50 hover:shadow-md transition-all duration-300 p-6 md:p-7 text-center min-h-[260px] md:min-h-[290px]"
             >
-              {/* Illustration with neutral halo */}
-              <div className="relative flex items-center justify-center w-full h-32 md:h-40 mb-4">
-                <div className="absolute w-28 h-28 md:w-36 md:h-36 rounded-full bg-secondary group-hover:bg-primary/5 transition-colors duration-500" />
+              {/* Illustration */}
+              <div className="relative flex items-center justify-center w-full h-28 md:h-32 mb-3">
+                <div className="absolute w-24 h-24 md:w-28 md:h-28 rounded-full bg-[hsl(var(--primary-soft))] group-hover:bg-primary/10 transition-colors duration-500" />
                 <img
                   src={category.image}
                   alt={category.name}
                   width={512}
                   height={512}
                   loading="lazy"
-                  className="relative w-32 h-32 md:w-40 md:h-40 object-contain group-hover:scale-105 transition-transform duration-500"
+                  className="relative w-28 h-28 md:w-32 md:h-32 object-contain group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
 
               {/* Text */}
               <div className="flex-1 flex flex-col items-center">
-                <h3 className="font-display text-lg md:text-xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
+                <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-1 group-hover:text-[hsl(var(--primary-strong))] transition-colors">
                   {category.name}
                 </h3>
-                <p className="text-muted-foreground text-sm md:text-base mb-4">
+                <p className="text-muted-foreground text-xs md:text-sm mb-3">
                   {category.description}
                 </p>
               </div>
 
               {/* Arrow button */}
-              <div className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center text-foreground/60 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
+              <div className="w-9 h-9 rounded-full bg-[hsl(var(--primary-soft))] border border-[hsl(var(--primary)/0.2)] flex items-center justify-center text-[hsl(var(--primary-strong))] group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
                 <ChevronRight className="h-4 w-4" />
               </div>
             </Link>
