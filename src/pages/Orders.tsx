@@ -44,6 +44,24 @@ const Orders = () => {
     enabled: !!user,
   });
 
+  // Realtime: refetch orders when any of this user's orders changes
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`orders-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["orders", user.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
+
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
     await refetch();
