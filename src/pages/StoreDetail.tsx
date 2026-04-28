@@ -185,6 +185,8 @@ const StoreDetail = () => {
   const [takeoutSubcategory, setTakeoutSubcategory] = useState<string>("all");
   const [grocerySubcategory, setGrocerySubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [packFilter, setPackFilter] = useState<string>("all");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
@@ -764,6 +766,55 @@ const StoreDetail = () => {
                       );
                     }
 
+                    // Derive brand options (first word of product name, top 12 by frequency)
+                    const getBrand = (name: string): string => {
+                      const cleaned = name.replace(/[^A-Za-z0-9 &'-]/g, "").trim();
+                      const first = cleaned.split(/\s+/)[0] || "";
+                      return first.length >= 2 ? first : "";
+                    };
+                    const brandCounts = new Map<string, number>();
+                    for (const p of displayItems) {
+                      const b = getBrand(p.name);
+                      if (b) brandCounts.set(b, (brandCounts.get(b) || 0) + 1);
+                    }
+                    const brandOptions = Array.from(brandCounts.entries())
+                      .filter(([, c]) => c >= 2)
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 12)
+                      .map(([brand, count]) => ({ brand, count }));
+
+                    // Derive pack-size options from products' available pack sizes in this category
+                    const packCounts = new Map<string, number>();
+                    for (const p of displayItems) {
+                      const sizes = getPackSizesForProduct(p);
+                      const seen = new Set<string>();
+                      for (const s of sizes) {
+                        if (!seen.has(s.value)) {
+                          seen.add(s.value);
+                          packCounts.set(s.value, (packCounts.get(s.value) || 0) + 1);
+                        }
+                      }
+                    }
+                    const packOptions = Array.from(packCounts.entries())
+                      .sort((a, b) => getPackSortValue(b[0]) - getPackSortValue(a[0]))
+                      .map(([value, count]) => {
+                        const baseList = PACK_SIZES_BY_CATEGORY[category as keyof typeof PACK_SIZES_BY_CATEGORY] || [];
+                        const label = baseList.find(s => s.value === value)?.label || value;
+                        return { value, label, count };
+                      });
+
+                    if (brandFilter !== "all") {
+                      displayItems = displayItems.filter(p => getBrand(p.name) === brandFilter);
+                    }
+                    if (packFilter !== "all") {
+                      displayItems = displayItems.filter(p =>
+                        getPackSizesForProduct(p).some(s => s.value === packFilter)
+                      );
+                    }
+
+                    const filtersActive = brandFilter !== "all" || packFilter !== "all" || !!q;
+
+
                     const renderLegacyPills = () => (
                       <>
                         {category === "spirits" && items.length > 0 && (
@@ -795,6 +846,62 @@ const StoreDetail = () => {
                       </>
                     );
 
+                    const renderQuickFilters = () => {
+                      if (brandOptions.length === 0 && packOptions.length === 0 && !filtersActive) return null;
+                      return (
+                        <div className="space-y-2 mb-4">
+                          {packOptions.length > 1 && (
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0 mr-1">Pack</span>
+                              <button
+                                onClick={() => setPackFilter("all")}
+                                className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${packFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                              >
+                                All
+                              </button>
+                              {packOptions.map(opt => (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => setPackFilter(opt.value)}
+                                  className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${packFilter === opt.value ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                                >
+                                  {opt.label} ({opt.count})
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {brandOptions.length > 1 && (
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0 mr-1">Brand</span>
+                              <button
+                                onClick={() => setBrandFilter("all")}
+                                className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${brandFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                              >
+                                All
+                              </button>
+                              {brandOptions.map(opt => (
+                                <button
+                                  key={opt.brand}
+                                  onClick={() => setBrandFilter(opt.brand)}
+                                  className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${brandFilter === opt.brand ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                                >
+                                  {opt.brand} ({opt.count})
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {(brandFilter !== "all" || packFilter !== "all") && (
+                            <button
+                              onClick={() => { setBrandFilter("all"); setPackFilter("all"); }}
+                              className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1"
+                            >
+                              <X className="h-3 w-3" /> Clear filters
+                            </button>
+                          )}
+                        </div>
+                      );
+                    };
+
                     const grid = items.length > 0 ? (
                       displayItems.length > 0 ? (
                         <VirtualizedProductGrid
@@ -817,6 +924,7 @@ const StoreDetail = () => {
                       return (
                         <>
                           {renderLegacyPills()}
+                          {renderQuickFilters()}
                           {grid}
                         </>
                       );
@@ -937,6 +1045,7 @@ const StoreDetail = () => {
                               </button>
                             )}
                           </div>
+                          {renderQuickFilters()}
                           {grid}
                         </div>
                       </div>
