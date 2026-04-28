@@ -27,11 +27,11 @@ const TestimonialsSection = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 md:mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-[hsl(var(--primary-strong))] text-xs font-semibold tracking-widest uppercase mb-4">
             Testimonials
           </span>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
-            People <span className="text-primary">love</span> us
+            People <span className="text-[hsl(var(--primary-strong))]">love</span> us
           </h2>
           <p className="text-muted-foreground text-base">
             Real words from Regina locals who trust Deliverr to bring the good times home.
