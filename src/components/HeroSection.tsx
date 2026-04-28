@@ -100,16 +100,16 @@ const HeroSection = () => {
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-12">
             {stats.map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm mb-2 border border-white/20">
                   <stat.icon className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-white font-semibold text-sm">{stat.label}</p>
-                <p className="text-white/50 text-xs">{stat.sublabel}</p>
+                <p className="text-white font-semibold text-sm drop-shadow">{stat.label}</p>
+                <p className="text-white/70 text-xs">{stat.sublabel}</p>
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-8 border-t border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-8 border-t border-white/15">
             {[
               { text: "Fast and reliable every time. Great selection and always at store prices!", author: "Ronald M." },
               { text: "App is super easy to use. Never had an issue in over two years. Love it!", author: "Dean A." },
@@ -121,15 +121,10 @@ const HeroSection = () => {
                     <Star key={j} className="h-4 w-4 fill-gold text-gold" />
                   ))}
                 </div>
-                <p className="text-white/60 text-sm mb-2 leading-relaxed line-clamp-2">{t.text}</p>
-                <p className="text-white/80 font-medium text-sm">— {t.author}</p>
+                <p className="text-white/80 text-sm mb-2 leading-relaxed line-clamp-2 drop-shadow">{t.text}</p>
+                <p className="text-white font-medium text-sm">— {t.author}</p>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
 export default HeroSection;
