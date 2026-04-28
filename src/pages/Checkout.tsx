@@ -196,11 +196,42 @@ const Checkout = () => {
   const handleSuccess = async () => {
     if (!user) return;
     try {
-      const storeId = cartItems[0]?.storeId;
+      // Always resolve a store_id for the order. If the cart contains items from
+      // multiple stores, pick the store with the highest line-item value (qty * price)
+      // so the order is attributed to the dominant fulfilling store.
+      const storeTotals = new Map<string, number>();
+      for (const item of cartItems) {
+        if (!item.storeId) continue;
+        const value = (Number(item.price) || 0) * (Number(item.quantity) || 0);
+        storeTotals.set(item.storeId, (storeTotals.get(item.storeId) || 0) + value);
+      }
+      let storeId: string | null = null;
+      let bestValue = -1;
+      for (const [sid, val] of storeTotals.entries()) {
+        if (val > bestValue) { bestValue = val; storeId = sid; }
+      }
+      // Fallback: first item with a storeId, then look up by storeName as a last resort.
+      if (!storeId) {
+        storeId = cartItems.find((i) => i.storeId)?.storeId ?? null;
+      }
+      if (!storeId) {
+        const fallbackName = cartItems.find((i) => i.storeName)?.storeName;
+        if (fallbackName) {
+          const { data: matchedStore } = await supabase
+            .from("stores")
+            .select("id")
+            .ilike("name", fallbackName)
+            .maybeSingle();
+          storeId = matchedStore?.id ?? null;
+        }
+      }
+      if (!storeId) {
+        throw new Error("Could not determine the store for this order. Please re-add items to your cart.");
+      }
       const isCod = paymentMode === "cod";
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user.id,
-        store_id: storeId || null,
+        store_id: storeId,
         subtotal,
         delivery_fee: deliveryFee,
         tax,
