@@ -342,10 +342,16 @@ const DashboardOrders = () => {
                       <div className="text-right shrink-0">
                         <p className="font-bold text-lg text-foreground">${Number(order.final_total ?? order.total).toFixed(2)}</p>
                         <p className="text-[11px] text-muted-foreground">
+                          Sub ${Number(order.subtotal).toFixed(2)}
+                          {Number(order.delivery_fee) > 0 && (
+                            <> · Del ${Number(order.delivery_fee).toFixed(2)}</>
+                          )}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
                           {order.authorized_amount
-                            ? `Auth $${Number(order.authorized_amount).toFixed(2)}`
-                            : `Sub $${Number(order.subtotal).toFixed(2)}`}{" "}
-                          · {order.payment_status || "pending"}
+                            ? `Auth $${Number(order.authorized_amount).toFixed(2)} · `
+                            : ""}
+                          {order.payment_status || "pending"}
                         </p>
                       </div>
                     </div>
