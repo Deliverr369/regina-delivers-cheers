@@ -185,6 +185,8 @@ const StoreDetail = () => {
   const [takeoutSubcategory, setTakeoutSubcategory] = useState<string>("all");
   const [grocerySubcategory, setGrocerySubcategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [packFilter, setPackFilter] = useState<string>("all");
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
     queryFn: async () => {
