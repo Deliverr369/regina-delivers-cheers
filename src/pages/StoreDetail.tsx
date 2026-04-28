@@ -902,6 +902,7 @@ const StoreDetail = () => {
                       );
                     };
 
+                    const grid = items.length > 0 ? (
                       displayItems.length > 0 ? (
                         <VirtualizedProductGrid
                           items={displayItems}
