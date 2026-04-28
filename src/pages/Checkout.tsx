@@ -678,7 +678,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 3. Payment */}
-          <SectionCard step={3} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle={isCod ? "Pay the driver in cash on delivery." : "Your card is held — never charged more than the final price."}>
+          <SectionCard step={4} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle={isCod ? "Pay the driver in cash on delivery." : "Your card is held — never charged more than the final price."}>
             {/* Card / COD toggle */}
             <div className="grid grid-cols-2 gap-2.5 mb-4">
               <button
