@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Package, Clock, MapPin, Loader2, ShoppingBag, ArrowRight, RotateCcw } from "lucide-react";
+import { Package, Clock, MapPin, Loader2, ShoppingBag, ArrowRight, RotateCcw, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
 import PullToRefresh from "@/components/PullToRefresh";
+import OrderTimeline from "@/components/OrderTimeline";
 
 const statusConfig: Record<string, { bg: string; label: string }> = {
   pending: { bg: "bg-amber-500", label: "Pending" },
