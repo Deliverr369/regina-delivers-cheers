@@ -163,6 +163,29 @@ const Orders = () => {
                       </div>
                     </div>
 
+                    {/* Tracking timeline */}
+                    <div className="mt-1 mb-3 px-1">
+                      <OrderTimeline status={order.status as any} />
+                    </div>
+
+                    {/* Scheduled delivery info */}
+                    {(order as any).delivery_type === "scheduled" && (order as any).delivery_scheduled_at && (
+                      <div className="mb-3 flex items-center gap-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-lg px-2.5 py-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                        <span>
+                          Scheduled for{" "}
+                          <span className="font-semibold text-foreground">
+                            {new Date((order as any).delivery_scheduled_at).toLocaleDateString(undefined, {
+                              weekday: "short", month: "short", day: "numeric",
+                            })}
+                          </span>
+                          {(order as any).delivery_window && (
+                            <> · <span className="font-semibold text-foreground">{(order as any).delivery_window}</span></>
+                          )}
+                        </span>
+                      </div>
+                    )}
+
                     {order.order_items && order.order_items.length > 0 && (
                       <div className={`pt-2.5 border-t border-border flex flex-wrap gap-1.5 ${isNative ? "" : "pt-3"}`}>
                         {order.order_items.slice(0, isNative ? 3 : 4).map((item: any) => (
