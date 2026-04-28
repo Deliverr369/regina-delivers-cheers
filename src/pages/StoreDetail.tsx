@@ -1045,6 +1045,7 @@ const StoreDetail = () => {
                               </button>
                             )}
                           </div>
+                          {renderQuickFilters()}
                           {grid}
                         </div>
                       </div>
