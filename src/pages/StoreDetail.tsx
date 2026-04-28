@@ -846,7 +846,62 @@ const StoreDetail = () => {
                       </>
                     );
 
-                    const grid = items.length > 0 ? (
+                    const renderQuickFilters = () => {
+                      if (brandOptions.length === 0 && packOptions.length === 0 && !filtersActive) return null;
+                      return (
+                        <div className="space-y-2 mb-4">
+                          {packOptions.length > 1 && (
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0 mr-1">Pack</span>
+                              <button
+                                onClick={() => setPackFilter("all")}
+                                className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${packFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                              >
+                                All
+                              </button>
+                              {packOptions.map(opt => (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => setPackFilter(opt.value)}
+                                  className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${packFilter === opt.value ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                                >
+                                  {opt.label} ({opt.count})
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {brandOptions.length > 1 && (
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0 mr-1">Brand</span>
+                              <button
+                                onClick={() => setBrandFilter("all")}
+                                className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${brandFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                              >
+                                All
+                              </button>
+                              {brandOptions.map(opt => (
+                                <button
+                                  key={opt.brand}
+                                  onClick={() => setBrandFilter(opt.brand)}
+                                  className={`shrink-0 text-[11.5px] font-semibold px-3 py-1.5 rounded-full border transition-all ${brandFilter === opt.brand ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40"}`}
+                                >
+                                  {opt.brand} ({opt.count})
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {(brandFilter !== "all" || packFilter !== "all") && (
+                            <button
+                              onClick={() => { setBrandFilter("all"); setPackFilter("all"); }}
+                              className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1"
+                            >
+                              <X className="h-3 w-3" /> Clear filters
+                            </button>
+                          )}
+                        </div>
+                      );
+                    };
+
                       displayItems.length > 0 ? (
                         <VirtualizedProductGrid
                           items={displayItems}
