@@ -309,6 +309,31 @@ const DashboardOrders = () => {
             ))}
           </SelectContent>
         </Select>
+        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <SelectTrigger className="w-44">
+            <DollarSign className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Payment" />
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_OPTIONS.map((p) => (
+              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant={splitOnly ? "default" : "outline"}
+          size="sm"
+          className="h-10 gap-1.5"
+          onClick={() => setSplitOnly((v) => !v)}
+          title="Show only orders that are part of a multi-store checkout"
+        >
+          <StoreIcon className="h-3.5 w-3.5" />
+          Split orders
+          <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+            {orders.filter((o) => isSplit(o)).length}
+          </Badge>
+        </Button>
       </div>
 
       <Card className="border-border/50">
