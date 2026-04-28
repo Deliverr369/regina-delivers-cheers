@@ -204,7 +204,7 @@ const StoreDetail = () => {
       while (true) {
         const { data, error } = await supabase
           .from("products")
-          .select("*, product_pack_prices(product_id, pack_size, price, is_hidden)")
+          .select("*, product_pack_prices!product_pack_prices_product_id_fkey(product_id, pack_size, price, is_hidden)")
           .eq("store_id", id!)
           .eq("in_stock", true)
           .range(from, from + batchSize - 1);
