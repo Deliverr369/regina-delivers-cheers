@@ -22,19 +22,19 @@ const FeaturedStoresSection = () => {
   });
 
   return (
-    <section className="section-padding bg-secondary/50">
+    <section className="section-padding bg-[hsl(var(--soft-grey))]">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
               Popular Stores
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm md:text-base">
               Order from Regina's top-rated liquor stores
             </p>
           </div>
           <Link to="/stores">
-            <Button variant="outline" className="gap-2 rounded-full">
+            <Button variant="outline" className="gap-2 rounded-full border-primary/40 text-[hsl(var(--primary-strong))] hover:bg-primary/10 hover:text-[hsl(var(--primary-strong))]">
               View All Stores
               <ArrowRight className="h-4 w-4" />
             </Button>
