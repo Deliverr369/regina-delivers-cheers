@@ -479,7 +479,7 @@ export type Database = {
           payment_status: string | null
           promo_code: string | null
           status: Database["public"]["Enums"]["order_status"] | null
-          store_id: string | null
+          store_id: string
           stripe_payment_intent_id: string | null
           subtotal: number
           tax: number
@@ -511,7 +511,7 @@ export type Database = {
           payment_status?: string | null
           promo_code?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
-          store_id?: string | null
+          store_id: string
           stripe_payment_intent_id?: string | null
           subtotal: number
           tax: number
@@ -543,7 +543,7 @@ export type Database = {
           payment_status?: string | null
           promo_code?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
-          store_id?: string | null
+          store_id?: string
           stripe_payment_intent_id?: string | null
           subtotal?: number
           tax?: number
