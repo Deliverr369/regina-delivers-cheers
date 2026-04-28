@@ -245,7 +245,7 @@ const DashboardOrders = () => {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by ID or address..."
+            placeholder="Search by ID, address, or store..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -265,6 +265,19 @@ const DashboardOrders = () => {
             <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
             <SelectItem value="delivered">Delivered</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={storeFilter} onValueChange={setStoreFilter}>
+          <SelectTrigger className="w-52">
+            <StoreIcon className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="All Stores" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="all">All Stores</SelectItem>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {stores.map((s) => (
+              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
