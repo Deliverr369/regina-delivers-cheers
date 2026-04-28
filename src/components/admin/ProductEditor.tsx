@@ -333,8 +333,9 @@ const ProductEditor = ({ productName, productCategory, onBack }: Props) => {
     toast({ title: "Processing image..." });
     try {
       const blob = await processProductImage(file, () => {});
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: "image/jpeg" });
+      const ext = blob.type === "image/webp" ? "webp" : "jpg";
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: blob.type || "image/jpeg" });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from("store-images").getPublicUrl(`products/${fileName}`);
       const ids = products.map(p => p.id);

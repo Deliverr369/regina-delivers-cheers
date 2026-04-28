@@ -169,18 +169,24 @@ export const processProductImage = async (
     onProgress?.('Finalizing...');
     
     return new Promise((resolve, reject) => {
-      finalCanvas.toBlob(
+      const writeWebp = () => finalCanvas.toBlob(
         (blob) => {
           if (blob) {
-            console.log('Successfully processed image');
+            console.log('Successfully processed image (webp)');
             resolve(blob);
           } else {
-            reject(new Error('Failed to create blob'));
+            // Browser doesn't support WebP encode → fall back to JPEG
+            finalCanvas.toBlob(
+              (jpegBlob) => jpegBlob ? resolve(jpegBlob) : reject(new Error('Failed to create blob')),
+              'image/jpeg',
+              0.92
+            );
           }
         },
-        'image/jpeg',
-        0.92
+        'image/webp',
+        0.85
       );
+      writeWebp();
     });
   } catch (error) {
     console.error('Error processing image:', error);
