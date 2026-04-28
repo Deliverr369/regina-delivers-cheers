@@ -231,7 +231,7 @@ const Checkout = () => {
       const isCod = paymentMode === "cod";
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user.id,
-        store_id: storeId || null,
+        store_id: storeId,
         subtotal,
         delivery_fee: deliveryFee,
         tax,
