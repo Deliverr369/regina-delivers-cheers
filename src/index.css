@@ -150,18 +150,28 @@
   .hero-overlay {
     background: linear-gradient(
       to bottom,
-      hsl(var(--hero-overlay) / 0.78) 0%,
-      hsl(var(--hero-overlay) / 0.62) 45%,
-      hsl(var(--hero-overlay) / 0.88) 100%
+      hsl(240 12% 8% / 0.55) 0%,
+      hsl(357 40% 18% / 0.45) 45%,
+      hsl(240 12% 8% / 0.7) 100%
     );
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
   }
 
   .bg-primary-gradient {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-dark)) 100%);
   }
 
+  .bg-soft-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary-soft)) 0%, hsl(var(--background)) 100%);
+  }
+
   .bg-charcoal {
-    background-color: hsl(var(--charcoal));
+    background-color: hsl(var(--blush));
+  }
+
+  .bg-blush {
+    background-color: hsl(var(--blush));
   }
 
   .glass {
@@ -173,11 +183,11 @@
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/20;
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/40;
   }
 
   .section-padding {
-    @apply py-16 md:py-24;
+    @apply py-14 md:py-20;
   }
 
   /* iPhone / Android safe-area helpers (Capacitor app + notched browsers) */
