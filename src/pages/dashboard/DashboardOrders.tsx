@@ -119,15 +119,23 @@ const DashboardOrders = () => {
   const fetchOrders = async () => {
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+      .select("*, stores ( id, name )")
       .order("created_at", { ascending: false });
 
     if (error) {
       toast({ title: "Error", description: "Failed to fetch orders", variant: "destructive" });
     } else {
-      setOrders((data as Order[]) || []);
+      setOrders((data as unknown as Order[]) || []);
     }
     setLoading(false);
+  };
+
+  const fetchStores = async () => {
+    const { data } = await supabase
+      .from("stores")
+      .select("id, name")
+      .order("name", { ascending: true });
+    setStores((data as StoreOption[]) || []);
   };
 
   const updateStatus = async (orderId: string, newStatus: OrderStatus) => {
