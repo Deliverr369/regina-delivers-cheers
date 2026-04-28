@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "node scripts/patch-capacitor-ios.mjs && vite build",
     "build:dev": "vite build --mode development",
+    "mobile:assets": "capacitor-assets generate --iconBackgroundColor \"#E63946\" --iconBackgroundColorDark \"#E63946\" --splashBackgroundColor \"#E63946\" --splashBackgroundColorDark \"#E63946\"",
+    "mobile:sync": "npm run mobile:assets && cap sync",
     "capacitor:copy:before": "node scripts/patch-capacitor-ios.mjs",
     "capacitor:copy:after": "node scripts/patch-capacitor-ios.mjs",
     "capacitor:sync:before": "node scripts/patch-capacitor-ios.mjs",
