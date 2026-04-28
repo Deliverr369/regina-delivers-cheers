@@ -33,6 +33,13 @@ interface Order {
   delivery_type?: string | null;
   delivery_scheduled_at?: string | null;
   delivery_window?: string | null;
+  store_id: string | null;
+  stores?: { id: string; name: string } | null;
+}
+
+interface StoreOption {
+  id: string;
+  name: string;
 }
 
 const STATUS_FLOW: OrderStatus[] = [
