@@ -5,17 +5,16 @@ const Footer = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 border-t border-border">
-      {/* Decorative glows */}
-      <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary/15 blur-3xl" />
-      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-secondary/10 blur-3xl" />
+    <footer className="relative overflow-hidden bg-secondary/50 border-t border-border">
+      {/* Decorative glows — subtle */}
+      <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
 
       {/* Newsletter / CTA strip */}
       <div className="relative container mx-auto px-4 sm:px-5 pt-10 sm:pt-14 md:pt-16">
-        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-primary via-primary to-primary/80 p-6 sm:p-8 md:p-10 shadow-2xl shadow-primary/30">
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.2) 0%, transparent 50%)'
+        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-primary-gradient p-6 sm:p-8 md:p-10 shadow-[0_20px_50px_-25px_hsl(var(--primary)/0.5)]">
+          <div className="absolute inset-0 opacity-15" style={{
+            backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.15) 0%, transparent 50%)'
           }} />
           <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
             <div className="text-primary-foreground w-full md:w-auto">
@@ -240,14 +239,14 @@ const Footer = () => {
       </div>
 
       {/* Bottom bar */}
-      <div className="relative border-t border-border bg-gradient-to-r from-primary/5 via-background to-primary/5 backdrop-blur">
+      <div className="relative border-t border-border bg-background/60 backdrop-blur">
         <div className="container mx-auto px-4 sm:px-5 py-4 sm:py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] sm:text-xs text-muted-foreground text-center md:text-left">
-          <p>© {year} <span className="font-bold text-foreground">Deliverr</span> Delivery Services Inc. All rights reserved.</p>
+          <p>© {year} <span className="font-semibold text-foreground">Deliverr</span> Delivery Services Inc. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-5">
             <Link to="/privacy" className="hover:text-primary transition-colors font-medium">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors font-medium">Terms of Service</Link>
             <span className="inline-flex items-center gap-1.5">
-              Made with <Heart className="h-3.5 w-3.5 fill-primary text-primary animate-pulse" /> in Canada
+              Made with <Heart className="h-3.5 w-3.5 fill-primary text-primary" /> in Canada
             </span>
           </div>
         </div>

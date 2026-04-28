@@ -6,43 +6,47 @@
 
 @layer base {
   :root {
-    --background: 0 0% 99%;
-    --foreground: 220 20% 12%;
+    --background: 0 0% 100%;
+    --foreground: 222 22% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 12%;
+    --card-foreground: 222 22% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 12%;
+    --popover-foreground: 222 22% 14%;
 
-    --primary: 354 75% 55%;
+    /* Refined deep, premium red — less neon, more elegant */
+    --primary: 354 68% 47%;
     --primary-foreground: 0 0% 100%;
+    --primary-dark: 354 72% 38%;
+    --primary-soft: 354 60% 96%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 20% 12%;
+    --secondary: 220 16% 97%;
+    --secondary-foreground: 222 22% 14%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 220 16% 97%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 354 75% 55%;
+    --accent: 354 68% 47%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 354 75% 55%;
+    --border: 220 14% 92%;
+    --input: 220 14% 92%;
+    --ring: 354 68% 47%;
 
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --hero-overlay: 220 20% 8%;
-    --gold: 45 93% 47%;
-    --success: 152 69% 41%;
-    --wine: 350 50% 42%;
-    --beer: 35 80% 50%;
-    --spirits: 220 30% 35%;
+    --hero-overlay: 222 30% 6%;
+    --gold: 42 88% 50%;
+    --success: 152 60% 38%;
+    --wine: 350 50% 38%;
+    --beer: 35 75% 48%;
+    --spirits: 220 30% 32%;
+    --charcoal: 222 25% 12%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -138,14 +142,22 @@
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
   }
-  
+
   .hero-overlay {
     background: linear-gradient(
       to bottom,
-      hsl(var(--hero-overlay) / 0.7) 0%,
-      hsl(var(--hero-overlay) / 0.5) 50%,
-      hsl(var(--hero-overlay) / 0.8) 100%
+      hsl(var(--hero-overlay) / 0.78) 0%,
+      hsl(var(--hero-overlay) / 0.62) 45%,
+      hsl(var(--hero-overlay) / 0.88) 100%
     );
+  }
+
+  .bg-primary-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-dark)) 100%);
+  }
+
+  .bg-charcoal {
+    background-color: hsl(var(--charcoal));
   }
 
   .glass {
