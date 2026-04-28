@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Package, Clock, MapPin, Loader2, ShoppingBag, ArrowRight, RotateCcw } from "lucide-react";
+import { Package, Clock, MapPin, Loader2, ShoppingBag, ArrowRight, RotateCcw, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
 import PullToRefresh from "@/components/PullToRefresh";
+import OrderTimeline from "@/components/OrderTimeline";
 
 const statusConfig: Record<string, { bg: string; label: string }> = {
   pending: { bg: "bg-amber-500", label: "Pending" },
@@ -41,6 +43,24 @@ const Orders = () => {
     },
     enabled: !!user,
   });
+
+  // Realtime: refetch orders when any of this user's orders changes
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`orders-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["orders", user.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
@@ -142,6 +162,29 @@ const Orders = () => {
                         <p className={`text-muted-foreground ${isNative ? "text-[10.5px]" : "text-xs"}`}>{order.order_items?.length || 0} items</p>
                       </div>
                     </div>
+
+                    {/* Tracking timeline */}
+                    <div className="mt-1 mb-3 px-1">
+                      <OrderTimeline status={order.status as any} />
+                    </div>
+
+                    {/* Scheduled delivery info */}
+                    {(order as any).delivery_type === "scheduled" && (order as any).delivery_scheduled_at && (
+                      <div className="mb-3 flex items-center gap-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-lg px-2.5 py-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                        <span>
+                          Scheduled for{" "}
+                          <span className="font-semibold text-foreground">
+                            {new Date((order as any).delivery_scheduled_at).toLocaleDateString(undefined, {
+                              weekday: "short", month: "short", day: "numeric",
+                            })}
+                          </span>
+                          {(order as any).delivery_window && (
+                            <> · <span className="font-semibold text-foreground">{(order as any).delivery_window}</span></>
+                          )}
+                        </span>
+                      </div>
+                    )}
 
                     {order.order_items && order.order_items.length > 0 && (
                       <div className={`pt-2.5 border-t border-border flex flex-wrap gap-1.5 ${isNative ? "" : "pt-3"}`}>
