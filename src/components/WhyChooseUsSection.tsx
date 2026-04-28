@@ -52,7 +52,7 @@ const WhyChooseUsSection = () => {
               key={i}
               className="text-center p-5 md:p-6 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-lg transition-all duration-300"
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/15 text-[hsl(var(--primary-strong))] mb-4">
                 <feature.icon className="h-6 w-6" />
               </div>
               <h3 className="font-display font-bold text-foreground mb-1.5 text-sm md:text-base">
