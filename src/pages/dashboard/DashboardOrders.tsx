@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, Search, Filter, DollarSign, ArrowRight, CalendarClock, Clock, CheckCircle2, ShoppingBasket, Truck, PackageCheck, XCircle, Radio } from "lucide-react";
+import { ShoppingCart, Search, Filter, DollarSign, ArrowRight, CalendarClock, Clock, CheckCircle2, ShoppingBasket, Truck, PackageCheck, XCircle, Radio, Store as StoreIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmFinalPriceDrawer } from "@/components/dashboard/ConfirmFinalPriceDrawer";
@@ -33,6 +33,13 @@ interface Order {
   delivery_type?: string | null;
   delivery_scheduled_at?: string | null;
   delivery_window?: string | null;
+  store_id: string | null;
+  stores?: { id: string; name: string } | null;
+}
+
+interface StoreOption {
+  id: string;
+  name: string;
 }
 
 const STATUS_FLOW: OrderStatus[] = [
@@ -83,12 +90,15 @@ const DashboardOrders = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("active");
+  const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [stores, setStores] = useState<StoreOption[]>([]);
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [advancingId, setAdvancingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
+    fetchStores();
   }, []);
 
   // Realtime: any change to any order triggers a refetch.
@@ -109,15 +119,23 @@ const DashboardOrders = () => {
   const fetchOrders = async () => {
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+      .select("*, stores ( id, name )")
       .order("created_at", { ascending: false });
 
     if (error) {
       toast({ title: "Error", description: "Failed to fetch orders", variant: "destructive" });
     } else {
-      setOrders((data as Order[]) || []);
+      setOrders((data as unknown as Order[]) || []);
     }
     setLoading(false);
+  };
+
+  const fetchStores = async () => {
+    const { data } = await supabase
+      .from("stores")
+      .select("id, name")
+      .order("name", { ascending: true });
+    setStores((data as StoreOption[]) || []);
   };
 
   const updateStatus = async (orderId: string, newStatus: OrderStatus) => {
@@ -157,10 +175,12 @@ const DashboardOrders = () => {
   }, [orders]);
 
   const filtered = orders.filter((o) => {
+    const storeName = o.stores?.name || "";
     const matchSearch =
       search === "" ||
       o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.delivery_address.toLowerCase().includes(search.toLowerCase());
+      o.delivery_address.toLowerCase().includes(search.toLowerCase()) ||
+      storeName.toLowerCase().includes(search.toLowerCase());
     const status = o.status || "pending";
     const matchStatus =
       statusFilter === "all"
@@ -168,7 +188,13 @@ const DashboardOrders = () => {
         : statusFilter === "active"
           ? status !== "delivered" && status !== "cancelled"
           : status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchStore =
+      storeFilter === "all"
+        ? true
+        : storeFilter === "unassigned"
+          ? !o.store_id
+          : o.store_id === storeFilter;
+    return matchSearch && matchStatus && matchStore;
   });
 
   if (loading) {
@@ -219,7 +245,7 @@ const DashboardOrders = () => {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by ID or address..."
+            placeholder="Search by ID, address, or store..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -239,6 +265,19 @@ const DashboardOrders = () => {
             <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
             <SelectItem value="delivered">Delivered</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={storeFilter} onValueChange={setStoreFilter}>
+          <SelectTrigger className="w-52">
+            <StoreIcon className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="All Stores" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="all">All Stores</SelectItem>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {stores.map((s) => (
+              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -275,6 +314,15 @@ const DashboardOrders = () => {
                           <Badge className={`${statusColors[status]} text-[10px] font-medium capitalize border`}>
                             <StatusIcon className="h-3 w-3 mr-1 inline" />
                             {status.replace(/_/g, " ")}
+                          </Badge>
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] font-medium gap-1 cursor-pointer hover:bg-secondary/80"
+                            onClick={() => order.store_id && setStoreFilter(order.store_id)}
+                            title={order.stores?.name ? `Filter by ${order.stores.name}` : "No store assigned"}
+                          >
+                            <StoreIcon className="h-3 w-3" />
+                            {order.stores?.name || "Unassigned"}
                           </Badge>
                           {order.delivery_type === "scheduled" && order.delivery_scheduled_at && (
                             <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
