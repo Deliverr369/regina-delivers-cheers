@@ -376,7 +376,10 @@ const DashboardOrders = () => {
                           <Badge
                             variant="secondary"
                             className="text-[10px] font-medium gap-1 cursor-pointer hover:bg-secondary/80"
-                            onClick={() => order.store_id && setStoreFilter(order.store_id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (order.store_id) setStoreFilter(order.store_id);
+                            }}
                             title={order.stores?.name ? `Filter by ${order.stores.name}` : "No store assigned"}
                           >
                             <StoreIcon className="h-3 w-3" />
