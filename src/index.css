@@ -15,13 +15,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 9% 19%;
 
-    /* Soft premium rose — main brand around #F78B8E */
-    --primary: 358 84% 76%;
+    /* Premium rose — main brand around #ED666D */
+    --primary: 357 80% 67%;
     --primary-foreground: 0 0% 100%;
-    --primary-dark: 357 70% 64%;
-    --primary-hover: 357 75% 67%;
+    --primary-dark: 357 70% 55%;
+    --primary-hover: 357 75% 60%;
     --primary-soft: 356 100% 97%;
-    --primary-strong: 357 65% 55%;
+    --primary-strong: 357 70% 50%;
 
     --secondary: 240 6% 97%;
     --secondary-foreground: 240 8% 18%;
