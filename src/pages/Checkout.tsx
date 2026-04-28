@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote, Zap, CalendarClock } from "lucide-react";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -101,6 +102,12 @@ const Checkout = () => {
   }, [tipPreset, customTip]);
 
   const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax + tip;
+
+  // Delivery scheduling
+  const [deliveryType, setDeliveryType] = useState<"asap" | "scheduled">("asap");
+  const [scheduledDate, setScheduledDate] = useState<string>(""); // YYYY-MM-DD
+  const [scheduledSlot, setScheduledSlot] = useState<string>(""); // e.g. "10:00-11:00"
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<FormData>(() => {
     const savedAddress = typeof window !== "undefined" ? localStorage.getItem("delivery_address") || "" : "";
@@ -208,6 +215,13 @@ const Checkout = () => {
         delivery_city: formData.city,
         delivery_postal_code: formData.postalCode,
         delivery_instructions: formData.deliveryInstructions,
+        delivery_type: deliveryType,
+        delivery_scheduled_at: deliveryType === "scheduled" && scheduledDate && scheduledSlot
+          ? new Date(`${scheduledDate}T${scheduledSlot.split("-")[0]}:00`).toISOString()
+          : null,
+        delivery_window: deliveryType === "scheduled" && scheduledSlot
+          ? formatSlotLabel(scheduledSlot)
+          : null,
         payment_method: isCod ? "cod" : "card",
         status: "pending",
       }).select().single();
@@ -340,6 +354,14 @@ const Checkout = () => {
               clientSecret: clientSecret || "",
               paymentMode,
               setPaymentMode,
+              deliveryType,
+              setDeliveryType,
+              scheduledDate,
+              setScheduledDate,
+              scheduledSlot,
+              setScheduledSlot,
+              scheduleError,
+              setScheduleError,
             };
 
             if (paymentMode === "cod") {
@@ -391,7 +413,59 @@ interface CheckoutBodyProps extends PaymentFormProps {
   clientSecret: string;
   paymentMode: "card" | "cod";
   setPaymentMode: (v: "card" | "cod") => void;
+  deliveryType: "asap" | "scheduled";
+  setDeliveryType: (v: "asap" | "scheduled") => void;
+  scheduledDate: string;
+  setScheduledDate: (v: string) => void;
+  scheduledSlot: string;
+  setScheduledSlot: (v: string) => void;
+  scheduleError: string | null;
+  setScheduleError: (v: string | null) => void;
 }
+
+/* ─── Delivery scheduling helpers ─── */
+// Slots are 1-hour windows from 10 AM to 9 PM, stored as "HH:MM-HH:MM" (24h).
+const TIME_SLOTS = Array.from({ length: 11 }, (_, i) => {
+  const start = 10 + i;
+  const end = start + 1;
+  const fmt = (h: number) => `${String(h).padStart(2, "0")}:00`;
+  return `${fmt(start)}-${fmt(end)}`;
+});
+
+const formatSlotLabel = (slot: string) => {
+  const [s, e] = slot.split("-");
+  const to12 = (t: string) => {
+    const [h] = t.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    const hr = h % 12 === 0 ? 12 : h % 12;
+    return `${hr}:00 ${period}`;
+  };
+  return `${to12(s)} – ${to12(e)}`;
+};
+
+const getNextDays = (count = 5) => {
+  const days: { value: string; label: string; sub: string }[] = [];
+  const today = new Date();
+  for (let i = 0; i < count; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const label =
+      i === 0 ? "Today" :
+      i === 1 ? "Tomorrow" :
+      d.toLocaleDateString(undefined, { weekday: "short" });
+    const sub = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    days.push({ value, label, sub });
+  }
+  return days;
+};
+
+const isSlotInPast = (dateStr: string, slot: string) => {
+  if (!dateStr || !slot) return false;
+  const [start] = slot.split("-");
+  const slotStart = new Date(`${dateStr}T${start}:00`);
+  return slotStart.getTime() <= Date.now();
+};
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const isCod = props.paymentMode === "cod";
@@ -415,6 +489,17 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     if (props.formData.city.trim().toLowerCase() !== "regina") {
       props.setCityError("We only deliver within Regina.");
       return;
+    }
+    if (props.deliveryType === "scheduled") {
+      if (!props.scheduledDate || !props.scheduledSlot) {
+        props.setScheduleError("Please pick a delivery date and time slot.");
+        return;
+      }
+      if (isSlotInPast(props.scheduledDate, props.scheduledSlot)) {
+        props.setScheduleError("That time has passed — please choose a later slot.");
+        return;
+      }
+      props.setScheduleError(null);
     }
     props.setIsSubmitting(true);
     props.setError(null);
@@ -469,20 +554,131 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           {/* 2. Delivery */}
           <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="We currently deliver within Regina, SK only.">
             <div className="space-y-3">
-              <FieldInput label="Street address" name="address" value={props.formData.address} onChange={handleChange} placeholder="123 Main Street" required />
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Street address</Label>
+                <AddressAutocomplete
+                  value={props.formData.address}
+                  onChange={(val) => props.setFormData((prev) => ({ ...prev, address: val }))}
+                  onSelect={(addr, isRegina) => {
+                    props.setFormData((prev) => ({ ...prev, address: addr, city: "Regina" }));
+                    props.setCityError(isRegina ? null : "We only deliver within Regina.");
+                  }}
+                  placeholder="Start typing your Regina address"
+                  inputClassName="h-11"
+                  error={props.cityError}
+                />
+              </div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <FieldInput label="City" name="city" value={props.formData.city} onChange={handleChange} required error={!!props.cityError} />
-                  {props.cityError && <p className="text-destructive text-xs mt-1.5 ml-1">{props.cityError}</p>}
-                </div>
+                <FieldInput label="City" name="city" value={props.formData.city} onChange={handleChange} required error={!!props.cityError} />
                 <FieldInput label="Postal code" name="postalCode" value={props.formData.postalCode} onChange={handleChange} placeholder="S4X 1A2" required />
               </div>
               <FieldInput label="Delivery instructions (optional)" name="deliveryInstructions" value={props.formData.deliveryInstructions} onChange={handleChange} placeholder="Ring doorbell, leave at door, etc." />
             </div>
           </SectionCard>
 
+          {/* 3. Delivery time */}
+          <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time" subtitle="Get it now or schedule for later — we deliver 10 AM – 10 PM in Regina.">
+            <div className="grid grid-cols-2 gap-2.5 mb-4">
+              <button
+                type="button"
+                onClick={() => { props.setDeliveryType("asap"); props.setScheduleError(null); }}
+                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                  props.deliveryType === "asap" ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${props.deliveryType === "asap" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                  <Zap className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">ASAP</p>
+                  <p className="text-[11px] text-muted-foreground">Arrives in 25–45 min</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => props.setDeliveryType("scheduled")}
+                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                  props.deliveryType === "scheduled" ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${props.deliveryType === "scheduled" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                  <CalendarClock className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Schedule</p>
+                  <p className="text-[11px] text-muted-foreground">Pick a day &amp; time</p>
+                </div>
+              </button>
+            </div>
+
+            {props.deliveryType === "scheduled" && (
+              <div className="space-y-3 animate-fade-in">
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a day</Label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {getNextDays(5).map((d) => {
+                      const selected = props.scheduledDate === d.value;
+                      return (
+                        <button
+                          key={d.value}
+                          type="button"
+                          onClick={() => { props.setScheduledDate(d.value); props.setScheduleError(null); }}
+                          className={`flex flex-col items-center justify-center rounded-xl border py-2.5 transition-all ${
+                            selected ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-background hover:border-primary/40"
+                          }`}
+                        >
+                          <span className="text-[11px] font-semibold uppercase tracking-wide">{d.label}</span>
+                          <span className={`text-xs mt-0.5 ${selected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{d.sub}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a time slot</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TIME_SLOTS.map((slot) => {
+                      const past = isSlotInPast(props.scheduledDate, slot);
+                      const selected = props.scheduledSlot === slot;
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          disabled={past}
+                          onClick={() => { props.setScheduledSlot(slot); props.setScheduleError(null); }}
+                          className={`rounded-xl border py-2.5 px-2 text-xs font-medium transition-all ${
+                            selected
+                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                              : past
+                                ? "border-border bg-muted/40 text-muted-foreground/50 cursor-not-allowed line-through"
+                                : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-secondary/60"
+                          }`}
+                        >
+                          {formatSlotLabel(slot)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {props.scheduleError && (
+                  <p className="text-destructive text-xs flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{props.scheduleError}</p>
+                )}
+                {props.scheduledDate && props.scheduledSlot && !props.scheduleError && (
+                  <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3 flex items-start gap-2.5">
+                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-foreground/80 leading-relaxed">
+                      Scheduled for <span className="font-semibold text-foreground">
+                        {new Date(props.scheduledDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                      </span> · <span className="font-semibold text-foreground">{formatSlotLabel(props.scheduledSlot)}</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </SectionCard>
+
           {/* 3. Payment */}
-          <SectionCard step={3} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle={isCod ? "Pay the driver in cash on delivery." : "Your card is held — never charged more than the final price."}>
+          <SectionCard step={4} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle={isCod ? "Pay the driver in cash on delivery." : "Your card is held — never charged more than the final price."}>
             {/* Card / COD toggle */}
             <div className="grid grid-cols-2 gap-2.5 mb-4">
               <button
@@ -599,7 +795,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 4. Tip */}
-          <SectionCard step={4} icon={<Heart className="h-4 w-4" />} title="Add a tip for your driver" subtitle="100% of your tip goes directly to the driver.">
+          <SectionCard step={5} icon={<Heart className="h-4 w-4" />} title="Add a tip for your driver" subtitle="100% of your tip goes directly to the driver.">
             <div className="grid grid-cols-4 gap-2.5">
               {[3, 5, 8].map((amt) => {
                 const selected = props.tipPreset === amt;
