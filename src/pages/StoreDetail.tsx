@@ -766,6 +766,55 @@ const StoreDetail = () => {
                       );
                     }
 
+                    // Derive brand options (first word of product name, top 12 by frequency)
+                    const getBrand = (name: string): string => {
+                      const cleaned = name.replace(/[^A-Za-z0-9 &'-]/g, "").trim();
+                      const first = cleaned.split(/\s+/)[0] || "";
+                      return first.length >= 2 ? first : "";
+                    };
+                    const brandCounts = new Map<string, number>();
+                    for (const p of displayItems) {
+                      const b = getBrand(p.name);
+                      if (b) brandCounts.set(b, (brandCounts.get(b) || 0) + 1);
+                    }
+                    const brandOptions = Array.from(brandCounts.entries())
+                      .filter(([, c]) => c >= 2)
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 12)
+                      .map(([brand, count]) => ({ brand, count }));
+
+                    // Derive pack-size options from products' available pack sizes in this category
+                    const packCounts = new Map<string, number>();
+                    for (const p of displayItems) {
+                      const sizes = getPackSizesForProduct(p);
+                      const seen = new Set<string>();
+                      for (const s of sizes) {
+                        if (!seen.has(s.value)) {
+                          seen.add(s.value);
+                          packCounts.set(s.value, (packCounts.get(s.value) || 0) + 1);
+                        }
+                      }
+                    }
+                    const packOptions = Array.from(packCounts.entries())
+                      .sort((a, b) => getPackSortValue(b[0]) - getPackSortValue(a[0]))
+                      .map(([value, count]) => {
+                        const baseList = PACK_SIZES_BY_CATEGORY[category as keyof typeof PACK_SIZES_BY_CATEGORY] || [];
+                        const label = baseList.find(s => s.value === value)?.label || value;
+                        return { value, label, count };
+                      });
+
+                    if (brandFilter !== "all") {
+                      displayItems = displayItems.filter(p => getBrand(p.name) === brandFilter);
+                    }
+                    if (packFilter !== "all") {
+                      displayItems = displayItems.filter(p =>
+                        getPackSizesForProduct(p).some(s => s.value === packFilter)
+                      );
+                    }
+
+                    const filtersActive = brandFilter !== "all" || packFilter !== "all" || !!q;
+
+
                     const renderLegacyPills = () => (
                       <>
                         {category === "spirits" && items.length > 0 && (
