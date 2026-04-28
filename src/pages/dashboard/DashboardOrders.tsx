@@ -315,6 +315,15 @@ const DashboardOrders = () => {
                             <StatusIcon className="h-3 w-3 mr-1 inline" />
                             {status.replace(/_/g, " ")}
                           </Badge>
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] font-medium gap-1 cursor-pointer hover:bg-secondary/80"
+                            onClick={() => order.store_id && setStoreFilter(order.store_id)}
+                            title={order.stores?.name ? `Filter by ${order.stores.name}` : "No store assigned"}
+                          >
+                            <StoreIcon className="h-3 w-3" />
+                            {order.stores?.name || "Unassigned"}
+                          </Badge>
                           {order.delivery_type === "scheduled" && order.delivery_scheduled_at && (
                             <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
                               <CalendarClock className="h-3 w-3 mr-1 inline" />
