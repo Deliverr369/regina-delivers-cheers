@@ -193,57 +193,40 @@ const StoreDetail = () => {
     },
   });
 
-  const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ["products", id],
+  // Single query fetches products together with their pack prices (no flicker / re-sort jump)
+  const { data: productsData = { products: [], packPrices: [] }, isLoading: productsLoading } = useQuery({
+    queryKey: ["products-with-packs", id],
     queryFn: async () => {
-      // Fetch all products in batches to avoid the 1000-row default limit
-      let allProducts: any[] = [];
+      const allProducts: any[] = [];
+      const allPrices: PackPrice[] = [];
       let from = 0;
       const batchSize = 1000;
       while (true) {
         const { data, error } = await supabase
           .from("products")
-          .select("*")
+          .select("*, product_pack_prices(product_id, pack_size, price, is_hidden)")
           .eq("store_id", id!)
           .eq("in_stock", true)
           .range(from, from + batchSize - 1);
         if (error) throw error;
         if (!data || data.length === 0) break;
-        allProducts = allProducts.concat(data);
+        for (const row of data) {
+          const { product_pack_prices, ...product } = row as any;
+          allProducts.push(product);
+          if (Array.isArray(product_pack_prices)) {
+            for (const pp of product_pack_prices) allPrices.push(pp as PackPrice);
+          }
+        }
         if (data.length < batchSize) break;
         from += batchSize;
       }
-      return allProducts;
+      return { products: allProducts, packPrices: allPrices };
     },
-  });
-
-  // Stable query key based on store id + product count (not array of ids — that recreates each render)
-  const productIdsWithPacks = useMemo(() => products.map(p => p.id), [products]);
-  const productIdsKey = useMemo(
-    () => productIdsWithPacks.length > 0 ? `${id}:${productIdsWithPacks.length}` : "",
-    [id, productIdsWithPacks.length]
-  );
-
-  const { data: packPrices = [] } = useQuery<PackPrice[]>({
-    queryKey: ["product_pack_prices", productIdsKey],
-    queryFn: async () => {
-      if (productIdsWithPacks.length === 0) return [];
-      const allPrices: PackPrice[] = [];
-      const batchSize = 200;
-      for (let i = 0; i < productIdsWithPacks.length; i += batchSize) {
-        const batch = productIdsWithPacks.slice(i, i + batchSize);
-        const { data, error } = await supabase
-          .from("product_pack_prices")
-          .select("product_id, pack_size, price, is_hidden")
-          .in("product_id", batch);
-        if (error) throw error;
-        if (data) allPrices.push(...(data as PackPrice[]));
-      }
-      return allPrices;
-    },
-    enabled: productIdsWithPacks.length > 0,
     staleTime: 60_000,
   });
+
+  const products = productsData.products;
+  const packPrices = productsData.packPrices;
 
   // Index packs by product_id once → O(1) lookup instead of O(N) filter per product
   const packsByProductId = useMemo(() => {
