@@ -84,6 +84,15 @@ const nextStatus = (s: OrderStatus | null): OrderStatus | null => {
   return STATUS_FLOW[idx + 1];
 };
 
+const PAYMENT_OPTIONS: { value: string; label: string }[] = [
+  { value: "all", label: "All payments" },
+  { value: "pending", label: "Pending" },
+  { value: "authorized", label: "Authorized" },
+  { value: "captured", label: "Captured" },
+  { value: "refunded", label: "Refunded" },
+  { value: "failed", label: "Failed" },
+];
+
 const DashboardOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -91,6 +100,8 @@ const DashboardOrders = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [splitOnly, setSplitOnly] = useState<boolean>(false);
   const [stores, setStores] = useState<StoreOption[]>([]);
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -174,6 +185,21 @@ const DashboardOrders = () => {
     return c;
   }, [orders]);
 
+  // Build a set of payment_intent_ids that appear on more than one order so
+  // we can flag split orders (one checkout → multiple per-store orders share
+  // the same intent).
+  const splitIntentIds = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const o of orders) {
+      const id = o.stripe_payment_intent_id;
+      if (!id) continue;
+      counts[id] = (counts[id] || 0) + 1;
+    }
+    return new Set(Object.entries(counts).filter(([, n]) => n > 1).map(([id]) => id));
+  }, [orders]);
+
+  const isSplit = (o: Order) => !!o.stripe_payment_intent_id && splitIntentIds.has(o.stripe_payment_intent_id);
+
   const filtered = orders.filter((o) => {
     const storeName = o.stores?.name || "";
     const matchSearch =
@@ -194,7 +220,10 @@ const DashboardOrders = () => {
         : storeFilter === "unassigned"
           ? !o.store_id
           : o.store_id === storeFilter;
-    return matchSearch && matchStatus && matchStore;
+    const matchPayment =
+      paymentFilter === "all" ? true : (o.payment_status || "pending") === paymentFilter;
+    const matchSplit = !splitOnly || isSplit(o);
+    return matchSearch && matchStatus && matchStore && matchPayment && matchSplit;
   });
 
   if (loading) {
