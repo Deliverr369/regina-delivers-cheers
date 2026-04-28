@@ -20,50 +20,38 @@ const PromoCodeInput = () => {
     if (!trimmed) return;
     setSubmitting(true);
 
-    const { data, error } = await supabase
-      .from("promo_codes")
-      .select("id, code, description, discount_type, discount_value, min_order_amount, max_uses, use_count, expires_at, is_active")
-      .ilike("code", trimmed)
-      .maybeSingle();
+    const subtotal = getCartTotal();
+    const { data, error } = await supabase.rpc("validate_promo_code", {
+      _code: trimmed,
+      _order_amount: subtotal,
+    });
 
     setSubmitting(false);
 
-    if (error || !data) {
+    const row = Array.isArray(data) ? data[0] : data;
+
+    if (error || !row) {
       haptics.warning();
       toast.error("Invalid code", { description: "That promo code doesn't exist." });
       return;
     }
-    if (!data.is_active) {
-      toast.error("This code is no longer active.");
-      return;
-    }
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      toast.error("This code has expired.");
-      return;
-    }
-    if (data.max_uses != null && data.use_count >= data.max_uses) {
-      toast.error("This code has reached its usage limit.");
-      return;
-    }
-    const subtotal = getCartTotal();
-    if (subtotal < Number(data.min_order_amount)) {
-      toast.error(`Minimum order $${Number(data.min_order_amount).toFixed(2)} required for this code.`);
+    if (!row.valid) {
+      haptics.warning();
+      toast.error(row.reason || "This code can't be applied.");
       return;
     }
 
     const promo: AppliedPromo = {
-      code: data.code,
-      description: data.description,
-      discount_type: data.discount_type as "percentage" | "fixed",
-      discount_value: Number(data.discount_value),
-      min_order_amount: Number(data.min_order_amount),
-      promo_code_id: data.id,
+      code: row.code,
+      description: null,
+      discount_type: row.discount_type as "percentage" | "fixed",
+      discount_value: Number(row.discount_value),
+      min_order_amount: Number(row.min_order_amount),
+      promo_code_id: row.id,
     };
     applyPromo(promo);
     haptics.success();
-    toast.success(`Code "${data.code}" applied!`, {
-      description: data.description ?? undefined,
-    });
+    toast.success(`Code "${row.code}" applied!`);
     setCode("");
     setOpen(false);
   };
