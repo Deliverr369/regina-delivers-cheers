@@ -293,7 +293,7 @@ const OrderReceipt = () => {
             </Button>
             <Button
               className="rounded-full gap-2"
-              onClick={() => reorder(order as any)}
+              onClick={() => setReorderOpen(true)}
             >
               <RotateCcw className="h-4 w-4" />
               Reorder these items
@@ -301,6 +301,11 @@ const OrderReceipt = () => {
           </div>
         </div>
       </main>
+      <ReorderConfirmDialog
+        order={order as any}
+        open={reorderOpen}
+        onOpenChange={setReorderOpen}
+      />
       <div className="print:hidden">
         <Footer />
       </div>
