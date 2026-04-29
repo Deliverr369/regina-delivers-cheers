@@ -109,11 +109,38 @@ Deno.serve(async (req) => {
     if (tip > 500) return json(400, { error: "Tip too large" });
 
     // ----- Address validation -----
-    if (!body.address || body.address.trim().length < 4) {
-      return json(400, { error: "Delivery address is required" });
+    if (!body.address_id || !UUID_RE.test(body.address_id)) {
+      return json(400, { error: "Please select a saved delivery address." });
     }
-    if ((body.city || "").trim().toLowerCase() !== "regina") {
-      return json(400, { error: "We only deliver within Regina, SK" });
+    const { data: addr, error: addrErr } = await supabase
+      .from("user_addresses")
+      .select("id, user_id, address, city, postal_code")
+      .eq("id", body.address_id)
+      .maybeSingle();
+    if (addrErr) return json(500, { error: "Could not load address" });
+    if (!addr || addr.user_id !== userData.user.id) {
+      return json(400, { error: "Selected address is invalid or no longer exists." });
+    }
+    if (!addr.address || addr.address.trim().length < 4) {
+      return json(400, { error: "Saved address is incomplete." });
+    }
+    if (norm(addr.city) !== "regina") {
+      return json(400, { error: "We only deliver within Regina, SK." });
+    }
+    if (!addr.postal_code || !CA_POSTAL_RE.test(addr.postal_code.trim())) {
+      return json(400, { error: "Saved address has an invalid postal code." });
+    }
+    // Regina postal codes start with S4 — enforce strict service area.
+    if (!/^s4/i.test(addr.postal_code.trim())) {
+      return json(400, { error: "Postal code is outside our Regina service area." });
+    }
+    // Cross-check: client-submitted address must match the saved record.
+    if (
+      norm(body.address) !== norm(addr.address) ||
+      norm(body.city) !== norm(addr.city) ||
+      norm(body.postal_code || "") !== norm(addr.postal_code || "")
+    ) {
+      return json(409, { error: "Address details changed — please reselect your address." });
     }
 
     // ----- Re-fetch products from DB and verify -----
