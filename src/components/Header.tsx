@@ -221,6 +221,34 @@ const Header = () => {
                 {link.label}
               </Link>
             ))}
+
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center justify-between text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors">
+                Shop by Category
+                <ChevronDown className="h-4 w-4 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="pl-3 mt-1 flex flex-col">
+                {SHOP_LINKS.map((l) => (
+                  <Link key={l.to} to={l.to} onClick={() => setIsMenuOpen(false)} className="text-sm text-muted-foreground py-2 px-3 rounded-md hover:bg-muted/50 hover:text-foreground transition-colors">
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
+
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center justify-between text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors">
+                Regina Areas
+                <ChevronDown className="h-4 w-4 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="pl-3 mt-1 flex flex-col max-h-72 overflow-y-auto">
+                {AREA_LINKS.map((l) => (
+                  <Link key={l.to} to={l.to} onClick={() => setIsMenuOpen(false)} className="text-sm text-muted-foreground py-2 px-3 rounded-md hover:bg-muted/50 hover:text-foreground transition-colors">
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
             {user && (
               <>
                 <Link to="/profile" className="text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50" onClick={() => setIsMenuOpen(false)}>My Profile</Link>
