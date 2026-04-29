@@ -44,6 +44,8 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const StorePage = lazy(() => import("./pages/StorePage"));
 const CategoryLanding = lazy(() => import("./pages/CategoryLanding"));
+const StoreDirectoryLanding = lazy(() => import("./pages/StoreDirectoryLanding"));
+const StoreCategoryDetail = lazy(() => import("./pages/StoreCategoryDetail"));
 
 // Admin dashboard — heavy, lazy-loaded as a group
 const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
@@ -134,6 +136,10 @@ const App = () => (
                 <Route path="/smokes-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/vape-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/spirits-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/vape-stores-regina" element={<StoreDirectoryLanding />} />
+                <Route path="/vape-stores-regina/:slug" element={<StoreCategoryDetail category="vape" />} />
+                <Route path="/spirits-stores-regina" element={<StoreDirectoryLanding />} />
+                <Route path="/spirits-stores-regina/:slug" element={<StoreCategoryDetail category="spirits" />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
