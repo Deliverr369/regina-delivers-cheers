@@ -11,6 +11,7 @@ import { useReorder } from "@/hooks/useReorder";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import OrderTimeline from "@/components/OrderTimeline";
+import ReorderConfirmDialog from "@/components/ReorderConfirmDialog";
 
 const statusConfig: Record<string, { bg: string; label: string }> = {
   pending: { bg: "bg-amber-500", label: "Pending" },
