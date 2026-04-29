@@ -493,6 +493,9 @@ const Checkout = () => {
               setScheduledSlot,
               scheduleError,
               setScheduleError,
+              storeHours,
+              cartStoreIds,
+              allStoresOpenNow,
             };
 
             if (paymentMode === "cod") {
@@ -552,6 +555,9 @@ interface CheckoutBodyProps extends PaymentFormProps {
   setScheduledSlot: (v: string) => void;
   scheduleError: string | null;
   setScheduleError: (v: string | null) => void;
+  storeHours: HoursByStore;
+  cartStoreIds: string[];
+  allStoresOpenNow: boolean;
 }
 
 /* ─── Delivery scheduling helpers ─── */
