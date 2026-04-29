@@ -92,7 +92,7 @@ const Signup = () => {
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <Checkbox id="age" checked={ageConfirmed} onCheckedChange={(c) => setAgeConfirmed(c as boolean)} className="mt-0.5" />
+                  <Checkbox id="age" checked={ageConfirmed} onCheckedChange={(c) => setAgeConfirmed(c as boolean)} className="mt-0.5 shrink-0" />
                   <Label htmlFor="age" className="text-xs text-muted-foreground leading-relaxed">
                     I confirm I am 19+ and agree to the{" "}
                     <Link to="/terms" className="text-primary hover:underline">Terms</Link> and{" "}
