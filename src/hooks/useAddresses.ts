@@ -9,6 +9,7 @@ export interface SavedAddress {
   recipient_name: string | null;
   phone: string | null;
   address: string;
+  unit: string | null;
   city: string;
   postal_code: string | null;
   delivery_instructions: string | null;
