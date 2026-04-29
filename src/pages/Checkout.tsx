@@ -719,13 +719,6 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 3. Delivery time */}
-          <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time" subtitle="Get it now or schedule for later — we deliver 10 AM – 10 PM in Regina.">
-            <div className="grid grid-cols-2 gap-2.5 mb-4">
-              <button
-                type="button"
-                onClick={() => { props.setDeliveryType("asap"); props.setScheduleError(null); }}
-                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
-          {/* 3. Delivery time */}
           <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time" subtitle="Get it now or schedule for later — slots respect each store's hours.">
             <div className="grid grid-cols-2 gap-2.5 mb-4">
               <button
