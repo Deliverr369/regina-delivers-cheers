@@ -293,14 +293,7 @@ const StorePage = () => {
             <h2 className="text-3xl font-bold font-heading text-center mb-8">
               {store.name} Delivery — Frequently Asked Questions
             </h2>
-            <div className="space-y-6">
-              {faqs.map((item) => (
-                <div key={item.q} className="border-b pb-6 last:border-0">
-                  <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
-                  <p className="text-muted-foreground">{item.a}</p>
-                </div>
-              ))}
-            </div>
+            <FaqAccordion items={faqs} />
           </div>
         </section>
 
