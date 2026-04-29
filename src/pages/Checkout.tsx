@@ -511,6 +511,8 @@ const Checkout = () => {
               storeHours,
               cartStoreIds,
               allStoresOpenNow,
+              selectedAddressId,
+              onAddressSelect: handleAddressSelect,
             };
 
             if (paymentMode === "cod") {
@@ -573,6 +575,8 @@ interface CheckoutBodyProps extends PaymentFormProps {
   storeHours: HoursByStore;
   cartStoreIds: string[];
   allStoresOpenNow: boolean;
+  selectedAddressId: string | null;
+  onAddressSelect: (addr: SavedAddress) => void;
 }
 
 /* ─── Delivery scheduling helpers ─── */
