@@ -132,6 +132,7 @@ const App = () => (
                 <Route path="/liquor-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/grocery-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/smokes-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/vape-delivery-regina" element={<CategoryLanding />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
