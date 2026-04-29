@@ -12,6 +12,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import AsSeenOnSection from "@/components/AsSeenOnSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
+import { localBusinessJsonLd, reginaServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -28,17 +29,21 @@ const Index = () => {
         title="Liquor & Smoke Delivery in Regina | Deliverr"
         description="Order beer, wine, spirits and smokes from Regina's top stores. Fast delivery in under 60 minutes at store prices. 19+ only."
         canonical="https://regina-delivers-cheers.lovable.app/"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "Deliverr",
-          url: "https://regina-delivers-cheers.lovable.app/",
-          potentialAction: {
-            "@type": "SearchAction",
-            target: "https://regina-delivers-cheers.lovable.app/products?q={search_term_string}",
-            "query-input": "required name=search_term_string",
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Deliverr",
+            url: "https://regina-delivers-cheers.lovable.app/",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://regina-delivers-cheers.lovable.app/products?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
           },
-        }}
+          localBusinessJsonLd,
+          reginaServiceJsonLd,
+        ]}
       />
       <Header />
       <main>
