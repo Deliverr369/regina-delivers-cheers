@@ -8,22 +8,24 @@ import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette }
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 
-const NEIGHBORHOODS: Record<string, { name: string; blurb: string }> = {
-  downtown: { name: "Downtown", blurb: "Fast delivery to Regina's downtown core — condos, offices and hotels." },
-  cathedral: { name: "Cathedral", blurb: "Heritage homes, indie shops and same-day delivery to your door." },
-  "harbour-landing": { name: "Harbour Landing", blurb: "Fast delivery to Regina's growing south-end community." },
-  lakeview: { name: "Lakeview", blurb: "Quick service to Lakeview and Wascana Park area." },
-  "albert-park": { name: "Albert Park", blurb: "Reliable delivery across Albert Park." },
-  hillsdale: { name: "Hillsdale", blurb: "Friendly drivers serving all of Hillsdale." },
-  eastview: { name: "Eastview", blurb: "Same-day service to Eastview and surrounding areas." },
-  "whitmore-park": { name: "Whitmore Park", blurb: "Delivery to Whitmore Park in under 60 minutes." },
-  "the-crescents": { name: "The Crescents", blurb: "Doorstep delivery throughout The Crescents." },
-  "north-central": { name: "North Central", blurb: "Same-day delivery across North Central Regina." },
-  "south-end": { name: "South End", blurb: "Reliable service to all of Regina's south end." },
-  "east-end": { name: "East End", blurb: "Doorstep delivery throughout Regina's east end." },
-  "west-end": { name: "West End", blurb: "Quick delivery to Regina's west end neighborhoods." },
-  uplands: { name: "Uplands", blurb: "Same-day service to the Uplands community." },
-  normanview: { name: "Normanview", blurb: "Friendly delivery across Normanview and Normanview West." },
+type Hood = { name: string; blurb: string; nearby: string[]; quadrant: string };
+
+const NEIGHBORHOODS: Record<string, Hood> = {
+  downtown: { name: "Downtown", blurb: "Fast delivery to Regina's downtown core — condos, offices and hotels.", nearby: ["Cathedral", "The Crescents", "North Central"], quadrant: "central Regina" },
+  cathedral: { name: "Cathedral", blurb: "Heritage homes, indie shops and same-day delivery to your door.", nearby: ["Downtown", "The Crescents", "Lakeview"], quadrant: "central Regina" },
+  "harbour-landing": { name: "Harbour Landing", blurb: "Fast delivery to Regina's growing south-end community.", nearby: ["Albert Park", "Lakeview", "Whitmore Park"], quadrant: "south Regina" },
+  lakeview: { name: "Lakeview", blurb: "Quick service to Lakeview and Wascana Park area.", nearby: ["The Crescents", "Cathedral", "Hillsdale"], quadrant: "south-central Regina" },
+  "albert-park": { name: "Albert Park", blurb: "Reliable delivery across Albert Park.", nearby: ["Hillsdale", "Whitmore Park", "Harbour Landing"], quadrant: "south Regina" },
+  hillsdale: { name: "Hillsdale", blurb: "Friendly drivers serving all of Hillsdale.", nearby: ["Lakeview", "Albert Park", "Whitmore Park"], quadrant: "south Regina" },
+  eastview: { name: "Eastview", blurb: "Same-day service to Eastview and surrounding areas.", nearby: ["Cathedral", "Downtown", "The Crescents"], quadrant: "east-central Regina" },
+  "whitmore-park": { name: "Whitmore Park", blurb: "Delivery to Whitmore Park in under 60 minutes.", nearby: ["Hillsdale", "Albert Park", "Harbour Landing"], quadrant: "south Regina" },
+  "the-crescents": { name: "The Crescents", blurb: "Doorstep delivery throughout The Crescents.", nearby: ["Cathedral", "Lakeview", "Downtown"], quadrant: "central Regina" },
+  "north-central": { name: "North Central", blurb: "Same-day delivery across North Central Regina.", nearby: ["Downtown", "Normanview", "Uplands"], quadrant: "north Regina" },
+  "south-end": { name: "South End", blurb: "Reliable service to all of Regina's south end.", nearby: ["Harbour Landing", "Albert Park", "Hillsdale", "Whitmore Park"], quadrant: "south Regina" },
+  "east-end": { name: "East End", blurb: "Doorstep delivery throughout Regina's east end.", nearby: ["Eastview", "Uplands"], quadrant: "east Regina" },
+  "west-end": { name: "West End", blurb: "Quick delivery to Regina's west end neighborhoods.", nearby: ["Normanview", "North Central"], quadrant: "west Regina" },
+  uplands: { name: "Uplands", blurb: "Same-day service to the Uplands community.", nearby: ["Normanview", "North Central", "East End"], quadrant: "north Regina" },
+  normanview: { name: "Normanview", blurb: "Friendly delivery across Normanview and Normanview West.", nearby: ["Uplands", "North Central", "West End"], quadrant: "north-west Regina" },
 };
 
 const ReginaLanding = () => {
