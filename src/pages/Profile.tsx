@@ -102,7 +102,6 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase.from("profiles").update({
       full_name: profile.full_name, phone: profile.phone,
-      address: profile.address, city: profile.city, postal_code: profile.postal_code,
     }).eq("id", user.id);
 
     toast(error
