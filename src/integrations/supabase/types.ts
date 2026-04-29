@@ -907,6 +907,47 @@ export type Database = {
         }
         Relationships: []
       }
+      store_hours: {
+        Row: {
+          close_time: string
+          created_at: string
+          id: string
+          is_closed: boolean
+          open_time: string
+          store_id: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          close_time?: string
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          open_time?: string
+          store_id: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          close_time?: string
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          open_time?: string
+          store_id?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_hours_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           address: string
