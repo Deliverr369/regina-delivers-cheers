@@ -43,6 +43,10 @@ function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
       q: "What vape products can I order in Regina?",
       a: "Disposable vapes (Allo, Vice, Elf Bar, Stlth and similar), refillable pod systems, replacement pods, e-liquid / vape juice in a range of nicotine strengths, replacement coils, batteries, chargers and accessories — all from Regina's licensed vape retailers. Saskatchewan rules apply: 19+ only and flavour restrictions where applicable.",
     },
+    "spirits-delivery-regina": {
+      q: "Which spirits can I order delivered in Regina?",
+      a: "Vodka, whisky (Canadian rye, scotch, bourbon, Irish, Japanese), rum (white, dark, spiced), gin, tequila, mezcal, brandy, cognac and liqueurs from Regina liquor stores. Available in 375 mL, 750 mL, 1.14 L and 1.75 L sizes depending on stock — we surface the lowest in-stock price across stores.",
+    },
   };
 
   const base: { q: string; a: string }[] = [
