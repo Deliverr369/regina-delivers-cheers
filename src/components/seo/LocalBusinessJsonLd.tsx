@@ -119,10 +119,10 @@ export function reginaFaqJsonLd(areaName: string) {
       },
       {
         "@type": "Question",
-        name: `Do I need to be 19+ to order alcohol or smokes in ${areaName}?`,
+        name: `Do I need to be 19+ to order alcohol, smokes or vape in ${areaName}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Yes. Saskatchewan law requires you to be 19 or older. Age is verified at checkout and again at the door on delivery.`,
+          text: `Yes. You must be 19 or older to order alcohol, smokes or vape in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
         },
       },
       {
