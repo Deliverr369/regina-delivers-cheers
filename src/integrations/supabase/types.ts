@@ -438,6 +438,8 @@ export type Database = {
           product_id: string | null
           product_name: string
           quantity: number
+          store_note: string | null
+          substituted_name: string | null
         }
         Insert: {
           created_at?: string
@@ -449,6 +451,8 @@ export type Database = {
           product_id?: string | null
           product_name: string
           quantity: number
+          store_note?: string | null
+          substituted_name?: string | null
         }
         Update: {
           created_at?: string
@@ -460,6 +464,8 @@ export type Database = {
           product_id?: string | null
           product_name?: string
           quantity?: number
+          store_note?: string | null
+          substituted_name?: string | null
         }
         Relationships: [
           {
