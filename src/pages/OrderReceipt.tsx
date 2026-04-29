@@ -203,29 +203,57 @@ const OrderReceipt = () => {
                 Items ({items.length})
               </p>
               <div className="rounded-xl border border-border overflow-hidden">
-                {items.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    className={`flex items-start gap-3 p-3.5 ${
-                      idx !== items.length - 1 ? "border-b border-border" : ""
-                    }`}
-                  >
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                      {item.quantity}×
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">
-                        {item.product_name}
+                {items.map((item, idx) => {
+                  const substituted =
+                    item.substituted_name &&
+                    item.substituted_name.trim() &&
+                    item.substituted_name.trim() !== item.product_name.trim();
+                  const note = item.store_note && item.store_note.trim();
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex items-start gap-3 p-3.5 ${
+                        idx !== items.length - 1 ? "border-b border-border" : ""
+                      }`}
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                        {item.quantity}×
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {substituted ? (
+                          <>
+                            <p className="text-sm font-medium text-foreground">
+                              {item.substituted_name}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <ArrowRightLeft className="h-3 w-3 text-amber-500" />
+                              Substituted from{" "}
+                              <span className="line-through">{item.product_name}</span>
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-sm font-medium text-foreground">
+                            {item.product_name}
+                          </p>
+                        )}
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {fmtMoney(item.price)} each
+                        </p>
+                        {note && (
+                          <div className="mt-1.5 flex items-start gap-1.5 rounded-md bg-secondary/60 px-2 py-1.5">
+                            <MessageSquare className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                            <p className="text-[11px] text-foreground italic leading-snug">
+                              {note}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold text-foreground tabular-nums">
+                        {fmtMoney(Number(item.price) * Number(item.quantity))}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {fmtMoney(item.price)} each
-                      </p>
                     </div>
-                    <p className="text-sm font-semibold text-foreground tabular-nums">
-                      {fmtMoney(Number(item.price) * Number(item.quantity))}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
