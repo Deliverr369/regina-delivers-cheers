@@ -11,4 +11,9 @@ Disallow: /login
 Disallow: /signup
 Disallow: /onboarding
 
-Sitemap: https://regina-delivers-cheers.lovable.app/sitemap.xml
+Sitemap: https://www.deliverr.ca/sitemap.xml
+
+# Note: per-domain indexing control is handled at runtime by
+# src/components/seo/DomainCanonical.tsx. Only www.deliverr.ca is indexable;
+# all other hosts (deliverr.store, *.lovable.app, previews) are served with
+# <meta name="robots" content="noindex, nofollow"> so Google ignores them.
