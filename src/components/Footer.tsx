@@ -247,6 +247,9 @@ const Footer = () => {
         <div className="container mx-auto px-4 sm:px-5 py-4 sm:py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] sm:text-xs text-muted-foreground text-center md:text-left">
           <p>© {year} <span className="font-semibold text-foreground">Deliverr</span> Delivery Services Inc. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-5">
+            <Link to="/about" className="hover:text-primary transition-colors font-medium">About</Link>
+            <Link to="/how-it-works" className="hover:text-primary transition-colors font-medium">How It Works</Link>
+            <Link to="/help" className="hover:text-primary transition-colors font-medium">Help</Link>
             <Link to="/privacy" className="hover:text-primary transition-colors font-medium">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors font-medium">Terms of Service</Link>
             <span className="inline-flex items-center gap-1.5">
