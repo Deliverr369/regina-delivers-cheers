@@ -24,7 +24,7 @@ const FaqAccordion = ({ items, defaultOpenCount = 2, className }: Props) => {
       {items.map((item, i) => (
         <AccordionItem key={item.q} value={`faq-${i}`}>
           <AccordionTrigger className="text-left text-base md:text-lg font-semibold">
-            <h3 className="m-0 font-semibold">{item.q}</h3>
+            {item.q}
           </AccordionTrigger>
           <AccordionContent className="text-muted-foreground text-base leading-relaxed">
             {item.a}
