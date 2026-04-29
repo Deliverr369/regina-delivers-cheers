@@ -27,6 +27,8 @@ export const CATEGORY_LINKS: { slug: string; name: string }[] = [
   { slug: "smokes-delivery-regina", name: "Smokes & Vape Delivery" },
   { slug: "vape-delivery-regina", name: "Vape Delivery" },
   { slug: "spirits-delivery-regina", name: "Spirits Delivery" },
+  { slug: "vape-stores-regina", name: "Vape Stores" },
+  { slug: "spirits-stores-regina", name: "Spirits Stores" },
 ];
 
 type Props = {
