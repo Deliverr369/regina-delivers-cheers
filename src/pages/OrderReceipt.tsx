@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useReorder } from "@/hooks/useReorder";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import OrderTimeline from "@/components/OrderTimeline";
