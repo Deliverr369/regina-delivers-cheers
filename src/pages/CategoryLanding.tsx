@@ -154,6 +154,16 @@ const CATEGORIES: Record<string, CategoryConfig> = {
     shopTo: "/products?category=smokes",
     ageGated: true,
   },
+  "vape-delivery-regina": {
+    slug: "vape-delivery-regina",
+    name: "Vape",
+    h1: "Vape Delivery in Regina",
+    title: "Vape Delivery in Regina, SK | Disposables, Pods & Juice | Deliverr",
+    description: "Same-day vape delivery in Regina. Disposable vapes, pods, vape juice, coils and accessories from licensed retailers. 19+ only.",
+    intro: "Disposable vapes, pod systems, e-liquid, coils and accessories from Regina's licensed vape retailers — delivered in under an hour.",
+    shopTo: "/products?category=smokes&subcategory=vapes",
+    ageGated: true,
+  },
 };
 
 const CategoryLanding = () => {
