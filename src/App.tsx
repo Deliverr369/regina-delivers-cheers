@@ -15,6 +15,7 @@ import OnboardingGate from "./components/OnboardingGate";
 import AgeGate from "./components/AgeGate";
 import PushNotificationsMount from "./components/PushNotificationsMount";
 import SupportChatbot from "./components/SupportChatbot";
+import DomainCanonical from "./components/seo/DomainCanonical";
 
 // Lazy-loaded — split out of the initial bundle
 const Categories = lazy(() => import("./pages/Categories"));
@@ -88,6 +89,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <DomainCanonical />
             <AgeGate />
             <OnboardingGate />
             <PushNotificationsMount />
