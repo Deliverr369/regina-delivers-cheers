@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette } from "lucide-react";
-import { localBusinessJsonLd, reginaServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 
 const NEIGHBORHOODS: Record<string, { name: string; blurb: string }> = {
   downtown: { name: "Downtown", blurb: "Fast delivery to Regina's downtown core — condos, offices and hotels." },
@@ -45,8 +45,10 @@ const ReginaLanding = () => {
         description={description}
         canonical={`https://regina-delivers-cheers.lovable.app${path}`}
         jsonLd={[
+          organizationJsonLd,
           localBusinessJsonLd,
           reginaServiceJsonLd,
+          reginaFaqJsonLd(areaName),
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
@@ -159,6 +161,29 @@ const ReginaLanding = () => {
             </div>
           </section>
         )}
+
+        {/* FAQ — mirrors FAQPage JSON-LD for rich-result eligibility */}
+        <section className="py-16 bg-muted/30">
+          <div className="container max-w-3xl mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 font-heading">
+              {areaName} Delivery FAQ
+            </h2>
+            <div className="space-y-6">
+              {[
+                { q: `How fast is delivery in ${areaName}?`, a: `Most orders in ${areaName} arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.` },
+                { q: `What can I get delivered in ${areaName}?`, a: "Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers." },
+                { q: `Is there a minimum order or delivery fee in ${areaName}?`, a: "Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10." },
+                { q: `Do I need to be 19+ to order alcohol or smokes in ${areaName}?`, a: "Yes. Saskatchewan law requires you to be 19 or older. Age is verified at checkout and again at the door on delivery." },
+                { q: "What payment methods does Deliverr accept?", a: "We accept all major credit cards. We do not accept cash on delivery." },
+              ].map((item) => (
+                <div key={item.q} className="border-b pb-6 last:border-0">
+                  <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
+                  <p className="text-muted-foreground">{item.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* CTA */}
         <section className="py-16 bg-primary text-primary-foreground">
