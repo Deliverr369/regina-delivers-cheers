@@ -1,0 +1,463 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`StorePage JSON-LD — BreadcrumbList > matches snapshot 1`] = `
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "item": "https://regina-delivers-cheers.lovable.app/",
+      "name": "Home",
+      "position": 1,
+    },
+    {
+      "@type": "ListItem",
+      "item": "https://regina-delivers-cheers.lovable.app/stores",
+      "name": "Stores",
+      "position": 2,
+    },
+    {
+      "@type": "ListItem",
+      "item": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+      "name": "Willow Park Wine & Spirits",
+      "position": 3,
+    },
+  ],
+}
+`;
+
+exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITH rating + reviews 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+  "@type": "LocalBusiness",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "CA",
+    "addressLocality": "Regina",
+    "addressRegion": "SK",
+    "postalCode": "S4S 6X4",
+    "streetAddress": "2606 28th Ave",
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "bestRating": 5,
+    "ratingValue": 4.9,
+    "reviewCount": 425,
+    "worstRating": 1,
+  },
+  "areaServed": [
+    {
+      "@type": "GeoCircle",
+      "description": "15 km service radius around central Regina, SK.",
+      "geoMidpoint": {
+        "@type": "GeoCoordinates",
+        "latitude": 50.4452,
+        "longitude": -104.6189,
+      },
+      "geoRadius": 15000,
+    },
+    {
+      "@type": "City",
+      "containedInPlace": {
+        "@type": "AdministrativeArea",
+        "name": "Saskatchewan",
+        "sameAs": "https://en.wikipedia.org/wiki/Saskatchewan",
+      },
+      "name": "Regina",
+      "sameAs": "https://en.wikipedia.org/wiki/Regina,_Saskatchewan",
+    },
+    {
+      "@type": "Place",
+      "name": "Downtown, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Cathedral, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Harbour Landing, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Lakeview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "The Crescents, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Albert Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Hillsdale, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Whitmore Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Eastview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Glencairn, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Walsh Acres, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Normanview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Argyle Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Wood Meadows, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Greens on Gardiner, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "North Central, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "South End, Regina",
+    },
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "areaServed": "CA-SK",
+    "availableLanguage": [
+      "English",
+    ],
+    "contactType": "customer support",
+    "telephone": "+13065852266",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 50.4452,
+    "longitude": -104.6189,
+  },
+  "image": "https://regina-delivers-cheers.lovable.app/images/stores/willow-park-logo.png",
+  "makesOffer": {
+    "@type": "Offer",
+    "description": "Same-day delivery from Willow Park Wine & Spirits in Regina",
+    "price": "7",
+    "priceCurrency": "CAD",
+  },
+  "name": "Willow Park Wine & Spirits (via Deliverr)",
+  "openingHours": "Mo-Su 10:00-22:00",
+  "parentOrganization": {
+    "@id": "https://www.deliverr.ca/#organization",
+  },
+  "priceRange": "$$",
+  "review": [
+    {
+      "@type": "Review",
+      "author": {
+        "@type": "Organization",
+        "name": "Deliverr customers",
+      },
+      "itemReviewed": {
+        "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+      },
+      "reviewBody": "Average customer rating of 4.9 out of 5 across 425 verified Deliverr deliveries from Willow Park Wine & Spirits in Regina.",
+      "reviewRating": {
+        "@type": "Rating",
+        "bestRating": 5,
+        "ratingValue": 4.9,
+        "worstRating": 1,
+      },
+    },
+  ],
+  "telephone": "+13065852266",
+  "url": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+}
+`;
+
+exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITHOUT rating + reviews 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/empire-offsale",
+  "@type": "LocalBusiness",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "CA",
+    "addressLocality": "Regina",
+    "addressRegion": "SK",
+    "postalCode": "S4P 2B6",
+    "streetAddress": "1755 Hamilton St",
+  },
+  "aggregateRating": undefined,
+  "areaServed": [
+    {
+      "@type": "GeoCircle",
+      "description": "15 km service radius around central Regina, SK.",
+      "geoMidpoint": {
+        "@type": "GeoCoordinates",
+        "latitude": 50.4452,
+        "longitude": -104.6189,
+      },
+      "geoRadius": 15000,
+    },
+    {
+      "@type": "City",
+      "containedInPlace": {
+        "@type": "AdministrativeArea",
+        "name": "Saskatchewan",
+        "sameAs": "https://en.wikipedia.org/wiki/Saskatchewan",
+      },
+      "name": "Regina",
+      "sameAs": "https://en.wikipedia.org/wiki/Regina,_Saskatchewan",
+    },
+    {
+      "@type": "Place",
+      "name": "Downtown, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Cathedral, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Harbour Landing, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Lakeview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "The Crescents, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Albert Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Hillsdale, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Whitmore Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Eastview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Glencairn, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Walsh Acres, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Normanview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Argyle Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Wood Meadows, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Greens on Gardiner, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "North Central, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "South End, Regina",
+    },
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "areaServed": "CA-SK",
+    "availableLanguage": [
+      "English",
+    ],
+    "contactType": "customer support",
+    "telephone": "+13067571755",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 50.4452,
+    "longitude": -104.6189,
+  },
+  "image": undefined,
+  "makesOffer": {
+    "@type": "Offer",
+    "description": "Same-day delivery from Empire Offsale in Regina",
+    "price": "7",
+    "priceCurrency": "CAD",
+  },
+  "name": "Empire Offsale (via Deliverr)",
+  "openingHours": "Mo-Su 10:00-22:00",
+  "parentOrganization": {
+    "@id": "https://www.deliverr.ca/#organization",
+  },
+  "priceRange": "$$",
+  "review": undefined,
+  "telephone": "+13067571755",
+  "url": "https://regina-delivers-cheers.lovable.app/liquor-stores/empire-offsale",
+}
+`;
+
+exports[`StorePage JSON-LD — LocalBusiness > matches snapshot when rating and reviews_count are zero 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/fresh-store",
+  "@type": "LocalBusiness",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "CA",
+    "addressLocality": "Regina",
+    "addressRegion": "SK",
+    "postalCode": "S4S 6X4",
+    "streetAddress": "2606 28th Ave",
+  },
+  "aggregateRating": undefined,
+  "areaServed": [
+    {
+      "@type": "GeoCircle",
+      "description": "15 km service radius around central Regina, SK.",
+      "geoMidpoint": {
+        "@type": "GeoCoordinates",
+        "latitude": 50.4452,
+        "longitude": -104.6189,
+      },
+      "geoRadius": 15000,
+    },
+    {
+      "@type": "City",
+      "containedInPlace": {
+        "@type": "AdministrativeArea",
+        "name": "Saskatchewan",
+        "sameAs": "https://en.wikipedia.org/wiki/Saskatchewan",
+      },
+      "name": "Regina",
+      "sameAs": "https://en.wikipedia.org/wiki/Regina,_Saskatchewan",
+    },
+    {
+      "@type": "Place",
+      "name": "Downtown, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Cathedral, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Harbour Landing, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Lakeview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "The Crescents, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Albert Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Hillsdale, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Whitmore Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Eastview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Glencairn, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Walsh Acres, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Normanview, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Argyle Park, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Wood Meadows, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "Greens on Gardiner, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "North Central, Regina",
+    },
+    {
+      "@type": "Place",
+      "name": "South End, Regina",
+    },
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "areaServed": "CA-SK",
+    "availableLanguage": [
+      "English",
+    ],
+    "contactType": "customer support",
+    "telephone": "+13065852266",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 50.4452,
+    "longitude": -104.6189,
+  },
+  "image": "https://regina-delivers-cheers.lovable.app/images/stores/willow-park-logo.png",
+  "makesOffer": {
+    "@type": "Offer",
+    "description": "Same-day delivery from Fresh Liquor in Regina",
+    "price": "7",
+    "priceCurrency": "CAD",
+  },
+  "name": "Fresh Liquor (via Deliverr)",
+  "openingHours": "Mo-Su 10:00-22:00",
+  "parentOrganization": {
+    "@id": "https://www.deliverr.ca/#organization",
+  },
+  "priceRange": "$$",
+  "review": undefined,
+  "telephone": "+13065852266",
+  "url": "https://regina-delivers-cheers.lovable.app/liquor-stores/fresh-store",
+}
+`;
