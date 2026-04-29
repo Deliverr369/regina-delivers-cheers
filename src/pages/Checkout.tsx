@@ -255,13 +255,14 @@ const Checkout = () => {
       delivery_type: deliveryType,
       scheduled_at: scheduledAt,
       scheduled_slot: deliveryType === "scheduled" ? scheduledSlot : null,
+      address_id: selectedAddressId,
       address: formData.address,
       city: formData.city,
       postal_code: formData.postalCode,
       tip,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cartItems, deliveryType, scheduledDate, scheduledSlot, formData, tip]);
+  }, [cartItems, deliveryType, scheduledDate, scheduledSlot, formData, tip, selectedAddressId]);
 
   // Create PaymentIntent whenever total or selected card changes (skip for COD).
   // The server now re-prices everything; we send the full cart so it can validate.
