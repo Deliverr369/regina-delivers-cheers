@@ -1,4 +1,4 @@
-import { Link, useParams, Navigate } from "react-router-dom";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import { SEO } from "@/components/seo/SEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -82,7 +82,8 @@ const CATEGORIES: Record<string, CategoryConfig> = {
 };
 
 const CategoryLanding = () => {
-  const { slug } = useParams();
+  const { pathname } = useLocation();
+  const slug = pathname.replace(/^\//, "").split("/")[0];
   const cfg = slug ? CATEGORIES[slug] : null;
 
   if (!cfg) return <Navigate to="/stores" replace />;
