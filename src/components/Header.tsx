@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Menu, X, User, LogOut, Settings, LayoutDashboard, Package, Heart } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Settings, LayoutDashboard, Package, Heart, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,6 +28,34 @@ const Header = () => {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+  const SHOP_LINKS = [
+    { to: "/alcohol-delivery-regina", label: "Alcohol Delivery" },
+    { to: "/beer-delivery-regina", label: "Beer Delivery" },
+    { to: "/wine-delivery-regina", label: "Wine Delivery" },
+    { to: "/liquor-delivery-regina", label: "Liquor Delivery" },
+    { to: "/grocery-delivery-regina", label: "Grocery Delivery" },
+    { to: "/smokes-delivery-regina", label: "Smokes & Vape" },
+  ];
+
+  const AREA_LINKS = [
+    { to: "/delivery/regina", label: "All of Regina" },
+    { to: "/delivery/regina/downtown", label: "Downtown" },
+    { to: "/delivery/regina/cathedral", label: "Cathedral" },
+    { to: "/delivery/regina/harbour-landing", label: "Harbour Landing" },
+    { to: "/delivery/regina/lakeview", label: "Lakeview" },
+    { to: "/delivery/regina/eastview", label: "Eastview" },
+    { to: "/delivery/regina/north-central", label: "North Central" },
+    { to: "/delivery/regina/south-end", label: "South End" },
+    { to: "/delivery/regina/east-end", label: "East End" },
+    { to: "/delivery/regina/west-end", label: "West End" },
+    { to: "/delivery/regina/uplands", label: "Uplands" },
+    { to: "/delivery/regina/normanview", label: "Normanview" },
+    { to: "/delivery/regina/albert-park", label: "Albert Park" },
+    { to: "/delivery/regina/hillsdale", label: "Hillsdale" },
+    { to: "/delivery/regina/whitmore-park", label: "Whitmore Park" },
+    { to: "/delivery/regina/the-crescents", label: "The Crescents" },
+  ];
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -47,6 +75,34 @@ const Header = () => {
             <Link to="/stores" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
               Stores
             </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
+                  Shop <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {SHOP_LINKS.map((l) => (
+                  <DropdownMenuItem key={l.to} asChild>
+                    <Link to={l.to}>{l.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
+                  Areas <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 max-h-[70vh] overflow-y-auto">
+                {AREA_LINKS.map((l) => (
+                  <DropdownMenuItem key={l.to} asChild>
+                    <Link to={l.to}>{l.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Link to="/how-it-works" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
               How It Works
             </Link>
@@ -165,6 +221,34 @@ const Header = () => {
                 {link.label}
               </Link>
             ))}
+
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center justify-between text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors">
+                Shop by Category
+                <ChevronDown className="h-4 w-4 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="pl-3 mt-1 flex flex-col">
+                {SHOP_LINKS.map((l) => (
+                  <Link key={l.to} to={l.to} onClick={() => setIsMenuOpen(false)} className="text-sm text-muted-foreground py-2 px-3 rounded-md hover:bg-muted/50 hover:text-foreground transition-colors">
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
+
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center justify-between text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors">
+                Regina Areas
+                <ChevronDown className="h-4 w-4 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="pl-3 mt-1 flex flex-col max-h-72 overflow-y-auto">
+                {AREA_LINKS.map((l) => (
+                  <Link key={l.to} to={l.to} onClick={() => setIsMenuOpen(false)} className="text-sm text-muted-foreground py-2 px-3 rounded-md hover:bg-muted/50 hover:text-foreground transition-colors">
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
             {user && (
               <>
                 <Link to="/profile" className="text-foreground font-medium py-2.5 px-3 rounded-lg hover:bg-muted/50" onClick={() => setIsMenuOpen(false)}>My Profile</Link>

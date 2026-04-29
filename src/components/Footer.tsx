@@ -102,22 +102,23 @@ const Footer = () => {
 
           {/* Links wrapper - 2 cols on mobile */}
           <div className="md:col-span-5 grid grid-cols-2 gap-8 sm:gap-6">
-            {/* Service Areas */}
+            {/* Shop by Category */}
             <div>
               <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
                 <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-                Service Areas
+                Shop by Category
               </h4>
               <ul className="space-y-2.5 sm:space-y-3 text-sm">
                 {[
-                  "Liquor in Regina",
-                  "Grocery in Regina",
-                  "Takeout in Regina",
-                  "Liquor in Saskatoon",
-                  "Grocery in Saskatoon",
-                ].map((label) => (
+                  { label: "Alcohol Delivery", to: "/alcohol-delivery-regina" },
+                  { label: "Beer Delivery", to: "/beer-delivery-regina" },
+                  { label: "Wine Delivery", to: "/wine-delivery-regina" },
+                  { label: "Liquor Delivery", to: "/liquor-delivery-regina" },
+                  { label: "Grocery Delivery", to: "/grocery-delivery-regina" },
+                  { label: "Smokes & Vape", to: "/smokes-delivery-regina" },
+                ].map(({ label, to }) => (
                   <li key={label}>
-                    <Link to="/stores" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                    <Link to={to} className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
                       <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
                       <span className="truncate">{label}</span>
                     </Link>
@@ -126,20 +127,22 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Company */}
+            {/* Regina Neighborhoods */}
             <div>
               <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
                 <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-                Company
+                Regina Neighborhoods
               </h4>
               <ul className="space-y-2.5 sm:space-y-3 text-sm">
                 {[
-                  { label: "About Us", to: "/about" },
-                  { label: "How It Works", to: "/how-it-works" },
-                  { label: "Help Center", to: "/help" },
-                  { label: "Support", to: "/help#contact" },
-                  { label: "Privacy Policy", to: "/privacy" },
-                  { label: "Terms of Use", to: "/terms" },
+                  { label: "All of Regina", to: "/delivery/regina" },
+                  { label: "Downtown", to: "/delivery/regina/downtown" },
+                  { label: "Cathedral", to: "/delivery/regina/cathedral" },
+                  { label: "Harbour Landing", to: "/delivery/regina/harbour-landing" },
+                  { label: "Lakeview", to: "/delivery/regina/lakeview" },
+                  { label: "Eastview", to: "/delivery/regina/eastview" },
+                  { label: "South End", to: "/delivery/regina/south-end" },
+                  { label: "North Central", to: "/delivery/regina/north-central" },
                 ].map(({ label, to }) => (
                   <li key={label}>
                     <Link to={to} className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
@@ -151,6 +154,7 @@ const Footer = () => {
               </ul>
             </div>
           </div>
+
 
           {/* Get the App */}
           <div className="md:col-span-3">
@@ -243,6 +247,9 @@ const Footer = () => {
         <div className="container mx-auto px-4 sm:px-5 py-4 sm:py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] sm:text-xs text-muted-foreground text-center md:text-left">
           <p>© {year} <span className="font-semibold text-foreground">Deliverr</span> Delivery Services Inc. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-5">
+            <Link to="/about" className="hover:text-primary transition-colors font-medium">About</Link>
+            <Link to="/how-it-works" className="hover:text-primary transition-colors font-medium">How It Works</Link>
+            <Link to="/help" className="hover:text-primary transition-colors font-medium">Help</Link>
             <Link to="/privacy" className="hover:text-primary transition-colors font-medium">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors font-medium">Terms of Service</Link>
             <span className="inline-flex items-center gap-1.5">
