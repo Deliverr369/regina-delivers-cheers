@@ -59,6 +59,7 @@ const DashboardImporter = lazy(() => import("./pages/dashboard/DashboardImporter
 const DashboardSEO = lazy(() => import("./pages/dashboard/DashboardSEO"));
 const DashboardPushTest = lazy(() => import("./pages/dashboard/DashboardPushTest"));
 const DashboardBlog = lazy(() => import("./pages/dashboard/DashboardBlog"));
+const DashboardSecurity = lazy(() => import("./pages/dashboard/DashboardSecurity"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -138,6 +139,7 @@ const App = () => (
                   <Route path="seo" element={<DashboardSEO />} />
                   <Route path="push-test" element={<DashboardPushTest />} />
                   <Route path="blog" element={<DashboardBlog />} />
+                  <Route path="security" element={<DashboardSecurity />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
