@@ -627,13 +627,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       props.setCityError("We only deliver within Regina.");
       return;
     }
-    if (props.deliveryType === "scheduled") {
+    if (props.deliveryType === "asap") {
+      if (Object.keys(props.storeHours).length > 0 && !props.allStoresOpenNow) {
+        props.setScheduleError("Stores are closed right now — please pick a scheduled slot.");
+        return;
+      }
+    } else {
       if (!props.scheduledDate || !props.scheduledSlot) {
         props.setScheduleError("Please pick a delivery date and time slot.");
         return;
       }
-      if (isSlotInPast(props.scheduledDate, props.scheduledSlot)) {
-        props.setScheduleError("That time has passed — please choose a later slot.");
+      if (!isSlotAvailable(props.scheduledDate, props.scheduledSlot, props.cartStoreIds, props.storeHours)) {
+        props.setScheduleError("That slot isn't available — please choose another.");
         return;
       }
       props.setScheduleError(null);
