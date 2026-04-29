@@ -172,6 +172,16 @@ const CATEGORIES: Record<string, CategoryConfig> = {
     shopTo: "/products?category=smokes&subcategory=vapes",
     ageGated: true,
   },
+  "spirits-delivery-regina": {
+    slug: "spirits-delivery-regina",
+    name: "Spirits",
+    h1: "Spirits Delivery in Regina",
+    title: "Spirits Delivery in Regina, SK | Vodka, Whisky, Rum & More | Deliverr",
+    description: "Same-day spirits delivery in Regina. Vodka, whisky, rum, gin, tequila, mezcal and liqueurs from local liquor stores. 19+ only.",
+    intro: "Vodka, whisky, rum, gin, tequila, mezcal and liqueurs from Regina's full-service liquor stores — delivered in under an hour.",
+    shopTo: "/products?category=spirits",
+    ageGated: true,
+  },
 };
 
 const CategoryLanding = () => {
