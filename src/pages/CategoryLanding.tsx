@@ -10,46 +10,155 @@ import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
 
-function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
-  const item = cfg.name.toLowerCase();
+type FaqItem = { q: string; a: string };
 
-  // Per-category nuance for "what makes this delivery different"
-  const nicheByCategory: Record<string, { q: string; a: string }> = {
-    "alcohol-delivery-regina": {
+/**
+ * Category-specific FAQs. These replace the generic "what makes us different"
+ * single Q&A with a focused set of questions buyers of that category actually
+ * ask (formats, brands, temperature, ID rules, flavour restrictions, etc.).
+ */
+const FAQS_BY_CATEGORY: Record<string, FaqItem[]> = {
+  "alcohol-delivery-regina": [
+    {
       q: "Which Regina liquor stores can I order alcohol from?",
       a: "We pull from full-service Regina liquor retailers across the city — Sobeys Liquor, Willow Park, Pioneer and other licensed SLGA stores — so you get the widest beer, wine, spirits and cooler selection in one cart.",
     },
-    "beer-delivery-regina": {
-      q: "What beer formats can I order in Regina?",
-      a: "Singles, six-packs, twelve-packs, fifteen-packs and twenty-fours — domestic, import and Saskatchewan craft. Tall cans and bottles where the store carries them. Beer is delivered cold from the cooler.",
+    {
+      q: "Can I mix beer, wine and spirits in one order?",
+      a: "Yes. As long as everything comes from the same liquor store you can mix beer, wine, spirits, coolers and seltzers in a single delivery. We show the lowest in-stock price across stores so you can compare before adding to cart.",
     },
-    "wine-delivery-regina": {
+    {
+      q: "Is alcohol delivered cold?",
+      a: "Beer, coolers and seltzers are pulled straight from the store cooler when available. Wine and spirits are delivered at room temperature unless the store has a chilled section.",
+    },
+  ],
+
+  "beer-delivery-regina": [
+    {
+      q: "What beer formats can I order in Regina?",
+      a: "Singles, six-packs, twelve-packs, fifteen-packs and twenty-fours — domestic, import and Saskatchewan craft. Tall cans (473 mL) and bottles where the store carries them.",
+    },
+    {
+      q: "Is the beer delivered cold?",
+      a: "Yes. Beer is pulled straight from the cooler at participating Regina liquor stores so it arrives cold and ready to drink.",
+    },
+    {
+      q: "Do you deliver Saskatchewan craft beer?",
+      a: "Yes — Pile O' Bones, Rebellion, District, Malty National, Black Bridge and other SK craft brands when the store has stock. Selection updates daily.",
+    },
+    {
+      q: "Can I order kegs in Regina?",
+      a: "Kegs aren't currently listed for delivery — most Regina stores require an in-person deposit and pickup. Cans and bottles up to 24-packs are available for same-day delivery.",
+    },
+  ],
+
+  "wine-delivery-regina": [
+    {
       q: "What kinds of wine can you deliver in Regina?",
       a: "Reds, whites, rosé, sparkling and champagne from California, BC, Niagara, France, Italy, Australia, Argentina and more — whatever Regina's liquor stores stock that day. We surface the lowest in-stock price across stores.",
     },
-    "liquor-delivery-regina": {
+    {
+      q: "Do you deliver champagne and prosecco same-day?",
+      a: "Yes. Sparkling wines including champagne, prosecco, cava and Saskatchewan sparkling are delivered same-day from Regina liquor stores that carry them, usually within 30–60 minutes.",
+    },
+    {
+      q: "Can I order wine by the case?",
+      a: "Most Regina stores list 6-bottle and 12-bottle cases of popular wines. Where a case isn't available you can add 6 or 12 bottles individually to the same cart.",
+    },
+    {
+      q: "Are there mixed wine packs available?",
+      a: "Some Regina retailers offer pre-built mixed reds, mixed whites and seasonal sampler packs. These appear on the wine page when in stock.",
+    },
+  ],
+
+  "liquor-delivery-regina": [
+    {
       q: "What spirits can I get delivered in Regina?",
       a: "Vodka, whisky (rye, scotch, bourbon, Canadian), rum, gin, tequila, mezcal, brandy and liqueurs — 375 mL, 750 mL and 1.14 L sizes from Regina liquor stores.",
     },
-    "grocery-delivery-regina": {
+    {
+      q: "What about coolers, seltzers and ready-to-drink cocktails?",
+      a: "Yes — White Claw, Twisted Tea, Nutrl, Palm Bay, BeatBox, Bud Light Seltzer and store-brand seltzers are available alongside premixed cans like Jack & Coke or Captain & Cola.",
+    },
+    {
+      q: "Do you deliver large-format liquor (1.75 L handles)?",
+      a: "When stocked, yes. 1.75 L handles of common spirits like vodka, whisky and rum are listed and delivered same-day from stores that carry them.",
+    },
+  ],
+
+  "grocery-delivery-regina": [
+    {
       q: "Which Regina grocery stores can I order from?",
       a: "Costco Wholesale Regina, Real Canadian Superstore and Sobeys — fresh produce, dairy, frozen, pantry, household and bulk. Note: Costco delivery is $15 and Superstore is $10; other stores are $7.",
     },
-    "smokes-delivery-regina": {
-      q: "What smokes and vape products can I order in Regina?",
-      a: "Cigarettes (carton or pack), Zyn and other nicotine pouches, disposable vapes, vape juice, papers, filters and rolling supplies from licensed Regina retailers. Government-issued photo ID required on delivery.",
+    {
+      q: "Do I need a Costco membership to order Costco grocery delivery?",
+      a: "No. We handle the in-store purchase for you, so you can order Costco Wholesale Regina items without a membership card. Pricing reflects what's on the shelf that day.",
     },
-    "vape-delivery-regina": {
-      q: "What vape products can I order in Regina?",
-      a: "Disposable vapes (Allo, Vice, Elf Bar, Stlth and similar), refillable pod systems, replacement pods, e-liquid / vape juice in a range of nicotine strengths, replacement coils, batteries, chargers and accessories — all from Regina's licensed vape retailers. Saskatchewan rules apply: 19+ only and flavour restrictions where applicable.",
+    {
+      q: "Can I order fresh produce, meat and frozen together?",
+      a: "Yes. Drivers use insulated bags and pull cold/frozen items last so produce, dairy, meat and frozen goods arrive at the right temperature.",
     },
-    "spirits-delivery-regina": {
-      q: "Which spirits can I order delivered in Regina?",
-      a: "Vodka, whisky (Canadian rye, scotch, bourbon, Irish, Japanese), rum (white, dark, spiced), gin, tequila, mezcal, brandy, cognac and liqueurs from Regina liquor stores. Available in 375 mL, 750 mL, 1.14 L and 1.75 L sizes depending on stock — we surface the lowest in-stock price across stores.",
-    },
-  };
+  ],
 
-  const base: { q: string; a: string }[] = [
+  "smokes-delivery-regina": [
+    {
+      q: "What smokes products can I order in Regina?",
+      a: "Cigarettes (carton or pack), Zyn and other nicotine pouches, papers, filters, lighters and rolling tobacco from licensed Regina retailers. Government-issued photo ID required on delivery.",
+    },
+    {
+      q: "Can I order cartons of cigarettes for delivery?",
+      a: "Yes — full cartons (typically 8 packs of 25) are available from licensed Regina tobacco retailers, alongside individual packs of 20 or 25.",
+    },
+    {
+      q: "Do you deliver Zyn and nicotine pouches?",
+      a: "Yes. Zyn (3 mg, 6 mg) and other nicotine pouches like Rogue, On!, and Velo are listed when in stock at Regina retailers.",
+    },
+  ],
+
+  "vape-delivery-regina": [
+    {
+      q: "What vape products can I order in Regina?",
+      a: "Disposable vapes (Allo, Vice, Elf Bar, Stlth and similar), refillable pod systems, replacement pods, e-liquid in a range of nicotine strengths, replacement coils, batteries, chargers and accessories from Regina's licensed vape retailers.",
+    },
+    {
+      q: "Are flavoured vapes restricted in Saskatchewan?",
+      a: "Saskatchewan limits where certain flavoured vape products can be sold. Our partner retailers are licensed under provincial rules — what shows in-stock on the site is what they're legally allowed to sell to you that day.",
+    },
+    {
+      q: "What nicotine strengths are available?",
+      a: "Most disposables and pods come in 20 mg/mL (the federal cap for general retail) and lower strengths like 10 mg/mL or 0 mg/mL. Each product page lists the nicotine strength.",
+    },
+    {
+      q: "Do you deliver replacement coils, pods and batteries?",
+      a: "Yes — replacement coils for common tanks, pre-filled and refillable pods, plus 18650 / 21700 batteries and chargers are listed when stores have them in stock.",
+    },
+  ],
+
+  "spirits-delivery-regina": [
+    {
+      q: "Which spirits can I order delivered in Regina?",
+      a: "Vodka, whisky (Canadian rye, scotch, bourbon, Irish, Japanese), rum (white, dark, spiced), gin, tequila, mezcal, brandy, cognac and liqueurs from Regina liquor stores.",
+    },
+    {
+      q: "What bottle sizes are available for spirits delivery?",
+      a: "375 mL, 750 mL, 1.14 L and 1.75 L depending on what each store has in stock. We show the lowest in-stock price across Regina stores so you can compare sizes side by side.",
+    },
+    {
+      q: "Can I order tequila and mezcal in Regina?",
+      a: "Yes. Blanco, reposado and añejo tequila plus mezcal are listed when stores have stock — including premium brands like Don Julio, Patrón, Casamigos and 1800.",
+    },
+    {
+      q: "Do you deliver premium and rare whisky?",
+      a: "Premium scotch, single malts, bourbons and Japanese whisky are listed when carried by Regina liquor stores. Rare allocations sell out fast — order placed first wins the bottle.",
+    },
+  ],
+};
+
+function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
+  const item = cfg.name.toLowerCase();
+
+  const base: FaqItem[] = [
     {
       q: `How fast is ${item} delivery in Regina?`,
       a: `Most ${item} orders in Regina arrive in 30 to 60 minutes. Delivery times depend on store hours and traffic conditions.`,
@@ -72,9 +181,12 @@ function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
     },
   ];
 
-  // Insert the per-category nuance right after the "what does it cost" question
-  const niche = nicheByCategory[cfg.slug];
-  if (niche) base.splice(2, 0, niche);
+  // Insert all category-specific Q&As right after the "How fast" question so
+  // the most distinctive content shows up high (good for users + SERP snippets).
+  const categoryFaqs = FAQS_BY_CATEGORY[cfg.slug] ?? [];
+  if (categoryFaqs.length > 0) {
+    base.splice(1, 0, ...categoryFaqs);
+  }
 
   if (cfg.ageGated) {
     base.splice(base.findIndex((b) => b.q.startsWith("What payment")), 0, {
