@@ -636,6 +636,10 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!props.selectedAddressId || !props.formData.address.trim()) {
+      props.setCityError("Please pick or add a delivery address.");
+      return;
+    }
     if (props.formData.city.trim().toLowerCase() !== "regina") {
       props.setCityError("We only deliver within Regina.");
       return;
