@@ -308,6 +308,14 @@ const Checkout = () => {
   const handleSuccess = async () => {
     if (!user) return;
     try {
+      // SERVER-SIDE re-validation: cart prices, store membership, address, hours.
+      const { data: validation, error: vErr } = await supabase.functions.invoke(
+        "validate-checkout",
+        { body: buildValidationPayload() },
+      );
+      if (vErr) throw new Error(vErr.message || "Validation failed");
+      if (!validation?.ok) throw new Error(validation?.error || "Cart validation failed");
+
       // Group cart items by storeId so we can split the cart into one order per store.
       const groups = new Map<string, { storeId: string; storeName: string; items: typeof cartItems }>();
       for (const item of cartItems) {
