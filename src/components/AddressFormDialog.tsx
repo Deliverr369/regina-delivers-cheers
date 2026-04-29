@@ -26,11 +26,15 @@ const empty: AddressInput = {
   recipient_name: "",
   phone: "",
   address: "",
+  unit: "",
   city: "Regina",
   postal_code: "",
   delivery_instructions: "",
   is_default: false,
 };
+
+// Allows e.g. "Apt 3B", "#204", "Suite 1200", "Unit 12", "PH 4". 1–15 alphanumerics + #.-/ space.
+const UNIT_RE = /^[A-Za-z0-9#.\-/ ]{1,15}$/;
 
 const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => {
   const [form, setForm] = useState<AddressInput>(empty);
