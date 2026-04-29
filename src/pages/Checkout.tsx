@@ -179,8 +179,11 @@ const Checkout = () => {
   const [cityError, setCityError] = useState<string | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
+  const [selectedAddressUnit, setSelectedAddressUnit] = useState<string | null>(null);
+
   const handleAddressSelect = useCallback((addr: SavedAddress) => {
     setSelectedAddressId(addr.id);
+    setSelectedAddressUnit(addr.unit ? addr.unit.trim() : null);
     setFormData((prev) => ({
       ...prev,
       address: addr.address,
