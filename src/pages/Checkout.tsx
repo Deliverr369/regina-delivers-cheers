@@ -178,6 +178,19 @@ const Checkout = () => {
     };
   });
   const [cityError, setCityError] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+
+  const handleAddressSelect = useCallback((addr: SavedAddress) => {
+    setSelectedAddressId(addr.id);
+    setFormData((prev) => ({
+      ...prev,
+      address: addr.address,
+      city: addr.city,
+      postalCode: addr.postal_code || "",
+      deliveryInstructions: addr.delivery_instructions || prev.deliveryInstructions,
+    }));
+    setCityError(addr.city.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
+  }, []);
 
   // Auto-fill from saved profile on login
   useEffect(() => {
