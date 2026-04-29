@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, MapPin, Clock, CalendarClock, Receipt, Printer, RotateCcw, CreditCard, Banknote } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Clock, CalendarClock, Receipt, Printer, RotateCcw, CreditCard, Banknote, ArrowRightLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
