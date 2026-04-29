@@ -5,9 +5,10 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette } from "lucide-react";
-import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqItems } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
+import { validateFaqs } from "@/components/seo/validateFaqs";
 
 type Hood = { name: string; blurb: string; nearby: string[]; quadrant: string };
 
@@ -41,6 +42,13 @@ const ReginaLanding = () => {
   const description = hood
     ? `Same-day alcohol, grocery and smokes delivery to ${hood.name}, Regina. Order in 60 seconds, delivered in under an hour. 19+ only.`
     : "Regina's #1 same-day delivery service. Alcohol, groceries, smokes from Costco, Superstore, Sobeys and local liquor stores. Delivered in under 60 minutes.";
+
+  // Single source of truth: same array drives both the visible accordion and
+  // the FAQPage JSON-LD, validated to enforce non-empty Q/A and unique questions.
+  const { items: faqItems, jsonLd: faqJsonLd } = validateFaqs(
+    reginaFaqItems(areaName, hood ? { name: hood.name, quadrant: hood.quadrant, nearby: hood.nearby } : undefined),
+    `ReginaLanding[${neighborhood ?? "hub"}]`,
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
