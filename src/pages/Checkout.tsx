@@ -1149,3 +1149,112 @@ const Row = ({ label, value, muted }: { label: React.ReactNode; value: string; m
 );
 
 export default Checkout;
+
+/* ─── Cutoff-aware scheduled slot picker ─── */
+interface ScheduledSlotPickerProps {
+  scheduledDate: string;
+  setScheduledDate: (v: string) => void;
+  scheduledSlot: string;
+  setScheduledSlot: (v: string) => void;
+  scheduleError: string | null;
+  setScheduleError: (v: string | null) => void;
+  storeHours: HoursByStore;
+  cartStoreIds: string[];
+}
+
+const ScheduledSlotPicker = (p: ScheduledSlotPickerProps) => {
+  const days = useMemo(() => getNextDays(7), []);
+
+  // For each day, is at least one slot bookable across every cart store?
+  const dayHasAvailability = (dateStr: string) =>
+    ALL_TIME_SLOTS.some((slot) => isSlotAvailable(dateStr, slot, p.cartStoreIds, p.storeHours));
+
+  return (
+    <div className="space-y-3 animate-fade-in">
+      <div>
+        <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a day</Label>
+        <div className="grid grid-cols-7 gap-2">
+          {days.map((d) => {
+            const selected = p.scheduledDate === d.value;
+            const available = Object.keys(p.storeHours).length === 0 || dayHasAvailability(d.value);
+            return (
+              <button
+                key={d.value}
+                type="button"
+                disabled={!available}
+                onClick={() => { p.setScheduledDate(d.value); p.setScheduledSlot(""); p.setScheduleError(null); }}
+                className={`flex flex-col items-center justify-center rounded-xl border py-2.5 transition-all ${
+                  selected
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : !available
+                      ? "border-border bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                      : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-wide">{d.label}</span>
+                <span className={`text-xs mt-0.5 ${selected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{d.sub}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {p.scheduledDate && (
+        <div>
+          <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a time slot</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {ALL_TIME_SLOTS.map((slot) => {
+              const available = isSlotAvailable(p.scheduledDate, slot, p.cartStoreIds, p.storeHours);
+              const selected = p.scheduledSlot === slot;
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  disabled={!available}
+                  onClick={() => { p.setScheduledSlot(slot); p.setScheduleError(null); }}
+                  className={`rounded-xl border py-2.5 px-2 text-xs font-medium transition-all ${
+                    selected
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : !available
+                        ? "border-border bg-muted/40 text-muted-foreground/50 cursor-not-allowed line-through"
+                        : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-secondary/60"
+                  }`}
+                >
+                  {formatSlotLabel(slot)}
+                </button>
+              );
+            })}
+          </div>
+          {/* Per-store hours summary for the chosen day */}
+          {p.cartStoreIds.length > 0 && Object.keys(p.storeHours).length > 0 && (
+            <div className="mt-2 space-y-0.5">
+              {p.cartStoreIds.map((id) => {
+                const weekday = new Date(p.scheduledDate + "T00:00:00").getDay();
+                const day = getDayHours(id, weekday, p.storeHours);
+                return (
+                  <p key={id} className="text-[11px] text-muted-foreground">
+                    Store hours: <span className="font-medium text-foreground/70">{formatDayHours(day)}</span>
+                  </p>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {p.scheduleError && (
+        <p className="text-destructive text-xs flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{p.scheduleError}</p>
+      )}
+      {p.scheduledDate && p.scheduledSlot && !p.scheduleError && (
+        <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3 flex items-start gap-2.5">
+          <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            Scheduled for <span className="font-semibold text-foreground">
+              {new Date(p.scheduledDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+            </span> · <span className="font-semibold text-foreground">{formatSlotLabel(p.scheduledSlot)}</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
