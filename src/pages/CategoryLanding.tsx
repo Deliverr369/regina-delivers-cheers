@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import InternalLinksSection from "@/components/seo/InternalLinks";
 
 function buildFaqs(cfg: { name: string; ageGated: boolean }) {
   const item = cfg.name.toLowerCase();
@@ -220,6 +221,8 @@ const CategoryLanding = () => {
             </div>
           </div>
         </section>
+
+        <InternalLinksSection excludeCategory={cfg.slug} />
 
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container max-w-4xl mx-auto px-4 text-center">
