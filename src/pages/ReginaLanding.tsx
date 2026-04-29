@@ -45,8 +45,10 @@ const ReginaLanding = () => {
         description={description}
         canonical={`https://regina-delivers-cheers.lovable.app${path}`}
         jsonLd={[
+          organizationJsonLd,
           localBusinessJsonLd,
           reginaServiceJsonLd,
+          reginaFaqJsonLd(areaName),
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
