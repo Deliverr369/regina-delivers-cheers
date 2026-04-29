@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, MapPin, Phone, Clock, Truck, Star, ShoppingBag, CheckCircle2 } from "lucide-react";
 import { organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import FaqAccordion from "@/components/seo/FaqAccordion";
+import { validateFaqs } from "@/components/seo/validateFaqs";
 
 interface Store {
   id: string;
@@ -113,48 +114,43 @@ const StorePage = () => {
     ],
   };
 
-  const faqs = [
-    {
-      q: `How fast is ${store.name} delivery in Regina?`,
-      a: `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours and traffic.`,
-    },
-    {
-      q: `What does delivery from ${store.name} cost?`,
-      a: `Delivery from ${store.name} is $${(store.delivery_fee ?? 7).toFixed(2)}. Orders over $50 ship free.`,
-    },
-    {
-      q: `What are ${store.name}'s hours?`,
-      a: store.hours
-        ? `${store.name} operates ${store.hours}. Orders placed outside store hours are delivered when the store next opens.`
-        : `${store.name}'s hours vary — check the live store status on the shop page before ordering.`,
-    },
-    {
-      q: `Where is ${store.name} located?`,
-      a: `${store.name} is located at ${store.address}, Regina, SK. Deliverr drivers pick up your order from this location.`,
-    },
-    {
-      q: `Do I need to be 19+ to order from ${store.name}?`,
-      a: `Yes. You must be 19 or older to order alcohol, smokes or vape from ${store.name}. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
-    },
-    {
-      q: `What payment methods does Deliverr accept?`,
-      a: `We accept all major credit cards (Visa, Mastercard, Amex). We do not accept cash on delivery.`,
-    },
-    {
-      q: `Which Regina neighborhoods does ${store.name} deliver to?`,
-      a: `We deliver from ${store.name} to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central, South End and beyond.`,
-    },
-  ];
-
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
+  // Single source of truth: same array drives both the visible accordion and
+  // the FAQPage JSON-LD, validated to enforce non-empty Q/A and unique questions.
+  const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
+    [
+      {
+        q: `How fast is ${store.name} delivery in Regina?`,
+        a: `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours and traffic.`,
+      },
+      {
+        q: `What does delivery from ${store.name} cost?`,
+        a: `Delivery from ${store.name} is $${(store.delivery_fee ?? 7).toFixed(2)}. Orders over $50 ship free.`,
+      },
+      {
+        q: `What are ${store.name}'s hours?`,
+        a: store.hours
+          ? `${store.name} operates ${store.hours}. Orders placed outside store hours are delivered when the store next opens.`
+          : `${store.name}'s hours vary — check the live store status on the shop page before ordering.`,
+      },
+      {
+        q: `Where is ${store.name} located?`,
+        a: `${store.name} is located at ${store.address}, Regina, SK. Deliverr drivers pick up your order from this location.`,
+      },
+      {
+        q: `Do I need to be 19+ to order from ${store.name}?`,
+        a: `Yes. You must be 19 or older to order alcohol, smokes or vape from ${store.name}. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
+      },
+      {
+        q: `What payment methods does Deliverr accept?`,
+        a: `We accept all major credit cards (Visa, Mastercard, Amex). We do not accept cash on delivery.`,
+      },
+      {
+        q: `Which Regina neighborhoods does ${store.name} deliver to?`,
+        a: `We deliver from ${store.name} to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central, South End and beyond.`,
+      },
+    ],
+    `StorePage[${store.slug}]`,
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
