@@ -133,6 +133,7 @@ const App = () => (
                 <Route path="/grocery-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/smokes-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/vape-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/spirits-delivery-regina" element={<CategoryLanding />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
