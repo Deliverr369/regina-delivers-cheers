@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
+import FaqAccordion from "@/components/seo/FaqAccordion";
 
 function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
   const item = cfg.name.toLowerCase();
@@ -244,14 +245,7 @@ const CategoryLanding = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 font-heading">
               {cfg.name} Delivery — Frequently Asked Questions
             </h2>
-            <div className="space-y-6">
-              {faqs.map((item) => (
-                <div key={item.q} className="border-b pb-6 last:border-0">
-                  <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
-                  <p className="text-muted-foreground">{item.a}</p>
-                </div>
-              ))}
-            </div>
+            <FaqAccordion items={faqs} />
           </div>
         </section>
 
