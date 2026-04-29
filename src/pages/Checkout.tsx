@@ -119,6 +119,55 @@ const Checkout = () => {
   const [scheduledSlot, setScheduledSlot] = useState<string>(""); // e.g. "10:00-11:00"
   const [scheduleError, setScheduleError] = useState<string | null>(null);
 
+  // Load per-weekday store hours for every store in the cart
+  const [storeHours, setStoreHours] = useState<HoursByStore>({});
+  const cartStoreIds = useMemo(
+    () => Array.from(new Set(cartItems.map((i) => i.storeId).filter(Boolean))),
+    [cartItems],
+  );
+  useEffect(() => {
+    if (cartStoreIds.length === 0) {
+      setStoreHours({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("store_hours")
+        .select("store_id, weekday, is_closed, open_time, close_time")
+        .in("store_id", cartStoreIds);
+      if (!cancelled) setStoreHours(groupHoursByStore((data || []) as StoreHourRow[]));
+    })();
+    return () => { cancelled = true; };
+  }, [cartStoreIds]);
+
+  // Are all stores in the cart open RIGHT NOW (gates the ASAP button)?
+  const allStoresOpenNow = useMemo(() => {
+    if (cartStoreIds.length === 0) return false;
+    return cartStoreIds.every((id) => isStoreOpenNow(id, storeHours));
+  }, [cartStoreIds, storeHours]);
+
+  // Auto-flip ASAP → Scheduled if any store is closed
+  useEffect(() => {
+    if (deliveryType === "asap" && Object.keys(storeHours).length > 0 && !allStoresOpenNow) {
+      setDeliveryType("scheduled");
+    }
+  }, [deliveryType, allStoresOpenNow, storeHours]);
+
+  // If the previously chosen scheduled slot is no longer valid (hours edited,
+  // time elapsed past the lead window), clear it so the user re-picks.
+  useEffect(() => {
+    if (
+      deliveryType === "scheduled" &&
+      scheduledDate &&
+      scheduledSlot &&
+      Object.keys(storeHours).length > 0 &&
+      !isSlotAvailable(scheduledDate, scheduledSlot, cartStoreIds, storeHours)
+    ) {
+      setScheduledSlot("");
+    }
+  }, [deliveryType, scheduledDate, scheduledSlot, cartStoreIds, storeHours]);
+
   const [formData, setFormData] = useState<FormData>(() => {
     const savedAddress = typeof window !== "undefined" ? localStorage.getItem("delivery_address") || "" : "";
     return {
