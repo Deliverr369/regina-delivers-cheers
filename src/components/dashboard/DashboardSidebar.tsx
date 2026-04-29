@@ -1,4 +1,4 @@
-import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus, Boxes, Globe, Sparkles, Search, Bell, FileText } from "lucide-react";
+import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus, Boxes, Globe, Sparkles, Search, Bell, FileText, ShieldCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
