@@ -11,8 +11,8 @@
  *   page still renders.
  */
 
-export type FaqInput = { q: unknown; a: unknown };
-export type FaqClean = { q: string; a: string };
+export type FaqInput = { q: unknown; a: unknown; aNode?: unknown };
+export type FaqClean = { q: string; a: string; aNode?: unknown };
 
 export type FaqPageJsonLd = {
   "@context": "https://schema.org";
@@ -62,7 +62,11 @@ export function validateFaqs(
         return;
       }
       seenQuestions.add(qTrim.toLowerCase());
-      clean.push({ q: qTrim, a: a.trim() });
+      const cleanItem: FaqClean = { q: qTrim, a: a.trim() };
+      if ((item as FaqInput).aNode !== undefined) {
+        cleanItem.aNode = (item as FaqInput).aNode;
+      }
+      clean.push(cleanItem);
     });
   }
 
