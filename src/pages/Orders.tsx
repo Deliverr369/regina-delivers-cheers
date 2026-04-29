@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Package, Clock, MapPin, Loader2, ShoppingBag, ArrowRight, RotateCcw, CalendarClock } from "lucide-react";
+import { Package, Clock, MapPin, Loader2, ShoppingBag, ArrowRight, RotateCcw, CalendarClock, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -203,7 +203,17 @@ const Orders = () => {
                         )}
                       </div>
                     )}
-                    <div className="mt-3 pt-3 border-t border-border flex justify-end">
+                    <div className="mt-3 pt-3 border-t border-border flex justify-end gap-2">
+                      <Link to={`/orders/${order.id}`}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="rounded-full gap-2 h-8 text-xs"
+                        >
+                          <Receipt className="h-3.5 w-3.5" />
+                          View receipt
+                        </Button>
+                      </Link>
                       <Button
                         size="sm"
                         variant="outline"

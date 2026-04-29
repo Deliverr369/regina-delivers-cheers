@@ -28,6 +28,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Orders = lazy(() => import("./pages/Orders"));
+const OrderReceipt = lazy(() => import("./pages/OrderReceipt"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -104,6 +105,7 @@ const App = () => (
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
                 <Route path="/orders" element={<Orders />} />
+                <Route path="/orders/:id" element={<OrderReceipt />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
