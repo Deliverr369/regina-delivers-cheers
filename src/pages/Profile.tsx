@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { useIsNative } from "@/hooks/useIsNative";
 import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2 } from "lucide-react";
+import AddressManager from "@/components/AddressManager";
 
 interface ProfileData {
   full_name: string;
@@ -101,7 +102,6 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase.from("profiles").update({
       full_name: profile.full_name, phone: profile.phone,
-      address: profile.address, city: profile.city, postal_code: profile.postal_code,
     }).eq("id", user.id);
 
     toast(error
@@ -166,31 +166,20 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Delivery Address */}
+          {/* Delivery Addresses */}
           <div className={`bg-card rounded-2xl border border-border ${isNative ? "p-4" : "p-6 mb-5"}`}>
-            <div className={`flex items-center gap-2.5 ${isNative ? "mb-3" : "mb-5"}`}>
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-4.5 w-4.5 text-primary" />
-              </div>
-              <h2 className={`font-display font-bold text-foreground ${isNative ? "text-[15px]" : "text-lg"}`}>Delivery Address</h2>
-            </div>
-            <div className={isNative ? "space-y-3" : "space-y-4"}>
-              <div>
-                <Label htmlFor="address" className="text-sm">Street Address</Label>
-                <Input id="address" value={profile.address} onChange={(e) => handleChange("address", e.target.value)} placeholder="123 Main St" className="mt-1.5 h-10" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm">City</Label>
-                  <Input value={profile.city} disabled className="bg-muted mt-1.5 h-10" />
-                  <p className="text-xs text-muted-foreground mt-1">Regina only</p>
+            <div className={`flex items-center justify-between gap-2.5 ${isNative ? "mb-3" : "mb-5"}`}>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MapPin className="h-4.5 w-4.5 text-primary" />
                 </div>
-                <div>
-                  <Label htmlFor="postal_code" className="text-sm">Postal Code</Label>
-                  <Input id="postal_code" value={profile.postal_code} onChange={(e) => handleChange("postal_code", e.target.value)} placeholder="S4X 1A1" className="mt-1.5 h-10" />
-                </div>
+                <h2 className={`font-display font-bold text-foreground ${isNative ? "text-[15px]" : "text-lg"}`}>Delivery Addresses</h2>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Save multiple addresses and pick one at checkout. Regina only.
+            </p>
+            <AddressManager />
           </div>
 
           {/* Payment */}

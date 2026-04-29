@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote, Zap, CalendarClock } from "lucide-react";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
+import CheckoutAddressPicker from "@/components/CheckoutAddressPicker";
+import type { SavedAddress } from "@/hooks/useAddresses";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -176,6 +177,19 @@ const Checkout = () => {
     };
   });
   const [cityError, setCityError] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+
+  const handleAddressSelect = useCallback((addr: SavedAddress) => {
+    setSelectedAddressId(addr.id);
+    setFormData((prev) => ({
+      ...prev,
+      address: addr.address,
+      city: addr.city,
+      postalCode: addr.postal_code || "",
+      deliveryInstructions: addr.delivery_instructions || prev.deliveryInstructions,
+    }));
+    setCityError(addr.city.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
+  }, []);
 
   // Auto-fill from saved profile on login
   useEffect(() => {
@@ -496,6 +510,8 @@ const Checkout = () => {
               storeHours,
               cartStoreIds,
               allStoresOpenNow,
+              selectedAddressId,
+              onAddressSelect: handleAddressSelect,
             };
 
             if (paymentMode === "cod") {
@@ -558,6 +574,8 @@ interface CheckoutBodyProps extends PaymentFormProps {
   storeHours: HoursByStore;
   cartStoreIds: string[];
   allStoresOpenNow: boolean;
+  selectedAddressId: string | null;
+  onAddressSelect: (addr: SavedAddress) => void;
 }
 
 /* ─── Delivery scheduling helpers ─── */
@@ -617,6 +635,10 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!props.selectedAddressId || !props.formData.address.trim()) {
+      props.setCityError("Please pick or add a delivery address.");
+      return;
+    }
     if (props.formData.city.trim().toLowerCase() !== "regina") {
       props.setCityError("We only deliver within Regina.");
       return;
@@ -688,27 +710,22 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 2. Delivery */}
-          <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="We currently deliver within Regina, SK only.">
-            <div className="space-y-3">
-              <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Street address</Label>
-                <AddressAutocomplete
-                  value={props.formData.address}
-                  onChange={(val) => props.setFormData((prev) => ({ ...prev, address: val }))}
-                  onSelect={(addr, isRegina) => {
-                    props.setFormData((prev) => ({ ...prev, address: addr, city: "Regina" }));
-                    props.setCityError(isRegina ? null : "We only deliver within Regina.");
-                  }}
-                  placeholder="Start typing your Regina address"
-                  inputClassName="h-11"
-                  error={props.cityError}
-                />
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <FieldInput label="City" name="city" value={props.formData.city} onChange={handleChange} required error={!!props.cityError} />
-                <FieldInput label="Postal code" name="postalCode" value={props.formData.postalCode} onChange={handleChange} placeholder="S4X 1A2" required />
-              </div>
-              <FieldInput label="Delivery instructions (optional)" name="deliveryInstructions" value={props.formData.deliveryInstructions} onChange={handleChange} placeholder="Ring doorbell, leave at door, etc." />
+          <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="Pick a saved address or add a new one. Regina, SK only.">
+            <CheckoutAddressPicker
+              selectedId={props.selectedAddressId}
+              onSelect={props.onAddressSelect}
+            />
+            {props.cityError && (
+              <p className="text-xs text-destructive mt-2">{props.cityError}</p>
+            )}
+            <div className="mt-3">
+              <FieldInput
+                label="Delivery instructions (optional)"
+                name="deliveryInstructions"
+                value={props.formData.deliveryInstructions}
+                onChange={handleChange}
+                placeholder="Ring doorbell, leave at door, etc."
+              />
             </div>
           </SectionCard>
 
