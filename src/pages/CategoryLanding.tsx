@@ -122,16 +122,28 @@ const FAQS_BY_CATEGORY: Record<string, FaqItem[]> = {
       a: "Disposable vapes (Allo, Vice, Elf Bar, Stlth and similar), refillable pod systems, replacement pods, e-liquid in a range of nicotine strengths, replacement coils, batteries, chargers and accessories from Regina's licensed vape retailers.",
     },
     {
+      q: "Which nicotine strengths can I order?",
+      a: "Disposables and pre-filled pods are capped at 20 mg/mL (2.0%) under federal rules — that's the strongest you'll see for general retail. Lower strengths (10 mg/mL, 6 mg/mL, 3 mg/mL and 0 mg/mL nicotine-free) are available on most products. Bottled e-liquid can be freebase or salt nicotine; salt nic typically reads as 20–35 mg/mL on freebase scales but is sold sealed at the legal cap. Each product page lists the exact strength.",
+    },
+    {
+      q: "How do I know which replacement coils fit my device?",
+      a: "Coils are not universal — each tank or pod system uses a specific coil family (e.g. SMOK RPM, GeekVape Z series, Uwell Caliburn G/G2/A2/A3, Vaporesso GTX, Innokin Z-Coil). Match the brand AND series printed on your device or current coil. If you're unsure, message support with your device name and we'll confirm the right coil before dispatch.",
+    },
+    {
+      q: "Do refillable pods fit any device?",
+      a: "No. Pods are device-specific — Stlth pods fit Stlth, Allo Sync pods fit Allo Sync, Caliburn pods fit Caliburn, Vuse pods fit Vuse, etc. Cross-brand pods will not seal or fire correctly. Filter the vape page by your device or check the product title for the matching device name.",
+    },
+    {
       q: "Are flavoured vapes restricted in Saskatchewan?",
-      a: "Saskatchewan limits where certain flavoured vape products can be sold. Our partner retailers are licensed under provincial rules — what shows in-stock on the site is what they're legally allowed to sell to you that day.",
+      a: "Saskatchewan limits where certain flavoured vape products can be sold. Our partner retailers are licensed under provincial rules — what shows in-stock on the site is what they're legally allowed to sell to you that day. Tobacco and mint/menthol are the most consistently available; fruit and dessert flavours depend on store licensing.",
     },
     {
-      q: "What nicotine strengths are available?",
-      a: "Most disposables and pods come in 20 mg/mL (the federal cap for general retail) and lower strengths like 10 mg/mL or 0 mg/mL. Each product page lists the nicotine strength.",
+      q: "Is there a minimum order for vape delivery?",
+      a: "There's no strict minimum order for vape delivery in Regina — you can order a single disposable, a pack of coils or a bottle of juice. Delivery starts at $7, and orders over $50 unlock free delivery at most participating vape retailers.",
     },
     {
-      q: "Do you deliver replacement coils, pods and batteries?",
-      a: "Yes — replacement coils for common tanks, pre-filled and refillable pods, plus 18650 / 21700 batteries and chargers are listed when stores have them in stock.",
+      q: "Do you deliver replacement coils, pods, batteries and chargers?",
+      a: "Yes — replacement coils for common tanks (SMOK, GeekVape, Uwell, Vaporesso, Innokin), pre-filled and refillable pods, plus 18650 / 21700 batteries, external chargers and USB-C charging cables are all listed when stores have them in stock.",
     },
   ],
 
