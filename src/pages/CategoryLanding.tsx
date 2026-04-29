@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
+import FaqAccordion from "@/components/seo/FaqAccordion";
 
 function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
   const item = cfg.name.toLowerCase();

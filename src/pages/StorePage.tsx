@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MapPin, Phone, Clock, Truck, Star, ShoppingBag, CheckCircle2 } from "lucide-react";
 import { organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import FaqAccordion from "@/components/seo/FaqAccordion";
 
 interface Store {
   id: string;
