@@ -59,6 +59,7 @@ const DashboardImporter = lazy(() => import("./pages/dashboard/DashboardImporter
 const DashboardSEO = lazy(() => import("./pages/dashboard/DashboardSEO"));
 const DashboardPushTest = lazy(() => import("./pages/dashboard/DashboardPushTest"));
 const DashboardBlog = lazy(() => import("./pages/dashboard/DashboardBlog"));
+const DashboardSecurity = lazy(() => import("./pages/dashboard/DashboardSecurity"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
