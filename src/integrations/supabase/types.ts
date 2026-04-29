@@ -122,6 +122,27 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_billing: {
+        Row: {
+          created_at: string
+          stripe_customer_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       device_tokens: {
         Row: {
           created_at: string
@@ -738,7 +759,6 @@ export type Database = {
           id: string
           phone: string | null
           postal_code: string | null
-          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -750,7 +770,6 @@ export type Database = {
           id: string
           phone?: string | null
           postal_code?: string | null
-          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -762,7 +781,6 @@ export type Database = {
           id?: string
           phone?: string | null
           postal_code?: string | null
-          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: []
