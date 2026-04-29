@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Deliverr — Blog posts.
+  Add a <url> entry per post slug. Keep under 50,000 entries; if you ever
+  exceed that, split into sitemap-blog-1.xml, sitemap-blog-2.xml, etc.
+  and register each in /sitemap.xml.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.deliverr.ca/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>

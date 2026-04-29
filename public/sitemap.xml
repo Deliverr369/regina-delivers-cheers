@@ -1,155 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Deliverr — XML Sitemap
+  Deliverr — Sitemap Index
   Canonical host: https://www.deliverr.ca
-  Only public, indexable routes are listed. Auth, checkout, cart, dashboard
-  and admin routes are intentionally excluded (see public/robots.txt).
+  Each child sitemap may contain up to 50,000 URLs / 50 MB. Add new
+  child sitemaps below as the catalog grows (e.g. sitemap-products-2.xml).
 -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <!-- Core pages -->
-  <url>
-    <loc>https://www.deliverr.ca/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/stores</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/categories</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/products</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Informational pages -->
-  <url>
-    <loc>https://www.deliverr.ca/how-it-works</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/about</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/help</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/blog</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Legal -->
-  <url>
-    <loc>https://www.deliverr.ca/privacy</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/terms</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-
-  <!-- Local SEO landing pages (Regina + neighborhoods) -->
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/downtown</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/cathedral</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/harbour-landing</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/lakeview</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/eastview</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/north-central</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/south-end</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/east-end</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/west-end</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/uplands</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/delivery/regina/normanview</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Featured store landing pages -->
-  <url>
-    <loc>https://www.deliverr.ca/liquor-stores/costco-liquor-regina</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/liquor-stores/superstore-liquor-regina</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/liquor-stores/sobeys-liquor-regina</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/stores-regina/costco-liquor-regina</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.deliverr.ca/stores-regina/superstore-liquor-regina</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://www.deliverr.ca/sitemaps/sitemap-pages.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.deliverr.ca/sitemaps/sitemap-locations.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.deliverr.ca/sitemaps/sitemap-stores.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.deliverr.ca/sitemaps/sitemap-blog.xml</loc>
+  </sitemap>
+</sitemapindex>
