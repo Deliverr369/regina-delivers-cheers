@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Linkedin, Instagram, Heart, Phone, Mail, Apple, Smartphone, MapPin, Sparkles, ArrowRight } from "lucide-react";
+import { CONTACT, telHref, mailHref } from "@/config/contact";
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -55,28 +56,28 @@ const Footer = () => {
 
             <div className="space-y-3 mb-6">
               <a
-                href="tel:+13065333333"
+                href={telHref}
                 className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
                 <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))] group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Phone className="h-4 w-4" />
                 </span>
-                <span className="font-semibold truncate">+1 (306) 533-3333</span>
+                <span className="font-semibold truncate">{CONTACT.phoneDisplay}</span>
               </a>
               <a
-                href="mailto:support@deliverr.ca"
+                href={mailHref}
                 className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group min-w-0"
               >
                 <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))] group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <Mail className="h-4 w-4" />
                 </span>
-                <span className="font-semibold truncate">support@deliverr.ca</span>
+                <span className="font-semibold truncate">{CONTACT.email}</span>
               </a>
               <div className="flex items-center gap-3 text-sm text-foreground min-w-0">
                 <span className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center text-[hsl(var(--primary-strong))]">
                   <MapPin className="h-4 w-4" />
                 </span>
-                <span className="font-semibold truncate">Regina &amp; Saskatoon, SK</span>
+                <span className="font-semibold truncate">{CONTACT.city}, {CONTACT.region}</span>
               </div>
             </div>
 

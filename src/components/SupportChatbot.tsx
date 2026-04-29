@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Sparkles, Loader2, Phone, Mail, Package, ArrowL
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { CONTACT, telHref, mailHref } from "@/config/contact";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 type Mode = "general" | "order_status";
@@ -323,10 +324,10 @@ const SupportChatbot = () => {
 
           {/* Contact strip */}
           <div className="px-4 py-2 border-t border-border bg-muted/20 flex items-center justify-between text-xs text-muted-foreground">
-            <a href="tel:+13065333333" className="flex items-center gap-1.5 hover:text-primary transition-colors">
-              <Phone className="h-3 w-3" /> 306-533-3333
+            <a href={telHref} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+              <Phone className="h-3 w-3" /> {CONTACT.phoneShort}
             </a>
-            <a href="mailto:support@deliverr.ca" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+            <a href={mailHref} className="flex items-center gap-1.5 hover:text-primary transition-colors">
               <Mail className="h-3 w-3" /> Email us
             </a>
           </div>
@@ -380,7 +381,7 @@ const SupportChatbot = () => {
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground text-center mt-2">
-                AI assistant · For order issues call 306-533-3333
+                AI assistant · For order issues call {CONTACT.phoneShort}
               </p>
             </div>
           )}

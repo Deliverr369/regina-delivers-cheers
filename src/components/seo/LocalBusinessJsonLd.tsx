@@ -1,42 +1,45 @@
 import { SEO } from "./SEO";
+import { CONTACT } from "@/config/contact";
 
 /**
- * Re-usable LocalBusiness + Service JSON-LD for the homepage and Regina landing pages.
- * This is the schema Google uses to understand "delivery service in Regina, SK".
+ * Re-usable LocalBusiness + Organization JSON-LD.
+ * All contact fields are pulled from src/config/contact.ts so the
+ * structured data always matches the visible Footer / SupportChatbot.
  */
 export const localBusinessJsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "@id": "https://regina-delivers-cheers.lovable.app/#business",
-  name: "Deliverr",
+  "@id": `${CONTACT.siteUrl}/#business`,
+  name: CONTACT.brand,
   description:
     "Same-day delivery service in Regina, SK for alcohol, groceries, smokes and convenience items from your favourite local stores.",
-  url: "https://regina-delivers-cheers.lovable.app/",
-  telephone: "+1-306-000-0000",
+  url: `${CONTACT.siteUrl}/`,
+  telephone: CONTACT.phoneE164,
+  email: CONTACT.email,
   priceRange: "$$",
-  image: "https://regina-delivers-cheers.lovable.app/og-image.jpg",
+  image: CONTACT.logoUrl,
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Regina",
-    addressRegion: "SK",
-    addressCountry: "CA",
+    addressLocality: CONTACT.city,
+    addressRegion: CONTACT.region,
+    addressCountry: CONTACT.country,
   },
   geo: {
     "@type": "GeoCoordinates",
-    latitude: 50.4452,
-    longitude: -104.6189,
+    latitude: CONTACT.latitude,
+    longitude: CONTACT.longitude,
   },
   areaServed: {
     "@type": "City",
-    name: "Regina",
+    name: CONTACT.city,
     sameAs: "https://en.wikipedia.org/wiki/Regina,_Saskatchewan",
   },
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-      opens: "10:00",
-      closes: "02:00",
+      opens: CONTACT.opens,
+      closes: CONTACT.closes,
     },
   ],
   hasOfferCatalog: {
@@ -55,8 +58,8 @@ export const reginaServiceJsonLd = {
   "@context": "https://schema.org",
   "@type": "Service",
   serviceType: "Delivery service",
-  provider: { "@id": "https://regina-delivers-cheers.lovable.app/#business" },
-  areaServed: { "@type": "City", name: "Regina, SK" },
+  provider: { "@id": `${CONTACT.siteUrl}/#business` },
+  areaServed: { "@type": "City", name: `${CONTACT.city}, ${CONTACT.region}` },
   offers: {
     "@type": "Offer",
     priceCurrency: "CAD",
@@ -68,17 +71,17 @@ export const reginaServiceJsonLd = {
 export const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "@id": "https://www.deliverr.ca/#organization",
-  name: "Deliverr",
-  url: "https://www.deliverr.ca/",
-  logo: "https://www.deliverr.ca/og-image.jpg",
-  sameAs: [
-    "https://www.instagram.com/deliverr.ca",
-    "https://www.facebook.com/deliverr.ca",
-  ],
+  "@id": `${CONTACT.siteUrl}/#organization`,
+  name: CONTACT.brand,
+  legalName: CONTACT.legalName,
+  url: `${CONTACT.siteUrl}/`,
+  logo: CONTACT.logoUrl,
+  email: CONTACT.email,
+  sameAs: [CONTACT.social.instagram, CONTACT.social.facebook],
   contactPoint: {
     "@type": "ContactPoint",
-    telephone: "+1-306-000-0000",
+    telephone: CONTACT.phoneE164,
+    email: CONTACT.email,
     contactType: "customer support",
     areaServed: "CA-SK",
     availableLanguage: ["English"],
