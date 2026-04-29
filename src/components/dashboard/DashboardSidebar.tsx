@@ -39,6 +39,7 @@ const contentMenu = [
   { title: "SEO Generator", url: "/dashboard/seo", icon: Search },
   { title: "Blog Posts", url: "/dashboard/blog", icon: FileText },
   { title: "Push Test", url: "/dashboard/push-test", icon: Bell },
+  { title: "Security", url: "/dashboard/security", icon: ShieldCheck },
 ];
 
 export function DashboardSidebar() {
