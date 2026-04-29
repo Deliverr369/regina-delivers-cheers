@@ -88,10 +88,16 @@ export const organizationJsonLd = {
   },
 };
 
-export function reginaFaqJsonLd(
+/**
+ * Single source of truth for the Regina-landing FAQ. Used by both the
+ * visible <FaqAccordion /> on /delivery/regina[/:hood] and the FAQPage
+ * JSON-LD emitted in <head> — guaranteeing the rendered questions match
+ * the structured data 1:1.
+ */
+export function reginaFaqItems(
   areaName: string,
   hood?: { name: string; quadrant: string; nearby: string[] },
-) {
+): { q: string; a: string }[] {
   const speedA = hood
     ? `Most ${hood.name} orders arrive in 30–45 minutes thanks to our drivers covering ${hood.quadrant}. Delivery windows depend on store hours and traffic.`
     : `Most orders in ${areaName} arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.`;
@@ -102,53 +108,45 @@ export function reginaFaqJsonLd(
     ? `We cover all of ${hood.name} and the surrounding ${hood.quadrant} — including ${hood.nearby.join(", ")}. If your address falls inside Regina city limits, we deliver to it.`
     : `We deliver to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Albert Park, Hillsdale, Eastview, Whitmore Park, The Crescents, North Central, South End, East End, West End, Uplands and Normanview.`;
 
+  return [
+    { q: `How fast is delivery in ${areaName}?`, a: speedA },
+    {
+      q: `What can I get delivered in ${areaName}?`,
+      a: `Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers.`,
+    },
+    { q: coverageQ, a: coverageA },
+    {
+      q: `Is there a minimum order or delivery fee in ${areaName}?`,
+      a: `Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10.`,
+    },
+    {
+      q: `Do I need to be 19+ to order alcohol, smokes or vape in ${areaName}?`,
+      a: `Yes. You must be 19 or older to order alcohol, smokes or vape in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
+    },
+    {
+      q: `What payment methods does Deliverr accept?`,
+      a: `We accept all major credit cards. We do not accept cash on delivery.`,
+    },
+  ];
+}
+
+/**
+ * @deprecated Prefer reginaFaqItems + validateFaqs so the visible accordion
+ *   and the JSON-LD are produced from the same array. Kept as a thin wrapper
+ *   for any external imports.
+ */
+export function reginaFaqJsonLd(
+  areaName: string,
+  hood?: { name: string; quadrant: string; nearby: string[] },
+) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `How fast is delivery in ${areaName}?`,
-        acceptedAnswer: { "@type": "Answer", text: speedA },
-      },
-      {
-        "@type": "Question",
-        name: `What can I get delivered in ${areaName}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: coverageQ,
-        acceptedAnswer: { "@type": "Answer", text: coverageA },
-      },
-      {
-        "@type": "Question",
-        name: `Is there a minimum order or delivery fee in ${areaName}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `Do I need to be 19+ to order alcohol, smokes or vape in ${areaName}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Yes. You must be 19 or older to order alcohol, smokes or vape in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What payment methods does Deliverr accept?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `We accept all major credit cards. We do not accept cash on delivery.`,
-        },
-      },
-    ],
+    mainEntity: reginaFaqItems(areaName, hood).map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   };
 }
 

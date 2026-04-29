@@ -5,9 +5,10 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette } from "lucide-react";
-import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqItems } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
+import { validateFaqs } from "@/components/seo/validateFaqs";
 
 type Hood = { name: string; blurb: string; nearby: string[]; quadrant: string };
 
@@ -42,6 +43,13 @@ const ReginaLanding = () => {
     ? `Same-day alcohol, grocery and smokes delivery to ${hood.name}, Regina. Order in 60 seconds, delivered in under an hour. 19+ only.`
     : "Regina's #1 same-day delivery service. Alcohol, groceries, smokes from Costco, Superstore, Sobeys and local liquor stores. Delivered in under 60 minutes.";
 
+  // Single source of truth: same array drives both the visible accordion and
+  // the FAQPage JSON-LD, validated to enforce non-empty Q/A and unique questions.
+  const { items: faqItems, jsonLd: faqJsonLd } = validateFaqs(
+    reginaFaqItems(areaName, hood ? { name: hood.name, quadrant: hood.quadrant, nearby: hood.nearby } : undefined),
+    `ReginaLanding[${neighborhood ?? "hub"}]`,
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
@@ -52,7 +60,7 @@ const ReginaLanding = () => {
           organizationJsonLd,
           localBusinessJsonLd,
           reginaServiceJsonLd,
-          reginaFaqJsonLd(areaName, hood ? { name: hood.name, quadrant: hood.quadrant, nearby: hood.nearby } : undefined),
+          faqJsonLd,
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
@@ -172,26 +180,8 @@ const ReginaLanding = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 font-heading">
               {areaName} Delivery FAQ
             </h2>
-            {(() => {
-              const speedA = hood
-                ? `Most ${hood.name} orders arrive in 30–45 minutes thanks to our drivers covering ${hood.quadrant}. Delivery windows depend on store hours and traffic.`
-                : `Most orders in Regina arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.`;
-              const coverageQ = hood
-                ? `Which streets near ${hood.name} do you deliver to?`
-                : `Which Regina neighborhoods do you deliver to?`;
-              const coverageA = hood
-                ? `We cover all of ${hood.name} and the surrounding ${hood.quadrant} — including ${hood.nearby.join(", ")}. If your address falls inside Regina city limits, we deliver to it.`
-                : `We deliver to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Albert Park, Hillsdale, Eastview, Whitmore Park, The Crescents, North Central, South End, East End, West End, Uplands and Normanview.`;
-              const items = [
-                { q: `How fast is delivery in ${areaName}?`, a: speedA },
-                { q: `What can I get delivered in ${areaName}?`, a: "Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers." },
-                { q: coverageQ, a: coverageA },
-                { q: `Is there a minimum order or delivery fee in ${areaName}?`, a: "Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10." },
-                { q: `Do I need to be 19+ to order alcohol, smokes or vape in ${areaName}?`, a: "Yes. You must be 19 or older to order alcohol, smokes or vape in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19." },
-                { q: "What payment methods does Deliverr accept?", a: "We accept all major credit cards. We do not accept cash on delivery." },
-              ];
-              return <FaqAccordion items={items} />;
-            })()}
+            <FaqAccordion items={faqItems} />
+
           </div>
         </section>
 
