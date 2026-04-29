@@ -996,6 +996,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_addresses: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          delivery_instructions: string | null
+          id: string
+          is_default: boolean
+          label: string
+          phone: string | null
+          postal_code: string | null
+          recipient_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          city?: string
+          created_at?: string
+          delivery_instructions?: string | null
+          id?: string
+          is_default?: boolean
+          label?: string
+          phone?: string | null
+          postal_code?: string | null
+          recipient_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          delivery_instructions?: string | null
+          id?: string
+          is_default?: boolean
+          label?: string
+          phone?: string | null
+          postal_code?: string | null
+          recipient_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
