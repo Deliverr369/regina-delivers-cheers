@@ -129,6 +129,7 @@ const CategoryLanding = () => {
 
   const path = `/${cfg.slug}`;
   const url = `https://www.deliverr.ca${path}`;
+  const faqs = buildFaqs(cfg);
 
   return (
     <div className="min-h-screen flex flex-col">
