@@ -45,11 +45,17 @@ interface BodyIn {
   delivery_type: "asap" | "scheduled";
   scheduled_at?: string | null;   // ISO timestamp, slot start
   scheduled_slot?: string | null; // "HH:MM-HH:MM"
+  address_id?: string | null;
   address: string;
   city: string;
   postal_code?: string;
   tip?: number;
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Canadian postal code: A1A 1A1 (space optional). Excludes D, F, I, O, Q, U; W/Z not valid as first letter.
+const CA_POSTAL_RE = /^[ABCEGHJ-NPRSTVXY]\d[A-Z][ -]?\d[A-Z]\d$/i;
+const norm = (s: string) => (s || "").trim().toLowerCase();
 
 const timeToMin = (t: string) => {
   const [h, m] = t.split(":").map(Number);
