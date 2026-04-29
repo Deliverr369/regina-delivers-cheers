@@ -155,30 +155,6 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Company column */}
-          <div className="md:col-span-3">
-            <h4 className="font-display font-bold text-sm uppercase tracking-wider text-foreground mb-4 sm:mb-5 flex items-center gap-2">
-              <span className="h-1 w-6 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-              Company
-            </h4>
-            <ul className="space-y-2.5 sm:space-y-3 text-sm">
-              {[
-                { label: "About Us", to: "/about" },
-                { label: "How It Works", to: "/how-it-works" },
-                { label: "Help Center", to: "/help" },
-                { label: "Support", to: "/help#contact" },
-                { label: "Privacy Policy", to: "/privacy" },
-                { label: "Terms of Use", to: "/terms" },
-              ].map(({ label, to }) => (
-                <li key={label}>
-                  <Link to={to} className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
-                    <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary group-hover:w-3 transition-all" />
-                    <span className="truncate">{label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
 
           {/* Get the App */}
           <div className="md:col-span-3">
