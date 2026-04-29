@@ -29,8 +29,8 @@ const OrderReceipt = () => {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { reorder } = useReorder();
   const printRef = useRef<HTMLDivElement>(null);
+  const [reorderOpen, setReorderOpen] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order-receipt", id],
