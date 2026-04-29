@@ -131,8 +131,7 @@ const App = () => (
                 <Route path="/wine-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/liquor-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/grocery-delivery-regina" element={<CategoryLanding />} />
-                <Route path="/smokes-delivery-regina" element={<CategoryLanding />} />{"\n"}                {/* useParams-based generic fallback */}
-                <Route path="/:slug" element={<CategoryLandingGuard />} />
+                <Route path="/smokes-delivery-regina" element={<CategoryLanding />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
