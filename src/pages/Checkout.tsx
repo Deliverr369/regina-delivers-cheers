@@ -725,7 +725,19 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 type="button"
                 onClick={() => { props.setDeliveryType("asap"); props.setScheduleError(null); }}
                 className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
-                  props.deliveryType === "asap" ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+          {/* 3. Delivery time */}
+          <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time" subtitle="Get it now or schedule for later — slots respect each store's hours.">
+            <div className="grid grid-cols-2 gap-2.5 mb-4">
+              <button
+                type="button"
+                disabled={!props.allStoresOpenNow && Object.keys(props.storeHours).length > 0}
+                onClick={() => { props.setDeliveryType("asap"); props.setScheduleError(null); }}
+                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                  props.deliveryType === "asap"
+                    ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
+                    : !props.allStoresOpenNow && Object.keys(props.storeHours).length > 0
+                      ? "border-border bg-muted/40 cursor-not-allowed opacity-60"
+                      : "border-border bg-background hover:border-primary/40"
                 }`}
               >
                 <div className={`h-9 w-9 rounded-md flex items-center justify-center ${props.deliveryType === "asap" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
@@ -733,7 +745,11 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-foreground">ASAP</p>
-                  <p className="text-[11px] text-muted-foreground">Arrives in 25–45 min</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {props.allStoresOpenNow || Object.keys(props.storeHours).length === 0
+                      ? "Arrives in 25–45 min"
+                      : "Closed right now"}
+                  </p>
                 </div>
               </button>
               <button
@@ -754,68 +770,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             </div>
 
             {props.deliveryType === "scheduled" && (
-              <div className="space-y-3 animate-fade-in">
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a day</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {getNextDays(5).map((d) => {
-                      const selected = props.scheduledDate === d.value;
-                      return (
-                        <button
-                          key={d.value}
-                          type="button"
-                          onClick={() => { props.setScheduledDate(d.value); props.setScheduleError(null); }}
-                          className={`flex flex-col items-center justify-center rounded-xl border py-2.5 transition-all ${
-                            selected ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-background hover:border-primary/40"
-                          }`}
-                        >
-                          <span className="text-[11px] font-semibold uppercase tracking-wide">{d.label}</span>
-                          <span className={`text-xs mt-0.5 ${selected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{d.sub}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a time slot</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {TIME_SLOTS.map((slot) => {
-                      const past = isSlotInPast(props.scheduledDate, slot);
-                      const selected = props.scheduledSlot === slot;
-                      return (
-                        <button
-                          key={slot}
-                          type="button"
-                          disabled={past}
-                          onClick={() => { props.setScheduledSlot(slot); props.setScheduleError(null); }}
-                          className={`rounded-xl border py-2.5 px-2 text-xs font-medium transition-all ${
-                            selected
-                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                              : past
-                                ? "border-border bg-muted/40 text-muted-foreground/50 cursor-not-allowed line-through"
-                                : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-secondary/60"
-                          }`}
-                        >
-                          {formatSlotLabel(slot)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                {props.scheduleError && (
-                  <p className="text-destructive text-xs flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{props.scheduleError}</p>
-                )}
-                {props.scheduledDate && props.scheduledSlot && !props.scheduleError && (
-                  <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3 flex items-start gap-2.5">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-foreground/80 leading-relaxed">
-                      Scheduled for <span className="font-semibold text-foreground">
-                        {new Date(props.scheduledDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
-                      </span> · <span className="font-semibold text-foreground">{formatSlotLabel(props.scheduledSlot)}</span>
-                    </p>
-                  </div>
-                )}
-              </div>
+              <ScheduledSlotPicker
+                scheduledDate={props.scheduledDate}
+                setScheduledDate={props.setScheduledDate}
+                scheduledSlot={props.scheduledSlot}
+                setScheduledSlot={props.setScheduledSlot}
+                scheduleError={props.scheduleError}
+                setScheduleError={props.setScheduleError}
+                storeHours={props.storeHours}
+                cartStoreIds={props.cartStoreIds}
+              />
             )}
           </SectionCard>
 
