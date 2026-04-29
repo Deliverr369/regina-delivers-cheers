@@ -43,6 +43,7 @@ const ReginaLanding = lazy(() => import("./pages/ReginaLanding"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const StorePage = lazy(() => import("./pages/StorePage"));
+const CategoryLanding = lazy(() => import("./pages/CategoryLanding"));
 
 // Admin dashboard — heavy, lazy-loaded as a group
 const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
@@ -125,6 +126,13 @@ const App = () => (
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/liquor-stores/:slug" element={<StorePage />} />
                 <Route path="/stores-regina/:slug" element={<StorePage />} />
+                <Route path="/alcohol-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/beer-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/wine-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/liquor-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/grocery-delivery-regina" element={<CategoryLanding />} />
+                <Route path="/smokes-delivery-regina" element={<CategoryLanding />} />{"\n"}                {/* useParams-based generic fallback */}
+                <Route path="/:slug" element={<CategoryLandingGuard />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
