@@ -88,7 +88,10 @@ const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{addr.address}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {addr.address}
+                  {addr.unit ? `, ${addr.unit}` : ""}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {addr.city}
                   {addr.postal_code ? `, ${addr.postal_code}` : ""}
