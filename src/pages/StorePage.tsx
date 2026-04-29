@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MapPin, Phone, Clock, Truck, Star, ShoppingBag, CheckCircle2 } from "lucide-react";
 import { organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import { CONTACT } from "@/config/contact";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
 
@@ -74,14 +75,50 @@ const StorePage = () => {
   const title = `${store.name} Regina | Delivery, Hours & Address | Deliverr`;
   const description = `Order ${store.name} delivery in Regina, SK. Hours: ${store.hours}. Address: ${store.address}. Same-day delivery in ${store.delivery_time || "30-45 min"}.`;
 
+  // ---- LocalBusiness + Organization JSON-LD ---------------------------------
+  // Normalise the store phone into E.164 (Canada/US +1) when we can; falls back
+  // to the raw value so we never invent digits. Search engines prefer E.164 for
+  // telephone in structured data.
+  const normalisePhoneE164 = (raw?: string | null): string | undefined => {
+    if (!raw) return undefined;
+    const digits = raw.replace(/\D+/g, "");
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+    return raw;
+  };
+
+  // Try to pull a Canadian postal code (e.g. "S4P 3Y2") out of the address.
+  const extractPostalCode = (raw?: string | null): string | undefined => {
+    if (!raw) return undefined;
+    const m = raw.match(/[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d/);
+    return m ? m[0].toUpperCase().replace(/[ -]?(\d[A-Za-z]\d)$/, " $1") : undefined;
+  };
+
+  const storePhoneE164 = normalisePhoneE164(store.phone);
+  const storePostalCode = extractPostalCode(store.address);
+  // Regina city centre — used as a stable centroid for the service-area GeoCircle.
+  // Per-store coordinates are not yet captured in the stores table, so we anchor
+  // the polygon at city centre and advertise a 15 km service radius covering
+  // every Regina neighborhood we deliver to.
+  const REGINA_CENTRE = { latitude: 50.4452, longitude: -104.6189 };
+  const SERVICE_RADIUS_METERS = 15000;
+  const SERVED_NEIGHBORHOODS = [
+    "Downtown", "Cathedral", "Harbour Landing", "Lakeview", "The Crescents",
+    "Albert Park", "Hillsdale", "Whitmore Park", "Eastview", "Glencairn",
+    "Walsh Acres", "Normanview", "Argyle Park", "Wood Meadows",
+    "Greens on Gardiner", "North Central", "South End",
+  ];
+
   const localBusiness = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": url,
     name: `${store.name} (via Deliverr)`,
-    image: store.image_url ? (store.image_url.startsWith("http") ? store.image_url : `https://regina-delivers-cheers.lovable.app${store.image_url}`) : undefined,
+    image: store.image_url
+      ? (store.image_url.startsWith("http") ? store.image_url : `https://regina-delivers-cheers.lovable.app${store.image_url}`)
+      : undefined,
     url,
-    telephone: store.phone || undefined,
+    telephone: storePhoneE164,
     priceRange: "$$",
     address: {
       "@type": "PostalAddress",
@@ -89,9 +126,54 @@ const StorePage = () => {
       addressLocality: "Regina",
       addressRegion: "SK",
       addressCountry: "CA",
+      postalCode: storePostalCode,
     },
-    geo: { "@type": "GeoCoordinates", latitude: 50.4452, longitude: -104.6189 },
-    areaServed: { "@type": "City", name: "Regina" },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: REGINA_CENTRE.latitude,
+      longitude: REGINA_CENTRE.longitude,
+    },
+    // Multi-typed areaServed: a GeoCircle for crawlers that consume coordinates,
+    // plus an explicit list of named neighborhoods + the parent City for human-
+    // readable coverage. Search engines accept arrays here.
+    areaServed: [
+      {
+        "@type": "GeoCircle",
+        geoMidpoint: {
+          "@type": "GeoCoordinates",
+          latitude: REGINA_CENTRE.latitude,
+          longitude: REGINA_CENTRE.longitude,
+        },
+        geoRadius: SERVICE_RADIUS_METERS,
+        description: `${SERVICE_RADIUS_METERS / 1000} km service radius around central Regina, SK.`,
+      },
+      {
+        "@type": "City",
+        name: "Regina",
+        sameAs: "https://en.wikipedia.org/wiki/Regina,_Saskatchewan",
+        containedInPlace: {
+          "@type": "AdministrativeArea",
+          name: "Saskatchewan",
+          sameAs: "https://en.wikipedia.org/wiki/Saskatchewan",
+        },
+      },
+      ...SERVED_NEIGHBORHOODS.map((n) => ({
+        "@type": "Place" as const,
+        name: `${n}, Regina`,
+      })),
+    ],
+    contactPoint: storePhoneE164
+      ? {
+          "@type": "ContactPoint",
+          telephone: storePhoneE164,
+          contactType: "customer support",
+          areaServed: "CA-SK",
+          availableLanguage: ["English"],
+        }
+      : undefined,
+    // Tie the per-store LocalBusiness back to the parent Deliverr Organization
+    // so Google can build a single knowledge-graph entity for the brand.
+    parentOrganization: { "@id": `${CONTACT.siteUrl}/#organization` },
     aggregateRating: store.rating && store.reviews_count
       ? { "@type": "AggregateRating", ratingValue: store.rating, reviewCount: store.reviews_count }
       : undefined,
