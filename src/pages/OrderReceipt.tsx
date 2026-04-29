@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, MapPin, Clock, CalendarClock, Receipt, Printer, RotateCcw, CreditCard, Banknote } from "lucide-react";
@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useReorder } from "@/hooks/useReorder";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import OrderTimeline from "@/components/OrderTimeline";
+import ReorderConfirmDialog from "@/components/ReorderConfirmDialog";
 
 const statusConfig: Record<string, { bg: string; label: string }> = {
   pending: { bg: "bg-amber-500", label: "Pending" },
@@ -28,8 +28,8 @@ const OrderReceipt = () => {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { reorder } = useReorder();
   const printRef = useRef<HTMLDivElement>(null);
+  const [reorderOpen, setReorderOpen] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order-receipt", id],
@@ -292,7 +292,7 @@ const OrderReceipt = () => {
             </Button>
             <Button
               className="rounded-full gap-2"
-              onClick={() => reorder(order as any)}
+              onClick={() => setReorderOpen(true)}
             >
               <RotateCcw className="h-4 w-4" />
               Reorder these items
@@ -300,6 +300,11 @@ const OrderReceipt = () => {
           </div>
         </div>
       </main>
+      <ReorderConfirmDialog
+        order={order as any}
+        open={reorderOpen}
+        onOpenChange={setReorderOpen}
+      />
       <div className="print:hidden">
         <Footer />
       </div>
