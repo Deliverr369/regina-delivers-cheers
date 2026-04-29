@@ -8,6 +8,7 @@ import { Clock, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
+import { validateFaqs } from "@/components/seo/validateFaqs";
 
 function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
   const item = cfg.name.toLowerCase();
@@ -164,7 +165,10 @@ const CategoryLanding = () => {
 
   const path = `/${cfg.slug}`;
   const url = `https://www.deliverr.ca${path}`;
-  const faqs = buildFaqs(cfg);
+  const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
+    buildFaqs(cfg),
+    `CategoryLanding[${cfg.slug}]`,
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -176,15 +180,7 @@ const CategoryLanding = () => {
           organizationJsonLd,
           localBusinessJsonLd,
           reginaServiceJsonLd,
-          {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faqs.map((f) => ({
-              "@type": "Question",
-              name: f.q,
-              acceptedAnswer: { "@type": "Answer", text: f.a },
-            })),
-          },
+          faqJsonLd,
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
