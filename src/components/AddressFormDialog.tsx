@@ -39,6 +39,7 @@ const UNIT_RE = /^[A-Za-z0-9#.\-/ ]{1,15}$/;
 const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => {
   const [form, setForm] = useState<AddressInput>(empty);
   const [cityError, setCityError] = useState<string | null>(null);
+  const [unitError, setUnitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
               recipient_name: initial.recipient_name || "",
               phone: initial.phone || "",
               address: initial.address,
+              unit: initial.unit || "",
               city: initial.city,
               postal_code: initial.postal_code || "",
               delivery_instructions: initial.delivery_instructions || "",
@@ -58,6 +60,7 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
           : empty,
       );
       setCityError(null);
+      setUnitError(null);
     }
   }, [open, initial]);
 
@@ -67,10 +70,16 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
       setCityError("We only deliver within Regina.");
       return;
     }
+    const unitTrimmed = (form.unit || "").trim();
+    if (unitTrimmed && !UNIT_RE.test(unitTrimmed)) {
+      setUnitError("Use letters, numbers, # . - / only (max 15 chars).");
+      return;
+    }
+    setUnitError(null);
     if (!form.address.trim()) return;
     setSaving(true);
     try {
-      await onSubmit(form);
+      await onSubmit({ ...form, unit: unitTrimmed || null });
       onOpenChange(false);
     } finally {
       setSaving(false);
