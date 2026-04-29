@@ -1,6 +1,17 @@
+import type { ReactNode } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-export type FaqItem = { q: string; a: string };
+export type FaqItem = {
+  q: string;
+  a: string;
+  /**
+   * Optional rich React node to render in the visible answer. When provided, it
+   * is shown instead of the plain `a` string, but the plain `a` remains the
+   * canonical text used for the FAQPage JSON-LD (so visible content and
+   * structured data stay equivalent).
+   */
+  aNode?: ReactNode;
+};
 
 type Props = {
   items: FaqItem[];
@@ -27,7 +38,7 @@ const FaqAccordion = ({ items, defaultOpenCount = 2, className }: Props) => {
             {item.q}
           </AccordionTrigger>
           <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-            {item.a}
+            {item.aNode ?? item.a}
           </AccordionContent>
         </AccordionItem>
       ))}
