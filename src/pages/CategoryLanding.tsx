@@ -204,6 +204,23 @@ const CategoryLanding = () => {
           </div>
         </section>
 
+        {/* FAQ — mirrors FAQPage JSON-LD */}
+        <section className="py-16 bg-muted/30">
+          <div className="container max-w-3xl mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 font-heading">
+              {cfg.name} Delivery — Frequently Asked Questions
+            </h2>
+            <div className="space-y-6">
+              {faqs.map((item) => (
+                <div key={item.q} className="border-b pb-6 last:border-0">
+                  <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
+                  <p className="text-muted-foreground">{item.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container max-w-4xl mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 font-heading">
