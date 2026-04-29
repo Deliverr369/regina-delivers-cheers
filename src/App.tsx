@@ -37,6 +37,9 @@ const Help = lazy(() => import("./pages/Help"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ReginaLanding = lazy(() => import("./pages/ReginaLanding"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
 
 // Admin dashboard — heavy, lazy-loaded as a group
 const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
@@ -109,6 +112,10 @@ const App = () => (
                 <Route path="/need-help" element={<Help />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/delivery/regina" element={<ReginaLanding />} />
+                <Route path="/delivery/regina/:neighborhood" element={<ReginaLanding />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
