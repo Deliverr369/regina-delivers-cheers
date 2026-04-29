@@ -144,6 +144,27 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
           </div>
 
           <div>
+            <Label className="text-sm">
+              Apt / Suite / Unit{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Input
+              value={form.unit || ""}
+              onChange={(e) => {
+                setForm((p) => ({ ...p, unit: e.target.value }));
+                if (unitError) setUnitError(null);
+              }}
+              placeholder="Apt 3B, Suite 204, #12..."
+              maxLength={15}
+              className={`mt-1.5 ${unitError ? "border-destructive" : ""}`}
+              aria-invalid={!!unitError}
+            />
+            {unitError && (
+              <p className="text-xs text-destructive mt-1">{unitError}</p>
+            )}
+          </div>
+
+          <div>
             <Label className="text-sm">Delivery instructions (optional)</Label>
             <Input
               value={form.delivery_instructions || ""}
