@@ -287,6 +287,23 @@ const StorePage = () => {
           </div>
         </section>
 
+        {/* FAQ — mirrors FAQPage JSON-LD */}
+        <section className="py-12 bg-muted/30">
+          <div className="container max-w-3xl mx-auto px-4">
+            <h2 className="text-3xl font-bold font-heading text-center mb-8">
+              {store.name} Delivery — Frequently Asked Questions
+            </h2>
+            <div className="space-y-6">
+              {faqs.map((item) => (
+                <div key={item.q} className="border-b pb-6 last:border-0">
+                  <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
+                  <p className="text-muted-foreground">{item.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container max-w-3xl mx-auto px-4 text-center">
