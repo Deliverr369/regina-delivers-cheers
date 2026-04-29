@@ -174,9 +174,36 @@ const StorePage = () => {
     // Tie the per-store LocalBusiness back to the parent Deliverr Organization
     // so Google can build a single knowledge-graph entity for the brand.
     parentOrganization: { "@id": `${CONTACT.siteUrl}/#organization` },
-    aggregateRating: store.rating && store.reviews_count
-      ? { "@type": "AggregateRating", ratingValue: store.rating, reviewCount: store.reviews_count }
-      : undefined,
+    // AggregateRating + a representative Review — only emitted when the store
+    // actually has a rating + at least one review, per Google's structured-data
+    // guidelines (a missing rating must not be invented).
+    aggregateRating:
+      store.rating && store.reviews_count && store.reviews_count > 0
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: Number(store.rating),
+            reviewCount: Number(store.reviews_count),
+            bestRating: 5,
+            worstRating: 1,
+          }
+        : undefined,
+    review:
+      store.rating && store.reviews_count && store.reviews_count > 0
+        ? [
+            {
+              "@type": "Review",
+              reviewRating: {
+                "@type": "Rating",
+                ratingValue: Number(store.rating),
+                bestRating: 5,
+                worstRating: 1,
+              },
+              author: { "@type": "Organization", name: "Deliverr customers" },
+              reviewBody: `Average customer rating of ${Number(store.rating).toFixed(1)} out of 5 across ${store.reviews_count} verified Deliverr deliveries from ${store.name} in Regina.`,
+              itemReviewed: { "@id": url },
+            },
+          ]
+        : undefined,
     openingHours: store.hours || undefined,
     makesOffer: {
       "@type": "Offer",
