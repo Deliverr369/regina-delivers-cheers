@@ -88,7 +88,20 @@ export const organizationJsonLd = {
   },
 };
 
-export function reginaFaqJsonLd(areaName: string) {
+export function reginaFaqJsonLd(
+  areaName: string,
+  hood?: { name: string; quadrant: string; nearby: string[] },
+) {
+  const speedA = hood
+    ? `Most ${hood.name} orders arrive in 30–45 minutes thanks to our drivers covering ${hood.quadrant}. Delivery windows depend on store hours and traffic.`
+    : `Most orders in ${areaName} arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.`;
+  const coverageQ = hood
+    ? `Which streets near ${hood.name} do you deliver to?`
+    : `Which Regina neighborhoods do you deliver to?`;
+  const coverageA = hood
+    ? `We cover all of ${hood.name} and the surrounding ${hood.quadrant} — including ${hood.nearby.join(", ")}. If your address falls inside Regina city limits, we deliver to it.`
+    : `We deliver to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Albert Park, Hillsdale, Eastview, Whitmore Park, The Crescents, North Central, South End, East End, West End, Uplands and Normanview.`;
+
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -96,10 +109,7 @@ export function reginaFaqJsonLd(areaName: string) {
       {
         "@type": "Question",
         name: `How fast is delivery in ${areaName}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Most orders in ${areaName} arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.`,
-        },
+        acceptedAnswer: { "@type": "Answer", text: speedA },
       },
       {
         "@type": "Question",
@@ -108,6 +118,11 @@ export function reginaFaqJsonLd(areaName: string) {
           "@type": "Answer",
           text: `Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers.`,
         },
+      },
+      {
+        "@type": "Question",
+        name: coverageQ,
+        acceptedAnswer: { "@type": "Answer", text: coverageA },
       },
       {
         "@type": "Question",

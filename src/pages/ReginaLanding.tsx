@@ -8,22 +8,24 @@ import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette }
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 
-const NEIGHBORHOODS: Record<string, { name: string; blurb: string }> = {
-  downtown: { name: "Downtown", blurb: "Fast delivery to Regina's downtown core — condos, offices and hotels." },
-  cathedral: { name: "Cathedral", blurb: "Heritage homes, indie shops and same-day delivery to your door." },
-  "harbour-landing": { name: "Harbour Landing", blurb: "Fast delivery to Regina's growing south-end community." },
-  lakeview: { name: "Lakeview", blurb: "Quick service to Lakeview and Wascana Park area." },
-  "albert-park": { name: "Albert Park", blurb: "Reliable delivery across Albert Park." },
-  hillsdale: { name: "Hillsdale", blurb: "Friendly drivers serving all of Hillsdale." },
-  eastview: { name: "Eastview", blurb: "Same-day service to Eastview and surrounding areas." },
-  "whitmore-park": { name: "Whitmore Park", blurb: "Delivery to Whitmore Park in under 60 minutes." },
-  "the-crescents": { name: "The Crescents", blurb: "Doorstep delivery throughout The Crescents." },
-  "north-central": { name: "North Central", blurb: "Same-day delivery across North Central Regina." },
-  "south-end": { name: "South End", blurb: "Reliable service to all of Regina's south end." },
-  "east-end": { name: "East End", blurb: "Doorstep delivery throughout Regina's east end." },
-  "west-end": { name: "West End", blurb: "Quick delivery to Regina's west end neighborhoods." },
-  uplands: { name: "Uplands", blurb: "Same-day service to the Uplands community." },
-  normanview: { name: "Normanview", blurb: "Friendly delivery across Normanview and Normanview West." },
+type Hood = { name: string; blurb: string; nearby: string[]; quadrant: string };
+
+const NEIGHBORHOODS: Record<string, Hood> = {
+  downtown: { name: "Downtown", blurb: "Fast delivery to Regina's downtown core — condos, offices and hotels.", nearby: ["Cathedral", "The Crescents", "North Central"], quadrant: "central Regina" },
+  cathedral: { name: "Cathedral", blurb: "Heritage homes, indie shops and same-day delivery to your door.", nearby: ["Downtown", "The Crescents", "Lakeview"], quadrant: "central Regina" },
+  "harbour-landing": { name: "Harbour Landing", blurb: "Fast delivery to Regina's growing south-end community.", nearby: ["Albert Park", "Lakeview", "Whitmore Park"], quadrant: "south Regina" },
+  lakeview: { name: "Lakeview", blurb: "Quick service to Lakeview and Wascana Park area.", nearby: ["The Crescents", "Cathedral", "Hillsdale"], quadrant: "south-central Regina" },
+  "albert-park": { name: "Albert Park", blurb: "Reliable delivery across Albert Park.", nearby: ["Hillsdale", "Whitmore Park", "Harbour Landing"], quadrant: "south Regina" },
+  hillsdale: { name: "Hillsdale", blurb: "Friendly drivers serving all of Hillsdale.", nearby: ["Lakeview", "Albert Park", "Whitmore Park"], quadrant: "south Regina" },
+  eastview: { name: "Eastview", blurb: "Same-day service to Eastview and surrounding areas.", nearby: ["Cathedral", "Downtown", "The Crescents"], quadrant: "east-central Regina" },
+  "whitmore-park": { name: "Whitmore Park", blurb: "Delivery to Whitmore Park in under 60 minutes.", nearby: ["Hillsdale", "Albert Park", "Harbour Landing"], quadrant: "south Regina" },
+  "the-crescents": { name: "The Crescents", blurb: "Doorstep delivery throughout The Crescents.", nearby: ["Cathedral", "Lakeview", "Downtown"], quadrant: "central Regina" },
+  "north-central": { name: "North Central", blurb: "Same-day delivery across North Central Regina.", nearby: ["Downtown", "Normanview", "Uplands"], quadrant: "north Regina" },
+  "south-end": { name: "South End", blurb: "Reliable service to all of Regina's south end.", nearby: ["Harbour Landing", "Albert Park", "Hillsdale", "Whitmore Park"], quadrant: "south Regina" },
+  "east-end": { name: "East End", blurb: "Doorstep delivery throughout Regina's east end.", nearby: ["Eastview", "Uplands"], quadrant: "east Regina" },
+  "west-end": { name: "West End", blurb: "Quick delivery to Regina's west end neighborhoods.", nearby: ["Normanview", "North Central"], quadrant: "west Regina" },
+  uplands: { name: "Uplands", blurb: "Same-day service to the Uplands community.", nearby: ["Normanview", "North Central", "East End"], quadrant: "north Regina" },
+  normanview: { name: "Normanview", blurb: "Friendly delivery across Normanview and Normanview West.", nearby: ["Uplands", "North Central", "West End"], quadrant: "north-west Regina" },
 };
 
 const ReginaLanding = () => {
@@ -49,7 +51,7 @@ const ReginaLanding = () => {
           organizationJsonLd,
           localBusinessJsonLd,
           reginaServiceJsonLd,
-          reginaFaqJsonLd(areaName),
+          reginaFaqJsonLd(areaName, hood ? { name: hood.name, quadrant: hood.quadrant, nearby: hood.nearby } : undefined),
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
@@ -170,13 +172,25 @@ const ReginaLanding = () => {
               {areaName} Delivery FAQ
             </h2>
             <div className="space-y-6">
-              {[
-                { q: `How fast is delivery in ${areaName}?`, a: `Most orders in ${areaName} arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.` },
-                { q: `What can I get delivered in ${areaName}?`, a: "Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers." },
-                { q: `Is there a minimum order or delivery fee in ${areaName}?`, a: "Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10." },
-                { q: `Do I need to be 19+ to order alcohol, smokes or vape in ${areaName}?`, a: "Yes. You must be 19 or older to order alcohol, smokes or vape in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19." },
-                { q: "What payment methods does Deliverr accept?", a: "We accept all major credit cards. We do not accept cash on delivery." },
-              ].map((item) => (
+              {(() => {
+                const speedA = hood
+                  ? `Most ${hood.name} orders arrive in 30–45 minutes thanks to our drivers covering ${hood.quadrant}. Delivery windows depend on store hours and traffic.`
+                  : `Most orders in Regina arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.`;
+                const coverageQ = hood
+                  ? `Which streets near ${hood.name} do you deliver to?`
+                  : `Which Regina neighborhoods do you deliver to?`;
+                const coverageA = hood
+                  ? `We cover all of ${hood.name} and the surrounding ${hood.quadrant} — including ${hood.nearby.join(", ")}. If your address falls inside Regina city limits, we deliver to it.`
+                  : `We deliver to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Albert Park, Hillsdale, Eastview, Whitmore Park, The Crescents, North Central, South End, East End, West End, Uplands and Normanview.`;
+                return [
+                  { q: `How fast is delivery in ${areaName}?`, a: speedA },
+                  { q: `What can I get delivered in ${areaName}?`, a: "Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers." },
+                  { q: coverageQ, a: coverageA },
+                  { q: `Is there a minimum order or delivery fee in ${areaName}?`, a: "Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10." },
+                  { q: `Do I need to be 19+ to order alcohol, smokes or vape in ${areaName}?`, a: "Yes. You must be 19 or older to order alcohol, smokes or vape in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19." },
+                  { q: "What payment methods does Deliverr accept?", a: "We accept all major credit cards. We do not accept cash on delivery." },
+                ];
+              })().map((item) => (
                 <div key={item.q} className="border-b pb-6 last:border-0">
                   <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
                   <p className="text-muted-foreground">{item.a}</p>
