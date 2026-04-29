@@ -201,18 +201,150 @@ function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
   }
 
   if (cfg.ageGated) {
-    base.splice(base.findIndex((b) => b.q.startsWith("What payment")), 0, {
-      q: `Do I need to be 19+ to order ${item} in Saskatchewan?`,
-      a: `Yes. You must be 19 or older to order ${item} in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
-    });
-    base.push({
-      q: `Can someone else accept the ${item} delivery for me?`,
-      a: `No. The 19+ person who placed the order must be present and show valid government-issued photo ID matching the name on the order. Drivers cannot leave ${item} unattended or hand them to anyone under 19.`,
-    });
+    const ageVariants = AGE_FAQS_BY_CATEGORY[cfg.slug] ?? defaultAgeFaqs(item);
+    // Place the "Am I old enough?" question above payment, keep substitution +
+    // hand-off questions at the bottom of the FAQ.
+    const payIdx = base.findIndex((b) => b.q.startsWith("What payment"));
+    base.splice(payIdx, 0, ageVariants.eligibility);
+    base.push(ageVariants.handoff);
+    if (ageVariants.substitution) base.push(ageVariants.substitution);
   }
 
   return base;
 }
+
+/* ─────────── Age-gated FAQ variants ───────────
+ * Each gated category has slightly different rules for ID checks at the door,
+ * who the driver can hand the order to, and what the store is allowed to swap
+ * if an item is out of stock. These answers reflect SLGA + federal tobacco/vape
+ * rules and our internal substitution policy.
+ */
+
+type AgeFaqSet = {
+  eligibility: FaqItem;
+  handoff: FaqItem;
+  substitution?: FaqItem;
+};
+
+function defaultAgeFaqs(item: string): AgeFaqSet {
+  return {
+    eligibility: {
+      q: `Do I need to be 19+ to order ${item} in Saskatchewan?`,
+      a: `Yes. You must be 19 or older to order ${item} in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
+    },
+    handoff: {
+      q: `Can someone else accept the ${item} delivery for me?`,
+      a: `No. The 19+ person who placed the order must be present and show valid government-issued photo ID matching the name on the order. Drivers cannot leave ${item} unattended or hand them to anyone under 19.`,
+    },
+  };
+}
+
+const AGE_FAQS_BY_CATEGORY: Record<string, AgeFaqSet> = {
+  "alcohol-delivery-regina": {
+    eligibility: {
+      q: "Do I need to be 19+ to order alcohol delivery in Regina?",
+      a: "Yes — Saskatchewan's legal drinking age is 19. You confirm your date of birth at checkout and the driver verifies it again at the door using a valid government-issued photo ID (SK driver's licence, SK Photo ID Card, Canadian passport, Permanent Resident card or Canadian citizenship card with photo). Expired IDs and photos of an ID are not accepted.",
+    },
+    handoff: {
+      q: "Can someone else sign for my alcohol delivery?",
+      a: "No. SLGA rules require the 19+ account holder named on the order to be present, sober and able to show valid photo ID. Drivers cannot hand alcohol to a minor, an obviously intoxicated person, or leave it unattended at the door — the order will be returned and a restocking/return-trip fee may apply.",
+    },
+    substitution: {
+      q: "Can the store swap an out-of-stock alcohol item?",
+      a: "Only with your prior approval. Liquor stores will not auto-substitute alcohol — if your specific beer, wine, spirit or cooler is out of stock you'll be messaged with options or refunded. Substitutions never cross categories (we won't replace wine with spirits, or non-alcoholic with alcoholic, or vice versa).",
+    },
+  },
+
+  "beer-delivery-regina": {
+    eligibility: {
+      q: "Do I have to be 19+ to order beer in Regina?",
+      a: "Yes. Saskatchewan's legal drinking age is 19. Date of birth is confirmed at checkout and the driver checks valid government-issued photo ID at the door. Acceptable ID: SK driver's licence, SK Photo ID Card, Canadian passport or PR card. Expired IDs and digital photos of ID are not accepted.",
+    },
+    handoff: {
+      q: "Who can sign for the beer delivery?",
+      a: "Only the 19+ person named on the order, in person, with valid photo ID. Drivers will not hand beer to a minor or to anyone visibly intoxicated, and they cannot leave it on the porch — even for short hallway hand-offs in apartments.",
+    },
+    substitution: {
+      q: "What if my exact beer is out of stock?",
+      a: "Beer is never auto-substituted. If your specific brand/format (e.g. Pilsner 24-pack cans) is sold out you'll be contacted to approve an alternative or get a refund. Substitutions never cross alcohol categories — we won't replace beer with coolers, wine or spirits.",
+    },
+  },
+
+  "wine-delivery-regina": {
+    eligibility: {
+      q: "Do I need to be 19+ to order wine in Regina?",
+      a: "Yes — Saskatchewan's legal drinking age is 19. You confirm your date of birth at checkout and the driver re-checks government-issued photo ID at the door. Accepted ID: SK driver's licence, SK Photo ID Card, Canadian passport, PR card or Canadian citizenship card with photo.",
+    },
+    handoff: {
+      q: "Can a friend or family member receive the wine on my behalf?",
+      a: "No. The 19+ account holder must be present and show valid photo ID. Drivers will not hand wine to a minor or to a clearly intoxicated person, and they cannot leave bottles unattended — even at concierge desks or with neighbours.",
+    },
+    substitution: {
+      q: "Will the store swap an out-of-stock wine for a similar one?",
+      a: "Only with your approval. Wine vintages and cuvées vary year to year, so if your exact bottle is sold out you'll be contacted with a comparable suggestion (same region/varietal/price tier) or refunded. We never substitute across alcohol categories.",
+    },
+  },
+
+  "liquor-delivery-regina": {
+    eligibility: {
+      q: "Do I need to be 19+ to order liquor in Regina?",
+      a: "Yes. Saskatchewan's legal drinking age is 19, enforced by SLGA. Date of birth is confirmed at checkout and the driver verifies valid government-issued photo ID at the door (SK driver's licence, SK Photo ID Card, Canadian passport, PR card). Photos or photocopies of ID are not accepted.",
+    },
+    handoff: {
+      q: "Can someone else accept my liquor delivery?",
+      a: "No. The 19+ person who placed the order must be present, sober and show valid photo ID. Drivers cannot leave liquor unattended or hand it to anyone underage or visibly intoxicated. Orders that fail door-side verification are returned and a return-trip fee may apply.",
+    },
+    substitution: {
+      q: "Can the store substitute a different bottle if mine is out of stock?",
+      a: "Only with your written approval through the order chat. Spirits are not auto-substituted — different brands, ages and proofs are not interchangeable. We never swap across alcohol categories (no replacing spirits with beer, wine or coolers).",
+    },
+  },
+
+  "spirits-delivery-regina": {
+    eligibility: {
+      q: "Do I need to be 19+ to order spirits delivery in Regina?",
+      a: "Yes — Saskatchewan's legal drinking age is 19. You confirm your date of birth at checkout, and the driver verifies it again at the door with a valid government-issued photo ID (SK driver's licence, SK Photo ID Card, Canadian passport, PR card or Canadian citizenship card with photo).",
+    },
+    handoff: {
+      q: "Can the spirits be left at the door if I'm not home?",
+      a: "No. SLGA requires in-person delivery to the 19+ account holder with a valid ID check. Drivers cannot leave spirits unattended, hand them to a minor, or hand them to a visibly intoxicated person — even one who is over 19. Failed verification results in a return trip and possible fee.",
+    },
+    substitution: {
+      q: "Can the store replace an out-of-stock spirit with a similar bottle?",
+      a: "Only with your prior approval. Different brands, ages and bottle sizes are not interchangeable, so if your exact bottle is sold out you'll be messaged with options (e.g. a different size of the same brand) or refunded. Cross-category swaps are never allowed.",
+    },
+  },
+
+  "smokes-delivery-regina": {
+    eligibility: {
+      q: "Do I need to be 19+ to order smokes in Regina?",
+      a: "Yes. Federal and Saskatchewan tobacco law requires you to be 19 or older to purchase cigarettes, cigars, rolling tobacco and nicotine pouches. Date of birth is confirmed at checkout and the driver re-checks valid government-issued photo ID at the door (SK driver's licence, SK Photo ID Card, Canadian passport or PR card).",
+    },
+    handoff: {
+      q: "Who can accept a smokes delivery in Regina?",
+      a: "Only the 19+ person named on the order, in person, with valid photo ID. Drivers will not hand smokes to a minor under any circumstances and cannot leave the order unattended at the door, with concierge or with a neighbour. Sealed cartons are kept in the bag until ID is verified.",
+    },
+    substitution: {
+      q: "Will the retailer substitute a different brand of smokes if mine is out?",
+      a: "No automatic substitutions — brand, format (king-size vs regular), pack size and flavour are not interchangeable. If your exact item is out of stock you'll be messaged for approval or refunded. We never substitute across nicotine categories (e.g. swapping cigarettes for vapes or pouches).",
+    },
+  },
+
+  "vape-delivery-regina": {
+    eligibility: {
+      q: "Do I need to be 19+ to order vape products in Regina?",
+      a: "Yes. Under Saskatchewan and federal vaping rules you must be 19 or older to purchase any vape product, including 0 mg/mL nicotine-free e-liquid and disposables. Date of birth is verified at checkout and the driver re-checks valid government-issued photo ID at the door — SK driver's licence, SK Photo ID Card, Canadian passport, PR card or Canadian citizenship card with photo.",
+    },
+    handoff: {
+      q: "Can my partner or roommate sign for the vape delivery?",
+      a: "No. The 19+ account holder named on the order must be present in person and show valid photo ID. Drivers will not leave vapes at the door, with a roommate, with concierge, or hand them to anyone under 19 — failed verification means the order is returned to the store.",
+    },
+    substitution: {
+      q: "Can the store swap an out-of-stock vape product?",
+      a: "Only with your prior approval, and only within the same product type and nicotine strength (e.g. a different flavour of the same disposable at the same mg/mL). Coils, pods and disposables are device-specific, so we will never substitute across device families. Flavour-restricted products (where store licensing limits flavours) cannot be swapped for restricted alternatives.",
+    },
+  },
+};
 
 type CategoryConfig = {
   slug: string;
