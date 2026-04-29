@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette } from "lucide-react";
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import InternalLinksSection from "@/components/seo/InternalLinks";
 
 const NEIGHBORHOODS: Record<string, { name: string; blurb: string }> = {
   downtown: { name: "Downtown", blurb: "Fast delivery to Regina's downtown core — condos, offices and hotels." },
@@ -184,6 +185,8 @@ const ReginaLanding = () => {
             </div>
           </div>
         </section>
+
+        <InternalLinksSection excludeNeighborhood={neighborhood} />
 
         {/* CTA */}
         <section className="py-16 bg-primary text-primary-foreground">
