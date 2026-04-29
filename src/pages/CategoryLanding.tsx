@@ -5,7 +5,46 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck } from "lucide-react";
-import { localBusinessJsonLd, reginaServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+
+function buildFaqs(cfg: { name: string; ageGated: boolean }) {
+  const item = cfg.name.toLowerCase();
+  const base = [
+    {
+      q: `How fast is ${item} delivery in Regina?`,
+      a: `Most ${item} orders in Regina arrive in 30 to 60 minutes. Delivery times depend on store hours and traffic conditions.`,
+    },
+    {
+      q: `What does ${item} delivery cost in Regina?`,
+      a: `Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10.`,
+    },
+    {
+      q: `Is there a minimum order for ${item} delivery?`,
+      a: `There's no strict minimum, but spending $50 or more unlocks free delivery at most participating Regina stores.`,
+    },
+    {
+      q: `What payment methods can I use?`,
+      a: `We accept all major credit cards (Visa, Mastercard, Amex). We do not accept cash on delivery.`,
+    },
+    {
+      q: `Which Regina neighborhoods do you deliver ${item} to?`,
+      a: `We deliver across all of Regina — Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central, South End, East End, West End, Uplands, Normanview and every other neighborhood.`,
+    },
+  ];
+
+  if (cfg.ageGated) {
+    base.splice(3, 0, {
+      q: `Do I need to be 19+ to order ${item} in Saskatchewan?`,
+      a: `Yes. Saskatchewan law requires you to be 19 or older to purchase ${item}. Your age is verified at checkout and again at the door — please have valid government-issued photo ID ready for the driver.`,
+    });
+    base.push({
+      q: `Can someone else accept the ${item} delivery for me?`,
+      a: `No. The person who placed the order must be present, 19+ and able to show valid photo ID. Drivers cannot leave ${item} unattended or with anyone underage.`,
+    });
+  }
+
+  return base;
+}
 
 type CategoryConfig = {
   slug: string;
