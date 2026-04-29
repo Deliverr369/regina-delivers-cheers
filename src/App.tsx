@@ -139,6 +139,7 @@ const App = () => (
                   <Route path="seo" element={<DashboardSEO />} />
                   <Route path="push-test" element={<DashboardPushTest />} />
                   <Route path="blog" element={<DashboardBlog />} />
+                  <Route path="security" element={<DashboardSecurity />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
