@@ -405,7 +405,9 @@ const Checkout = () => {
             // reconcile the single authorization across the group.
             stripe_payment_intent_id: isCod ? null : paymentIntentId,
             payment_status: isCod ? "pending" : "authorized",
-            delivery_address: formData.address,
+            delivery_address: selectedAddressUnit
+              ? `${selectedAddressUnit} – ${formData.address}`
+              : formData.address,
             delivery_city: formData.city,
             delivery_postal_code: formData.postalCode,
             delivery_instructions: formData.deliveryInstructions,
