@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MapPin, Phone, Clock, Truck, Star, ShoppingBag, CheckCircle2 } from "lucide-react";
+import { organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 
 interface Store {
   id: string;
@@ -111,9 +112,58 @@ const StorePage = () => {
     ],
   };
 
+  const faqs = [
+    {
+      q: `How fast is ${store.name} delivery in Regina?`,
+      a: `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours and traffic.`,
+    },
+    {
+      q: `What does delivery from ${store.name} cost?`,
+      a: `Delivery from ${store.name} is $${(store.delivery_fee ?? 7).toFixed(2)}. Orders over $50 ship free.`,
+    },
+    {
+      q: `What are ${store.name}'s hours?`,
+      a: store.hours
+        ? `${store.name} operates ${store.hours}. Orders placed outside store hours are delivered when the store next opens.`
+        : `${store.name}'s hours vary — check the live store status on the shop page before ordering.`,
+    },
+    {
+      q: `Where is ${store.name} located?`,
+      a: `${store.name} is located at ${store.address}, Regina, SK. Deliverr drivers pick up your order from this location.`,
+    },
+    {
+      q: `Do I need to be 19+ to order from ${store.name}?`,
+      a: `Yes. Saskatchewan law requires you to be 19 or older to purchase alcohol. Your age is verified at checkout and again at the door — please have valid government-issued photo ID ready.`,
+    },
+    {
+      q: `What payment methods does Deliverr accept?`,
+      a: `We accept all major credit cards (Visa, Mastercard, Amex). We do not accept cash on delivery.`,
+    },
+    {
+      q: `Which Regina neighborhoods does ${store.name} deliver to?`,
+      a: `We deliver from ${store.name} to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central, South End and beyond.`,
+    },
+  ];
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <SEO title={title} description={description} canonical={url} image={store.image_url || undefined} jsonLd={[localBusiness, breadcrumb]} />
+      <SEO
+        title={title}
+        description={description}
+        canonical={url}
+        image={store.image_url || undefined}
+        jsonLd={[organizationJsonLd, localBusiness, faqJsonLd, breadcrumb]}
+      />
       <Header />
 
       <main className="flex-1">
