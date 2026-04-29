@@ -109,7 +109,23 @@ Deno.serve(async (req) => {
     if (tip > 500) return json(400, { error: "Tip too large" });
 
     // ----- Address validation -----
+    const userId = userData.user.id;
+    const logAddr = (reason: string, extra: Record<string, unknown> = {}) => {
+      console.warn(
+        JSON.stringify({
+          scope: "validate-checkout.address",
+          reason,
+          user_id: userId,
+          address_id: body.address_id ?? null,
+          submitted_city: body.city ?? null,
+          submitted_postal: body.postal_code ?? null,
+          ...extra,
+        }),
+      );
+    };
+
     if (!body.address_id || !UUID_RE.test(body.address_id)) {
+      logAddr("missing_or_invalid_address_id");
       return json(400, { error: "Please select a saved delivery address." });
     }
     const { data: addr, error: addrErr } = await supabase
@@ -117,21 +133,33 @@ Deno.serve(async (req) => {
       .select("id, user_id, address, city, postal_code")
       .eq("id", body.address_id)
       .maybeSingle();
-    if (addrErr) return json(500, { error: "Could not load address" });
-    if (!addr || addr.user_id !== userData.user.id) {
+    if (addrErr) {
+      logAddr("db_error", { db_error: addrErr.message });
+      return json(500, { error: "Could not load address" });
+    }
+    if (!addr) {
+      logAddr("address_not_found");
+      return json(400, { error: "Selected address is invalid or no longer exists." });
+    }
+    if (addr.user_id !== userId) {
+      logAddr("address_not_owned_by_user", { owner_user_id: addr.user_id });
       return json(400, { error: "Selected address is invalid or no longer exists." });
     }
     if (!addr.address || addr.address.trim().length < 4) {
+      logAddr("incomplete_street_address", { saved_address_len: addr.address?.length ?? 0 });
       return json(400, { error: "Saved address is incomplete." });
     }
     if (norm(addr.city) !== "regina") {
+      logAddr("wrong_city", { saved_city: addr.city });
       return json(400, { error: "We only deliver within Regina, SK." });
     }
     if (!addr.postal_code || !CA_POSTAL_RE.test(addr.postal_code.trim())) {
+      logAddr("invalid_postal_format", { saved_postal: addr.postal_code });
       return json(400, { error: "Saved address has an invalid postal code." });
     }
     // Regina postal codes start with S4 — enforce strict service area.
     if (!/^s4/i.test(addr.postal_code.trim())) {
+      logAddr("postal_outside_service_area", { saved_postal: addr.postal_code });
       return json(400, { error: "Postal code is outside our Regina service area." });
     }
     // Cross-check: client-submitted address must match the saved record.
@@ -140,6 +168,10 @@ Deno.serve(async (req) => {
       norm(body.city) !== norm(addr.city) ||
       norm(body.postal_code || "") !== norm(addr.postal_code || "")
     ) {
+      logAddr("client_server_address_mismatch", {
+        saved_city: addr.city,
+        saved_postal: addr.postal_code,
+      });
       return json(409, { error: "Address details changed — please reselect your address." });
     }
 
