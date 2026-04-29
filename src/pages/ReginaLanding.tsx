@@ -51,7 +51,7 @@ const ReginaLanding = () => {
           organizationJsonLd,
           localBusinessJsonLd,
           reginaServiceJsonLd,
-          reginaFaqJsonLd(areaName),
+          reginaFaqJsonLd(areaName, hood ? { name: hood.name, quadrant: hood.quadrant, nearby: hood.nearby } : undefined),
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
