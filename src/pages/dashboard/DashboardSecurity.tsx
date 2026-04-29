@@ -80,6 +80,24 @@ const findings: Finding[] = [
       "Admin access is granted via the user_roles table and checked through has_role(), not via a flag on profiles. This blocks privilege-escalation attacks where a user edits their own profile to become admin.",
   },
   {
+    id: "orders_no_user_update",
+    title: "Customers cannot tamper with placed orders",
+    category: "Order integrity",
+    status: "pass",
+    description:
+      "After an order is placed, signed-in shoppers can no longer edit any of its fields from the client. Status changes, payment-status updates, totals, and store assignments go exclusively through the admin dashboard and backend payment functions.",
+    evidence:
+      "The 'Users can update their own orders' policy has been removed from public.orders. Only admins (and service-role edge functions) can UPDATE.",
+  },
+  {
+    id: "order_items_scoped_insert",
+    title: "Order items can only be added to your own order",
+    category: "Order integrity",
+    status: "pass",
+    description:
+      "Inserting an order_item is only allowed when the parent order's user_id matches the caller, so a user cannot inject items into another shopper's order.",
+  },
+  {
     id: "validate_promo_definer",
     title: "validate_promo_code is intentionally callable by signed-in users",
     category: "Accepted risk",
