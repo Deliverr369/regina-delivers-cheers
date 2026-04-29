@@ -36,11 +36,11 @@ function buildFaqs(cfg: { name: string; ageGated: boolean }) {
   if (cfg.ageGated) {
     base.splice(3, 0, {
       q: `Do I need to be 19+ to order ${item} in Saskatchewan?`,
-      a: `Yes. Saskatchewan law requires you to be 19 or older to purchase ${item}. Your age is verified at checkout and again at the door — please have valid government-issued photo ID ready for the driver.`,
+      a: `Yes. You must be 19 or older to order ${item} in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
     });
     base.push({
       q: `Can someone else accept the ${item} delivery for me?`,
-      a: `No. The person who placed the order must be present, 19+ and able to show valid photo ID. Drivers cannot leave ${item} unattended or with anyone underage.`,
+      a: `No. The 19+ person who placed the order must be present and show valid government-issued photo ID matching the name on the order. Drivers cannot leave ${item} unattended or hand them to anyone under 19.`,
     });
   }
 

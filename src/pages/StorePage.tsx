@@ -133,7 +133,7 @@ const StorePage = () => {
     },
     {
       q: `Do I need to be 19+ to order from ${store.name}?`,
-      a: `Yes. Saskatchewan law requires you to be 19 or older to purchase alcohol. Your age is verified at checkout and again at the door — please have valid government-issued photo ID ready.`,
+      a: `Yes. You must be 19 or older to order alcohol, smokes or vape from ${store.name}. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
     },
     {
       q: `What payment methods does Deliverr accept?`,

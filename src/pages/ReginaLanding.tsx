@@ -174,7 +174,7 @@ const ReginaLanding = () => {
                 { q: `How fast is delivery in ${areaName}?`, a: `Most orders in ${areaName} arrive in 30 to 60 minutes. Delivery windows depend on store hours and traffic.` },
                 { q: `What can I get delivered in ${areaName}?`, a: "Beer, wine, spirits, coolers and seltzers from local liquor stores, plus groceries from Costco, Superstore and Sobeys, and smokes & vape from licensed retailers." },
                 { q: `Is there a minimum order or delivery fee in ${areaName}?`, a: "Delivery starts at $7. Orders over $50 ship free at most stores. Costco delivery is $15 and Superstore is $10." },
-                { q: `Do I need to be 19+ to order alcohol or smokes in ${areaName}?`, a: "Yes. Saskatchewan law requires you to be 19 or older. Age is verified at checkout and again at the door on delivery." },
+                { q: `Do I need to be 19+ to order alcohol, smokes or vape in ${areaName}?`, a: "Yes. You must be 19 or older to order alcohol, smokes or vape in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19." },
                 { q: "What payment methods does Deliverr accept?", a: "We accept all major credit cards. We do not accept cash on delivery." },
               ].map((item) => (
                 <div key={item.q} className="border-b pb-6 last:border-0">
