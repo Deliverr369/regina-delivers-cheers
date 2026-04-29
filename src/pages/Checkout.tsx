@@ -561,9 +561,9 @@ interface CheckoutBodyProps extends PaymentFormProps {
 }
 
 /* ─── Delivery scheduling helpers ─── */
-// Slots are 1-hour windows from 10 AM to 9 PM, stored as "HH:MM-HH:MM" (24h).
-const TIME_SLOTS = Array.from({ length: 11 }, (_, i) => {
-  const start = 10 + i;
+// 1-hour slots from 06:00 to 23:00 (filtered per-store at render time)
+const ALL_TIME_SLOTS = Array.from({ length: 17 }, (_, i) => {
+  const start = 6 + i;
   const end = start + 1;
   const fmt = (h: number) => `${String(h).padStart(2, "0")}:00`;
   return `${fmt(start)}-${fmt(end)}`;
@@ -580,29 +580,23 @@ const formatSlotLabel = (slot: string) => {
   return `${to12(s)} – ${to12(e)}`;
 };
 
-const getNextDays = (count = 5) => {
-  const days: { value: string; label: string; sub: string }[] = [];
+const getNextDays = (count = 7) => {
+  const days: { value: string; label: string; sub: string; weekday: number }[] = [];
   const today = new Date();
   for (let i = 0; i < count; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const value = toLocalDateStr(d);
     const label =
       i === 0 ? "Today" :
       i === 1 ? "Tomorrow" :
       d.toLocaleDateString(undefined, { weekday: "short" });
     const sub = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    days.push({ value, label, sub });
+    days.push({ value, label, sub, weekday: d.getDay() });
   }
   return days;
 };
 
-const isSlotInPast = (dateStr: string, slot: string) => {
-  if (!dateStr || !slot) return false;
-  const [start] = slot.split("-");
-  const slotStart = new Date(`${dateStr}T${start}:00`);
-  return slotStart.getTime() <= Date.now();
-};
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const isCod = props.paymentMode === "cod";
