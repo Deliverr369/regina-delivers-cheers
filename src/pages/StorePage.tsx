@@ -114,13 +114,59 @@ const StorePage = () => {
     ],
   };
 
+  // Neighborhoods with dedicated landing pages — used to deep-link FAQ answers
+  // back into the local SEO graph.
+  const NEIGHBORHOOD_LINKS: Array<{ label: string; slug: string }> = [
+    { label: "Downtown", slug: "downtown" },
+    { label: "Cathedral", slug: "cathedral" },
+    { label: "Harbour Landing", slug: "harbour-landing" },
+    { label: "Lakeview", slug: "lakeview" },
+    { label: "Eastview", slug: "eastview" },
+    { label: "North Central", slug: "north-central" },
+    { label: "South End", slug: "south-end" },
+  ];
+
+  // Helper: render a comma-separated list of neighborhood links with an Oxford "and".
+  const renderNeighborhoodLinks = () => (
+    <>
+      {NEIGHBORHOOD_LINKS.map((n, i) => {
+        const isLast = i === NEIGHBORHOOD_LINKS.length - 1;
+        const isSecondLast = i === NEIGHBORHOOD_LINKS.length - 2;
+        return (
+          <span key={n.slug}>
+            <Link
+              to={`/delivery/regina/${n.slug}`}
+              className="text-primary underline-offset-2 hover:underline"
+            >
+              {n.label}
+            </Link>
+            {!isLast && (isSecondLast ? " and " : ", ")}
+          </span>
+        );
+      })}
+    </>
+  );
+
   // Single source of truth: same array drives both the visible accordion and
   // the FAQPage JSON-LD, validated to enforce non-empty Q/A and unique questions.
+  // `aNode` (when present) provides a richer rendered version with real <Link>s
+  // to neighborhood pages; the plain `a` string remains the canonical content
+  // used in the FAQPage JSON-LD so structured data stays in sync.
+  const neighborhoodAnswerText = `We deliver from ${store.name} to every Regina neighborhood — ${NEIGHBORHOOD_LINKS.map(n => n.label).slice(0, -1).join(", ")} and ${NEIGHBORHOOD_LINKS[NEIGHBORHOOD_LINKS.length - 1].label}. Visit any neighborhood page above for area-specific delivery details.`;
+  const locationAnswerText = `${store.name} is located at ${store.address}, Regina, SK. Deliverr drivers pick up here and deliver across Regina including Downtown, Cathedral, Harbour Landing and Lakeview.`;
+  const speedAnswerText = `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours, traffic and which Regina neighborhood (Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central or South End) you're in.`;
+
   const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
     [
       {
         q: `How fast is ${store.name} delivery in Regina?`,
-        a: `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours and traffic.`,
+        a: speedAnswerText,
+        aNode: (
+          <>
+            {store.name} orders typically arrive in {store.delivery_time || "30 to 60 minutes"} after
+            checkout, depending on store hours, traffic and which Regina neighborhood ({renderNeighborhoodLinks()}) you're in.
+          </>
+        ),
       },
       {
         q: `What does delivery from ${store.name} cost?`,
@@ -134,7 +180,18 @@ const StorePage = () => {
       },
       {
         q: `Where is ${store.name} located?`,
-        a: `${store.name} is located at ${store.address}, Regina, SK. Deliverr drivers pick up your order from this location.`,
+        a: locationAnswerText,
+        aNode: (
+          <>
+            {store.name} is located at {store.address}, Regina, SK. Deliverr drivers pick up here and
+            deliver across Regina including{" "}
+            <Link to="/delivery/regina/downtown" className="text-primary underline-offset-2 hover:underline">Downtown</Link>,{" "}
+            <Link to="/delivery/regina/cathedral" className="text-primary underline-offset-2 hover:underline">Cathedral</Link>,{" "}
+            <Link to="/delivery/regina/harbour-landing" className="text-primary underline-offset-2 hover:underline">Harbour Landing</Link>{" "}
+            and{" "}
+            <Link to="/delivery/regina/lakeview" className="text-primary underline-offset-2 hover:underline">Lakeview</Link>.
+          </>
+        ),
       },
       {
         q: `Do I need to be 19+ to order from ${store.name}?`,
@@ -146,7 +203,13 @@ const StorePage = () => {
       },
       {
         q: `Which Regina neighborhoods does ${store.name} deliver to?`,
-        a: `We deliver from ${store.name} to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central, South End and beyond.`,
+        a: neighborhoodAnswerText,
+        aNode: (
+          <>
+            We deliver from {store.name} to every Regina neighborhood — {renderNeighborhoodLinks()}.
+            Visit any neighborhood page above for area-specific delivery details.
+          </>
+        ),
       },
     ],
     `StorePage[${store.slug}]`,
