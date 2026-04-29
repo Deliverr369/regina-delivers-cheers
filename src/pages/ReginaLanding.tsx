@@ -8,6 +8,7 @@ import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette }
 import { localBusinessJsonLd, reginaServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 
 const NEIGHBORHOODS: Record<string, { name: string; blurb: string }> = {
+  downtown: { name: "Downtown", blurb: "Fast delivery to Regina's downtown core — condos, offices and hotels." },
   cathedral: { name: "Cathedral", blurb: "Heritage homes, indie shops and same-day delivery to your door." },
   "harbour-landing": { name: "Harbour Landing", blurb: "Fast delivery to Regina's growing south-end community." },
   lakeview: { name: "Lakeview", blurb: "Quick service to Lakeview and Wascana Park area." },
@@ -16,6 +17,12 @@ const NEIGHBORHOODS: Record<string, { name: string; blurb: string }> = {
   eastview: { name: "Eastview", blurb: "Same-day service to Eastview and surrounding areas." },
   "whitmore-park": { name: "Whitmore Park", blurb: "Delivery to Whitmore Park in under 60 minutes." },
   "the-crescents": { name: "The Crescents", blurb: "Doorstep delivery throughout The Crescents." },
+  "north-central": { name: "North Central", blurb: "Same-day delivery across North Central Regina." },
+  "south-end": { name: "South End", blurb: "Reliable service to all of Regina's south end." },
+  "east-end": { name: "East End", blurb: "Doorstep delivery throughout Regina's east end." },
+  "west-end": { name: "West End", blurb: "Quick delivery to Regina's west end neighborhoods." },
+  uplands: { name: "Uplands", blurb: "Same-day service to the Uplands community." },
+  normanview: { name: "Normanview", blurb: "Friendly delivery across Normanview and Normanview West." },
 };
 
 const ReginaLanding = () => {
