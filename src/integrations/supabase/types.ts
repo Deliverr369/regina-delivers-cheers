@@ -1014,6 +1014,7 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           recipient_name: string | null
+          unit: string | null
           updated_at: string
           user_id: string
         }
@@ -1028,6 +1029,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           recipient_name?: string | null
+          unit?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1042,6 +1044,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           recipient_name?: string | null
+          unit?: string | null
           updated_at?: string
           user_id?: string
         }

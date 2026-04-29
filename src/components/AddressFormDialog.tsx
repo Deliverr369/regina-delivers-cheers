@@ -26,15 +26,20 @@ const empty: AddressInput = {
   recipient_name: "",
   phone: "",
   address: "",
+  unit: "",
   city: "Regina",
   postal_code: "",
   delivery_instructions: "",
   is_default: false,
 };
 
+// Allows e.g. "Apt 3B", "#204", "Suite 1200", "Unit 12", "PH 4". 1–15 alphanumerics + #.-/ space.
+const UNIT_RE = /^[A-Za-z0-9#.\-/ ]{1,15}$/;
+
 const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => {
   const [form, setForm] = useState<AddressInput>(empty);
   const [cityError, setCityError] = useState<string | null>(null);
+  const [unitError, setUnitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -46,6 +51,7 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
               recipient_name: initial.recipient_name || "",
               phone: initial.phone || "",
               address: initial.address,
+              unit: initial.unit || "",
               city: initial.city,
               postal_code: initial.postal_code || "",
               delivery_instructions: initial.delivery_instructions || "",
@@ -54,6 +60,7 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
           : empty,
       );
       setCityError(null);
+      setUnitError(null);
     }
   }, [open, initial]);
 
@@ -63,10 +70,16 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
       setCityError("We only deliver within Regina.");
       return;
     }
+    const unitTrimmed = (form.unit || "").trim();
+    if (unitTrimmed && !UNIT_RE.test(unitTrimmed)) {
+      setUnitError("Use letters, numbers, # . - / only (max 15 chars).");
+      return;
+    }
+    setUnitError(null);
     if (!form.address.trim()) return;
     setSaving(true);
     try {
-      await onSubmit(form);
+      await onSubmit({ ...form, unit: unitTrimmed || null });
       onOpenChange(false);
     } finally {
       setSaving(false);
@@ -128,6 +141,27 @@ const AddressFormDialog = ({ open, onOpenChange, initial, onSubmit }: Props) => 
                 className="mt-1.5"
               />
             </div>
+          </div>
+
+          <div>
+            <Label className="text-sm">
+              Apt / Suite / Unit{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Input
+              value={form.unit || ""}
+              onChange={(e) => {
+                setForm((p) => ({ ...p, unit: e.target.value }));
+                if (unitError) setUnitError(null);
+              }}
+              placeholder="Apt 3B, Suite 204, #12..."
+              maxLength={15}
+              className={`mt-1.5 ${unitError ? "border-destructive" : ""}`}
+              aria-invalid={!!unitError}
+            />
+            {unitError && (
+              <p className="text-xs text-destructive mt-1">{unitError}</p>
+            )}
           </div>
 
           <div>
