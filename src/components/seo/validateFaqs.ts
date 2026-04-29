@@ -11,8 +11,10 @@
  *   page still renders.
  */
 
-export type FaqInput = { q: unknown; a: unknown; aNode?: unknown };
-export type FaqClean = { q: string; a: string; aNode?: unknown };
+import type { ReactNode } from "react";
+
+export type FaqInput = { q: unknown; a: unknown; aNode?: ReactNode };
+export type FaqClean = { q: string; a: string; aNode?: ReactNode };
 
 export type FaqPageJsonLd = {
   "@context": "https://schema.org";
