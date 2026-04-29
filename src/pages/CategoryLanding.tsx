@@ -8,9 +8,38 @@ import { Clock, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 
-function buildFaqs(cfg: { name: string; ageGated: boolean }) {
+function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
   const item = cfg.name.toLowerCase();
-  const base = [
+
+  // Per-category nuance for "what makes this delivery different"
+  const nicheByCategory: Record<string, { q: string; a: string }> = {
+    "alcohol-delivery-regina": {
+      q: "Which Regina liquor stores can I order alcohol from?",
+      a: "We pull from full-service Regina liquor retailers across the city — Sobeys Liquor, Willow Park, Pioneer and other licensed SLGA stores — so you get the widest beer, wine, spirits and cooler selection in one cart.",
+    },
+    "beer-delivery-regina": {
+      q: "What beer formats can I order in Regina?",
+      a: "Singles, six-packs, twelve-packs, fifteen-packs and twenty-fours — domestic, import and Saskatchewan craft. Tall cans and bottles where the store carries them. Beer is delivered cold from the cooler.",
+    },
+    "wine-delivery-regina": {
+      q: "What kinds of wine can you deliver in Regina?",
+      a: "Reds, whites, rosé, sparkling and champagne from California, BC, Niagara, France, Italy, Australia, Argentina and more — whatever Regina's liquor stores stock that day. We surface the lowest in-stock price across stores.",
+    },
+    "liquor-delivery-regina": {
+      q: "What spirits can I get delivered in Regina?",
+      a: "Vodka, whisky (rye, scotch, bourbon, Canadian), rum, gin, tequila, mezcal, brandy and liqueurs — 375 mL, 750 mL and 1.14 L sizes from Regina liquor stores.",
+    },
+    "grocery-delivery-regina": {
+      q: "Which Regina grocery stores can I order from?",
+      a: "Costco Wholesale Regina, Real Canadian Superstore and Sobeys — fresh produce, dairy, frozen, pantry, household and bulk. Note: Costco delivery is $15 and Superstore is $10; other stores are $7.",
+    },
+    "smokes-delivery-regina": {
+      q: "What smokes and vape products can I order in Regina?",
+      a: "Cigarettes (carton or pack), Zyn and other nicotine pouches, disposable vapes, vape juice, papers, filters and rolling supplies from licensed Regina retailers. Government-issued photo ID required on delivery.",
+    },
+  };
+
+  const base: { q: string; a: string }[] = [
     {
       q: `How fast is ${item} delivery in Regina?`,
       a: `Most ${item} orders in Regina arrive in 30 to 60 minutes. Delivery times depend on store hours and traffic conditions.`,
@@ -29,12 +58,16 @@ function buildFaqs(cfg: { name: string; ageGated: boolean }) {
     },
     {
       q: `Which Regina neighborhoods do you deliver ${item} to?`,
-      a: `We deliver across all of Regina — Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central, South End, East End, West End, Uplands, Normanview and every other neighborhood.`,
+      a: `We deliver to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Albert Park, Hillsdale, Eastview, Whitmore Park, The Crescents, North Central, South End, East End, West End, Uplands and Normanview.`,
     },
   ];
 
+  // Insert the per-category nuance right after the "what does it cost" question
+  const niche = nicheByCategory[cfg.slug];
+  if (niche) base.splice(2, 0, niche);
+
   if (cfg.ageGated) {
-    base.splice(3, 0, {
+    base.splice(base.findIndex((b) => b.q.startsWith("What payment")), 0, {
       q: `Do I need to be 19+ to order ${item} in Saskatchewan?`,
       a: `Yes. You must be 19 or older to order ${item} in Saskatchewan. At checkout you confirm your date of birth, and on delivery the driver will ask for valid government-issued photo ID matching the name on the order. Orders cannot be left unattended or handed to anyone under 19.`,
     });
