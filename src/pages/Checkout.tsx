@@ -20,6 +20,16 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import {
+  isSlotAvailable,
+  isStoreOpenNow,
+  groupHoursByStore,
+  getDayHours,
+  toLocalDateStr,
+  formatDayHours,
+  type StoreHourRow,
+  type HoursByStore,
+} from "@/lib/storeHours";
 
 const stripePromise = loadStripe(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string);
 
@@ -108,6 +118,55 @@ const Checkout = () => {
   const [scheduledDate, setScheduledDate] = useState<string>(""); // YYYY-MM-DD
   const [scheduledSlot, setScheduledSlot] = useState<string>(""); // e.g. "10:00-11:00"
   const [scheduleError, setScheduleError] = useState<string | null>(null);
+
+  // Load per-weekday store hours for every store in the cart
+  const [storeHours, setStoreHours] = useState<HoursByStore>({});
+  const cartStoreIds = useMemo(
+    () => Array.from(new Set(cartItems.map((i) => i.storeId).filter(Boolean))),
+    [cartItems],
+  );
+  useEffect(() => {
+    if (cartStoreIds.length === 0) {
+      setStoreHours({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("store_hours")
+        .select("store_id, weekday, is_closed, open_time, close_time")
+        .in("store_id", cartStoreIds);
+      if (!cancelled) setStoreHours(groupHoursByStore((data || []) as StoreHourRow[]));
+    })();
+    return () => { cancelled = true; };
+  }, [cartStoreIds]);
+
+  // Are all stores in the cart open RIGHT NOW (gates the ASAP button)?
+  const allStoresOpenNow = useMemo(() => {
+    if (cartStoreIds.length === 0) return false;
+    return cartStoreIds.every((id) => isStoreOpenNow(id, storeHours));
+  }, [cartStoreIds, storeHours]);
+
+  // Auto-flip ASAP → Scheduled if any store is closed
+  useEffect(() => {
+    if (deliveryType === "asap" && Object.keys(storeHours).length > 0 && !allStoresOpenNow) {
+      setDeliveryType("scheduled");
+    }
+  }, [deliveryType, allStoresOpenNow, storeHours]);
+
+  // If the previously chosen scheduled slot is no longer valid (hours edited,
+  // time elapsed past the lead window), clear it so the user re-picks.
+  useEffect(() => {
+    if (
+      deliveryType === "scheduled" &&
+      scheduledDate &&
+      scheduledSlot &&
+      Object.keys(storeHours).length > 0 &&
+      !isSlotAvailable(scheduledDate, scheduledSlot, cartStoreIds, storeHours)
+    ) {
+      setScheduledSlot("");
+    }
+  }, [deliveryType, scheduledDate, scheduledSlot, cartStoreIds, storeHours]);
 
   const [formData, setFormData] = useState<FormData>(() => {
     const savedAddress = typeof window !== "undefined" ? localStorage.getItem("delivery_address") || "" : "";
@@ -434,6 +493,9 @@ const Checkout = () => {
               setScheduledSlot,
               scheduleError,
               setScheduleError,
+              storeHours,
+              cartStoreIds,
+              allStoresOpenNow,
             };
 
             if (paymentMode === "cod") {
@@ -493,12 +555,15 @@ interface CheckoutBodyProps extends PaymentFormProps {
   setScheduledSlot: (v: string) => void;
   scheduleError: string | null;
   setScheduleError: (v: string | null) => void;
+  storeHours: HoursByStore;
+  cartStoreIds: string[];
+  allStoresOpenNow: boolean;
 }
 
 /* ─── Delivery scheduling helpers ─── */
-// Slots are 1-hour windows from 10 AM to 9 PM, stored as "HH:MM-HH:MM" (24h).
-const TIME_SLOTS = Array.from({ length: 11 }, (_, i) => {
-  const start = 10 + i;
+// 1-hour slots from 06:00 to 23:00 (filtered per-store at render time)
+const ALL_TIME_SLOTS = Array.from({ length: 17 }, (_, i) => {
+  const start = 6 + i;
   const end = start + 1;
   const fmt = (h: number) => `${String(h).padStart(2, "0")}:00`;
   return `${fmt(start)}-${fmt(end)}`;
@@ -515,29 +580,23 @@ const formatSlotLabel = (slot: string) => {
   return `${to12(s)} – ${to12(e)}`;
 };
 
-const getNextDays = (count = 5) => {
-  const days: { value: string; label: string; sub: string }[] = [];
+const getNextDays = (count = 7) => {
+  const days: { value: string; label: string; sub: string; weekday: number }[] = [];
   const today = new Date();
   for (let i = 0; i < count; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const value = toLocalDateStr(d);
     const label =
       i === 0 ? "Today" :
       i === 1 ? "Tomorrow" :
       d.toLocaleDateString(undefined, { weekday: "short" });
     const sub = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    days.push({ value, label, sub });
+    days.push({ value, label, sub, weekday: d.getDay() });
   }
   return days;
 };
 
-const isSlotInPast = (dateStr: string, slot: string) => {
-  if (!dateStr || !slot) return false;
-  const [start] = slot.split("-");
-  const slotStart = new Date(`${dateStr}T${start}:00`);
-  return slotStart.getTime() <= Date.now();
-};
 
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const isCod = props.paymentMode === "cod";
@@ -562,13 +621,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       props.setCityError("We only deliver within Regina.");
       return;
     }
-    if (props.deliveryType === "scheduled") {
+    if (props.deliveryType === "asap") {
+      if (Object.keys(props.storeHours).length > 0 && !props.allStoresOpenNow) {
+        props.setScheduleError("Stores are closed right now — please pick a scheduled slot.");
+        return;
+      }
+    } else {
       if (!props.scheduledDate || !props.scheduledSlot) {
         props.setScheduleError("Please pick a delivery date and time slot.");
         return;
       }
-      if (isSlotInPast(props.scheduledDate, props.scheduledSlot)) {
-        props.setScheduleError("That time has passed — please choose a later slot.");
+      if (!isSlotAvailable(props.scheduledDate, props.scheduledSlot, props.cartStoreIds, props.storeHours)) {
+        props.setScheduleError("That slot isn't available — please choose another.");
         return;
       }
       props.setScheduleError(null);
@@ -649,13 +713,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 3. Delivery time */}
-          <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time" subtitle="Get it now or schedule for later — we deliver 10 AM – 10 PM in Regina.">
+          <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time" subtitle="Get it now or schedule for later — slots respect each store's hours.">
             <div className="grid grid-cols-2 gap-2.5 mb-4">
               <button
                 type="button"
+                disabled={!props.allStoresOpenNow && Object.keys(props.storeHours).length > 0}
                 onClick={() => { props.setDeliveryType("asap"); props.setScheduleError(null); }}
                 className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
-                  props.deliveryType === "asap" ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
+                  props.deliveryType === "asap"
+                    ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
+                    : !props.allStoresOpenNow && Object.keys(props.storeHours).length > 0
+                      ? "border-border bg-muted/40 cursor-not-allowed opacity-60"
+                      : "border-border bg-background hover:border-primary/40"
                 }`}
               >
                 <div className={`h-9 w-9 rounded-md flex items-center justify-center ${props.deliveryType === "asap" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
@@ -663,7 +732,11 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-foreground">ASAP</p>
-                  <p className="text-[11px] text-muted-foreground">Arrives in 25–45 min</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {props.allStoresOpenNow || Object.keys(props.storeHours).length === 0
+                      ? "Arrives in 25–45 min"
+                      : "Closed right now"}
+                  </p>
                 </div>
               </button>
               <button
@@ -684,68 +757,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             </div>
 
             {props.deliveryType === "scheduled" && (
-              <div className="space-y-3 animate-fade-in">
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a day</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {getNextDays(5).map((d) => {
-                      const selected = props.scheduledDate === d.value;
-                      return (
-                        <button
-                          key={d.value}
-                          type="button"
-                          onClick={() => { props.setScheduledDate(d.value); props.setScheduleError(null); }}
-                          className={`flex flex-col items-center justify-center rounded-xl border py-2.5 transition-all ${
-                            selected ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-background hover:border-primary/40"
-                          }`}
-                        >
-                          <span className="text-[11px] font-semibold uppercase tracking-wide">{d.label}</span>
-                          <span className={`text-xs mt-0.5 ${selected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{d.sub}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a time slot</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {TIME_SLOTS.map((slot) => {
-                      const past = isSlotInPast(props.scheduledDate, slot);
-                      const selected = props.scheduledSlot === slot;
-                      return (
-                        <button
-                          key={slot}
-                          type="button"
-                          disabled={past}
-                          onClick={() => { props.setScheduledSlot(slot); props.setScheduleError(null); }}
-                          className={`rounded-xl border py-2.5 px-2 text-xs font-medium transition-all ${
-                            selected
-                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                              : past
-                                ? "border-border bg-muted/40 text-muted-foreground/50 cursor-not-allowed line-through"
-                                : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-secondary/60"
-                          }`}
-                        >
-                          {formatSlotLabel(slot)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                {props.scheduleError && (
-                  <p className="text-destructive text-xs flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{props.scheduleError}</p>
-                )}
-                {props.scheduledDate && props.scheduledSlot && !props.scheduleError && (
-                  <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3 flex items-start gap-2.5">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-foreground/80 leading-relaxed">
-                      Scheduled for <span className="font-semibold text-foreground">
-                        {new Date(props.scheduledDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
-                      </span> · <span className="font-semibold text-foreground">{formatSlotLabel(props.scheduledSlot)}</span>
-                    </p>
-                  </div>
-                )}
-              </div>
+              <ScheduledSlotPicker
+                scheduledDate={props.scheduledDate}
+                setScheduledDate={props.setScheduledDate}
+                scheduledSlot={props.scheduledSlot}
+                setScheduledSlot={props.setScheduledSlot}
+                scheduleError={props.scheduleError}
+                setScheduleError={props.setScheduleError}
+                storeHours={props.storeHours}
+                cartStoreIds={props.cartStoreIds}
+              />
             )}
           </SectionCard>
 
@@ -1128,3 +1149,112 @@ const Row = ({ label, value, muted }: { label: React.ReactNode; value: string; m
 );
 
 export default Checkout;
+
+/* ─── Cutoff-aware scheduled slot picker ─── */
+interface ScheduledSlotPickerProps {
+  scheduledDate: string;
+  setScheduledDate: (v: string) => void;
+  scheduledSlot: string;
+  setScheduledSlot: (v: string) => void;
+  scheduleError: string | null;
+  setScheduleError: (v: string | null) => void;
+  storeHours: HoursByStore;
+  cartStoreIds: string[];
+}
+
+const ScheduledSlotPicker = (p: ScheduledSlotPickerProps) => {
+  const days = useMemo(() => getNextDays(7), []);
+
+  // For each day, is at least one slot bookable across every cart store?
+  const dayHasAvailability = (dateStr: string) =>
+    ALL_TIME_SLOTS.some((slot) => isSlotAvailable(dateStr, slot, p.cartStoreIds, p.storeHours));
+
+  return (
+    <div className="space-y-3 animate-fade-in">
+      <div>
+        <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a day</Label>
+        <div className="grid grid-cols-7 gap-2">
+          {days.map((d) => {
+            const selected = p.scheduledDate === d.value;
+            const available = Object.keys(p.storeHours).length === 0 || dayHasAvailability(d.value);
+            return (
+              <button
+                key={d.value}
+                type="button"
+                disabled={!available}
+                onClick={() => { p.setScheduledDate(d.value); p.setScheduledSlot(""); p.setScheduleError(null); }}
+                className={`flex flex-col items-center justify-center rounded-xl border py-2.5 transition-all ${
+                  selected
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : !available
+                      ? "border-border bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                      : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-wide">{d.label}</span>
+                <span className={`text-xs mt-0.5 ${selected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{d.sub}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {p.scheduledDate && (
+        <div>
+          <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Choose a time slot</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {ALL_TIME_SLOTS.map((slot) => {
+              const available = isSlotAvailable(p.scheduledDate, slot, p.cartStoreIds, p.storeHours);
+              const selected = p.scheduledSlot === slot;
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  disabled={!available}
+                  onClick={() => { p.setScheduledSlot(slot); p.setScheduleError(null); }}
+                  className={`rounded-xl border py-2.5 px-2 text-xs font-medium transition-all ${
+                    selected
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : !available
+                        ? "border-border bg-muted/40 text-muted-foreground/50 cursor-not-allowed line-through"
+                        : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-secondary/60"
+                  }`}
+                >
+                  {formatSlotLabel(slot)}
+                </button>
+              );
+            })}
+          </div>
+          {/* Per-store hours summary for the chosen day */}
+          {p.cartStoreIds.length > 0 && Object.keys(p.storeHours).length > 0 && (
+            <div className="mt-2 space-y-0.5">
+              {p.cartStoreIds.map((id) => {
+                const weekday = new Date(p.scheduledDate + "T00:00:00").getDay();
+                const day = getDayHours(id, weekday, p.storeHours);
+                return (
+                  <p key={id} className="text-[11px] text-muted-foreground">
+                    Store hours: <span className="font-medium text-foreground/70">{formatDayHours(day)}</span>
+                  </p>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {p.scheduleError && (
+        <p className="text-destructive text-xs flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{p.scheduleError}</p>
+      )}
+      {p.scheduledDate && p.scheduledSlot && !p.scheduleError && (
+        <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3 flex items-start gap-2.5">
+          <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            Scheduled for <span className="font-semibold text-foreground">
+              {new Date(p.scheduledDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+            </span> · <span className="font-semibold text-foreground">{formatSlotLabel(p.scheduledSlot)}</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
