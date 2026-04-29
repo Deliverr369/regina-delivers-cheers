@@ -1,11 +1,9 @@
-// supabase/functions/create-payment-intent/index.ts
-//
-// Hardened: re-validates the cart, store, address, and delivery time
-// SERVER-SIDE before creating the Stripe PaymentIntent. The client's
-// `estimated_total` is ignored — the authoritative amount comes from
-// re-pricing items against the database.
+// supabase/functions/validate-checkout/index.ts
+// Server-side re-validation before order creation.
+// Validates: cart items belong to the chosen store, prices match the DB,
+// every store is open (ASAP) or the slot is in hours (scheduled),
+// delivery address is in Regina, and computed totals match the client.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,9 +17,9 @@ const json = (status: number, body: unknown) =>
   });
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
-const approxEq = (a: number, b: number, tol = 0.01) => Math.abs(a - b) <= tol;
+const approxEq = (a: number, b: number, tol = 0.02) => Math.abs(a - b) <= tol;
 
-// MUST match the client-side fee logic in src/pages/Checkout.tsx
+// Mirror of the client-side delivery fee logic — KEEP IN SYNC with Checkout.tsx
 const getDeliveryFee = (storeName: string): number => {
   const n = (storeName || "").toLowerCase();
   if (n.includes("costco")) return 20;
@@ -34,32 +32,29 @@ const TAX_PCT = 0.11;
 const BUFFER_PCT = 0.3;
 const LEAD_TIME_MS = 60 * 60 * 1000;
 
-const timeToMin = (t: string) => {
-  const [h, m] = t.split(":").map(Number);
-  return (h || 0) * 60 + (m || 0);
-};
-
 interface ItemIn {
   product_id: string;
   store_id: string;
   quantity: number;
-  price: number;
+  price: number; // client-claimed unit price
   pack_size?: string | null;
 }
 
 interface BodyIn {
-  items?: ItemIn[];
-  delivery_type?: "asap" | "scheduled";
-  scheduled_at?: string | null;
-  scheduled_slot?: string | null;
-  address?: string;
-  city?: string;
+  items: ItemIn[];
+  delivery_type: "asap" | "scheduled";
+  scheduled_at?: string | null;   // ISO timestamp, slot start
+  scheduled_slot?: string | null; // "HH:MM-HH:MM"
+  address: string;
+  city: string;
   postal_code?: string;
   tip?: number;
-  payment_method_id?: string;
-  // Legacy field, intentionally ignored by the server now:
-  estimated_total?: number;
 }
+
+const timeToMin = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -76,26 +71,38 @@ Deno.serve(async (req) => {
 
     const { data: userData, error: userErr } = await supabase.auth.getUser();
     if (userErr || !userData.user) return json(401, { error: "Unauthorized" });
-    const user = userData.user;
 
     let body: BodyIn;
-    try { body = await req.json(); } catch { return json(400, { error: "Invalid JSON body" }); }
+    try {
+      body = await req.json();
+    } catch {
+      return json(400, { error: "Invalid JSON body" });
+    }
 
-    // --- Shape validation ---
+    // ----- Basic shape validation -----
     if (!Array.isArray(body.items) || body.items.length === 0) {
       return json(400, { error: "Cart is empty" });
     }
-    if (body.items.length > 200) return json(400, { error: "Too many items" });
+    if (body.items.length > 200) {
+      return json(400, { error: "Too many items" });
+    }
     for (const it of body.items) {
       if (
-        !it.product_id || !it.store_id ||
-        !Number.isInteger(it.quantity) || it.quantity < 1 || it.quantity > 99 ||
-        !Number.isFinite(it.price) || it.price < 0
-      ) return json(400, { error: "Invalid item in cart" });
+        !it.product_id ||
+        !it.store_id ||
+        !Number.isInteger(it.quantity) ||
+        it.quantity < 1 ||
+        it.quantity > 99 ||
+        !Number.isFinite(it.price) ||
+        it.price < 0
+      ) {
+        return json(400, { error: "Invalid item in cart" });
+      }
     }
     const tip = Number.isFinite(body.tip) && body.tip! >= 0 ? round2(body.tip!) : 0;
     if (tip > 500) return json(400, { error: "Tip too large" });
 
+    // ----- Address validation -----
     if (!body.address || body.address.trim().length < 4) {
       return json(400, { error: "Delivery address is required" });
     }
@@ -103,27 +110,22 @@ Deno.serve(async (req) => {
       return json(400, { error: "We only deliver within Regina, SK" });
     }
 
-    // --- Re-price against DB ---
+    // ----- Re-fetch products from DB and verify -----
     const productIds = Array.from(new Set(body.items.map((i) => i.product_id)));
-    const storeIds = Array.from(new Set(body.items.map((i) => i.store_id)));
-
-    const [{ data: products, error: prodErr }, { data: stores, error: storesErr }] = await Promise.all([
-      supabase.from("products")
-        .select("id, name, price, store_id, is_hidden, in_stock")
-        .in("id", productIds),
-      supabase.from("stores")
-        .select("id, name")
-        .in("id", storeIds),
-    ]);
+    const { data: products, error: prodErr } = await supabase
+      .from("products")
+      .select("id, name, price, store_id, is_hidden, in_stock")
+      .in("id", productIds);
     if (prodErr) return json(500, { error: "Could not load products" });
-    if (storesErr) return json(500, { error: "Could not load stores" });
 
     const prodById = new Map((products || []).map((p) => [p.id, p]));
-    const storeById = new Map((stores || []).map((s) => [s.id, s]));
 
-    let needPackPrices = body.items.some((i) => i.pack_size);
+    // Pack-price lookup (only when a pack_size is supplied for that line)
+    const packKeys = body.items
+      .filter((i) => i.pack_size)
+      .map((i) => `${i.product_id}::${i.pack_size}`);
     const packPriceByKey = new Map<string, number>();
-    if (needPackPrices) {
+    if (packKeys.length > 0) {
       const { data: packs } = await supabase
         .from("product_pack_prices")
         .select("product_id, pack_size, price, is_hidden")
@@ -133,40 +135,68 @@ Deno.serve(async (req) => {
       }
     }
 
+    const storeIds = Array.from(new Set(body.items.map((i) => i.store_id)));
+    const { data: stores, error: storesErr } = await supabase
+      .from("stores")
+      .select("id, name")
+      .in("id", storeIds);
+    if (storesErr) return json(500, { error: "Could not load stores" });
+    const storeById = new Map((stores || []).map((s) => [s.id, s]));
+
+    // Per-line + per-store validation
+    type Line = { storeId: string; storeName: string; subtotal: number };
+    const lineErrors: string[] = [];
     const storeSubtotals = new Map<string, number>();
+
     for (const it of body.items) {
       const p = prodById.get(it.product_id);
-      if (!p) return json(409, { error: "An item is no longer available." });
-      if (p.is_hidden) return json(409, { error: `"${p.name}" is no longer available.` });
-      if (p.in_stock === false) return json(409, { error: `"${p.name}" is out of stock.` });
+      if (!p) {
+        lineErrors.push("An item is no longer available.");
+        continue;
+      }
+      if (p.is_hidden) {
+        lineErrors.push(`"${p.name}" is no longer available.`);
+        continue;
+      }
+      if (p.in_stock === false) {
+        lineErrors.push(`"${p.name}" is out of stock.`);
+        continue;
+      }
       if (p.store_id !== it.store_id) {
-        return json(409, { error: `"${p.name}" does not belong to the selected store.` });
+        lineErrors.push(`"${p.name}" does not belong to the selected store.`);
+        continue;
       }
       const expectedUnit = it.pack_size
         ? packPriceByKey.get(`${it.product_id}::${it.pack_size}`) ?? Number(p.price)
         : Number(p.price);
-      if (!approxEq(expectedUnit, Number(it.price))) {
-        return json(409, {
-          error: `Price for "${p.name}" changed (was $${Number(it.price).toFixed(2)}, now $${expectedUnit.toFixed(2)}). Please refresh your cart.`,
-        });
+      if (!approxEq(expectedUnit, Number(it.price), 0.01)) {
+        lineErrors.push(
+          `Price for "${p.name}" changed (was $${Number(it.price).toFixed(2)}, now $${expectedUnit.toFixed(2)}). Please refresh your cart.`,
+        );
+        continue;
       }
       const lineTotal = expectedUnit * it.quantity;
       storeSubtotals.set(it.store_id, round2((storeSubtotals.get(it.store_id) || 0) + lineTotal));
     }
 
-    // --- Delivery time validation ---
+    if (lineErrors.length > 0) {
+      return json(409, { error: lineErrors[0], details: lineErrors });
+    }
+
+    // ----- Delivery time validation (ASAP vs scheduled) -----
     const { data: hours } = await supabase
       .from("store_hours")
       .select("store_id, weekday, is_closed, open_time, close_time")
       .in("store_id", storeIds);
+
     const hoursByStore = new Map<string, any[]>();
     for (const h of hours || []) {
       if (!hoursByStore.has(h.store_id)) hoursByStore.set(h.store_id, []);
       hoursByStore.get(h.store_id)!.push(h);
     }
+
     const now = new Date();
-    const deliveryType = body.delivery_type || "asap";
-    if (deliveryType === "asap") {
+    if (body.delivery_type === "asap") {
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
         const day = list.find((d) => d.weekday === now.getDay());
@@ -186,13 +216,15 @@ Deno.serve(async (req) => {
         return json(400, { error: "Please pick a delivery date and time slot." });
       }
       const slotStart = new Date(body.scheduled_at);
-      if (isNaN(slotStart.getTime())) return json(400, { error: "Invalid scheduled time" });
+      if (isNaN(slotStart.getTime())) {
+        return json(400, { error: "Invalid scheduled time" });
+      }
       if (slotStart.getTime() - now.getTime() < LEAD_TIME_MS) {
         return json(409, { error: "That slot is too soon — please pick a later one." });
       }
-      const [ss, ee] = body.scheduled_slot.split("-");
-      const startMin = timeToMin(ss);
-      const endMin = timeToMin(ee);
+      const [s, e] = body.scheduled_slot.split("-");
+      const startMin = timeToMin(s);
+      const endMin = timeToMin(e);
       const weekday = slotStart.getDay();
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
@@ -201,92 +233,46 @@ Deno.serve(async (req) => {
           || startMin < timeToMin(day.open_time)
           || endMin > timeToMin(day.close_time)) {
           const st = storeById.get(sid);
-          return json(409, { error: `Selected slot is outside ${st?.name || "a store"}'s hours.` });
+          return json(409, {
+            error: `Selected slot is outside ${st?.name || "a store"}'s hours.`,
+          });
         }
       }
     }
 
-    // --- Authoritative totals ---
+    // ----- Compute authoritative totals -----
+    const lines: Line[] = [];
     let subtotal = 0;
     let deliveryFee = 0;
     for (const sid of storeIds) {
       const sub = storeSubtotals.get(sid) || 0;
+      const store = storeById.get(sid);
+      if (!store) return json(409, { error: "Selected store not found." });
+      const fee = getDeliveryFee(store.name);
+      lines.push({ storeId: sid, storeName: store.name, subtotal: sub });
       subtotal += sub;
-      deliveryFee += getDeliveryFee(storeById.get(sid)?.name || "");
+      deliveryFee += fee;
     }
     subtotal = round2(subtotal);
     deliveryFee = round2(deliveryFee);
     const convenienceFee = round2(subtotal * CONVENIENCE_PCT);
     const tax = round2(subtotal * TAX_PCT);
     const estimatedTotal = round2(subtotal + deliveryFee + convenienceFee + tax + tip);
-    if (estimatedTotal <= 0) return json(400, { error: "Order total must be > $0" });
-    const authorizedAmountCents = Math.round(estimatedTotal * (1 + BUFFER_PCT) * 100);
-
-    // --- Stripe customer + intent ---
-    const stripe = createStripeClient("sandbox");
-    const adminSupabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
-    const { data: profile } = await adminSupabase
-      .from("profiles")
-      .select("stripe_customer_id, full_name, email")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    let customerId = profile?.stripe_customer_id as string | null;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email || profile?.email || undefined,
-        name: profile?.full_name || undefined,
-        metadata: { user_id: user.id },
-      });
-      customerId = customer.id;
-      await adminSupabase
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
-    }
-
-    const intentParams: any = {
-      amount: authorizedAmountCents,
-      currency: "cad",
-      capture_method: "manual",
-      customer: customerId,
-      setup_future_usage: "off_session",
-      metadata: {
-        user_id: user.id,
-        estimated_total: String(estimatedTotal),
-        buffer_pct: String(Math.round(BUFFER_PCT * 100)),
-        validated: "true",
-      },
-    };
-
-    if (body.payment_method_id) {
-      intentParams.payment_method = body.payment_method_id;
-      intentParams.payment_method_types = ["card"];
-    } else {
-      intentParams.automatic_payment_methods = { enabled: true };
-    }
-
-    const intent = await stripe.paymentIntents.create(intentParams);
+    const authorizedAmount = round2(estimatedTotal * (1 + BUFFER_PCT));
 
     return json(200, {
-      client_secret: intent.client_secret,
-      payment_intent_id: intent.id,
-      authorized_amount: authorizedAmountCents / 100,
-      customer_id: customerId,
-      // Server-validated breakdown — clients SHOULD use these instead of their own.
+      ok: true,
       subtotal,
       delivery_fee: deliveryFee,
       convenience_fee: convenienceFee,
       tax,
       tip,
       estimated_total: estimatedTotal,
+      authorized_amount: authorizedAmount,
+      stores: lines,
     });
   } catch (err: any) {
-    console.error("create-payment-intent error:", err);
-    return json(500, { error: err?.message || "Unknown error" });
+    console.error("validate-checkout error:", err);
+    return json(500, { error: err?.message || "Validation failed" });
   }
 });

@@ -231,7 +231,40 @@ const Checkout = () => {
     })();
   }, [user]);
 
-  // Create PaymentIntent whenever total or selected card changes (skip for COD)
+  // Build the canonical server-validation payload from cart + form state.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const buildValidationPayload = useCallback(() => {
+    const scheduledAt =
+      deliveryType === "scheduled" && scheduledDate && scheduledSlot
+        ? new Date(`${scheduledDate}T${scheduledSlot.split("-")[0]}:00`).toISOString()
+        : null;
+    return {
+      items: cartItems
+        .map((it) => {
+          const m = String(it.id).match(UUID_RE);
+          return m
+            ? {
+                product_id: m[0],
+                store_id: it.storeId,
+                quantity: it.quantity,
+                price: Number(it.price),
+              }
+            : null;
+        })
+        .filter(Boolean),
+      delivery_type: deliveryType,
+      scheduled_at: scheduledAt,
+      scheduled_slot: deliveryType === "scheduled" ? scheduledSlot : null,
+      address: formData.address,
+      city: formData.city,
+      postal_code: formData.postalCode,
+      tip,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems, deliveryType, scheduledDate, scheduledSlot, formData, tip]);
+
+  // Create PaymentIntent whenever total or selected card changes (skip for COD).
+  // The server now re-prices everything; we send the full cart so it can validate.
   useEffect(() => {
     if (!user || cartItems.length === 0) return;
     if (paymentMode === "cod") {
@@ -241,18 +274,24 @@ const Checkout = () => {
       setInitLoading(false);
       return;
     }
+    // Don't try until the user has picked an address and it validates as Regina.
+    if (!formData.address || (formData.city || "").trim().toLowerCase() !== "regina") {
+      setInitLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setInitLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke("create-payment-intent", {
           body: {
-            estimated_total: estimatedTotal,
+            ...buildValidationPayload(),
             payment_method_id: selectedCardId !== "new" ? selectedCardId : undefined,
           },
         });
         if (cancelled) return;
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         setClientSecret(data.client_secret);
         setPaymentIntentId(data.payment_intent_id);
         setAuthorizedAmount(data.authorized_amount);
@@ -264,11 +303,19 @@ const Checkout = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length, estimatedTotal, selectedCardId, paymentMode]);
+  }, [user, cartItems.length, estimatedTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, tip]);
 
   const handleSuccess = async () => {
     if (!user) return;
     try {
+      // SERVER-SIDE re-validation: cart prices, store membership, address, hours.
+      const { data: validation, error: vErr } = await supabase.functions.invoke(
+        "validate-checkout",
+        { body: buildValidationPayload() },
+      );
+      if (vErr) throw new Error(vErr.message || "Validation failed");
+      if (!validation?.ok) throw new Error(validation?.error || "Cart validation failed");
+
       // Group cart items by storeId so we can split the cart into one order per store.
       const groups = new Map<string, { storeId: string; storeName: string; items: typeof cartItems }>();
       for (const item of cartItems) {
