@@ -39,6 +39,10 @@ function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
       q: "What smokes and vape products can I order in Regina?",
       a: "Cigarettes (carton or pack), Zyn and other nicotine pouches, disposable vapes, vape juice, papers, filters and rolling supplies from licensed Regina retailers. Government-issued photo ID required on delivery.",
     },
+    "vape-delivery-regina": {
+      q: "What vape products can I order in Regina?",
+      a: "Disposable vapes (Allo, Vice, Elf Bar, Stlth and similar), refillable pod systems, replacement pods, e-liquid / vape juice in a range of nicotine strengths, replacement coils, batteries, chargers and accessories — all from Regina's licensed vape retailers. Saskatchewan rules apply: 19+ only and flavour restrictions where applicable.",
+    },
   };
 
   const base: { q: string; a: string }[] = [
@@ -152,6 +156,16 @@ const CATEGORIES: Record<string, CategoryConfig> = {
     description: "Cigarettes, vapes, pouches and accessories delivered in Regina. Same-day from licensed retailers. 19+ only.",
     intro: "Cigarettes, vapes, pouches and rolling supplies from Regina's licensed retailers — delivered fast.",
     shopTo: "/products?category=smokes",
+    ageGated: true,
+  },
+  "vape-delivery-regina": {
+    slug: "vape-delivery-regina",
+    name: "Vape",
+    h1: "Vape Delivery in Regina",
+    title: "Vape Delivery in Regina, SK | Disposables, Pods & Juice | Deliverr",
+    description: "Same-day vape delivery in Regina. Disposable vapes, pods, vape juice, coils and accessories from licensed retailers. 19+ only.",
+    intro: "Disposable vapes, pod systems, e-liquid, coils and accessories from Regina's licensed vape retailers — delivered in under an hour.",
+    shopTo: "/products?category=smokes&subcategory=vapes",
     ageGated: true,
   },
 };
