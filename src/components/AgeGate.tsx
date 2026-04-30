@@ -9,6 +9,8 @@ const AgeGate = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    // Don't show the age gate on admin dashboard routes
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) return;
     if (!hasVerifiedAge()) setOpen(true);
   }, []);
 
