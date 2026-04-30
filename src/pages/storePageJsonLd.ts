@@ -22,7 +22,7 @@ export interface StoreLike {
   is_open: boolean | null;
 }
 
-export const SITE_URL = "https://regina-delivers-cheers.lovable.app";
+export const SITE_URL = CONTACT.siteUrl;
 export const REGINA_CENTRE = { latitude: 50.4452, longitude: -104.6189 };
 export const SERVICE_RADIUS_METERS = 15000;
 export const SERVED_NEIGHBORHOODS = [
