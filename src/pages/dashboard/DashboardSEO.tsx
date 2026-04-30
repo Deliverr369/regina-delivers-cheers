@@ -22,9 +22,8 @@ const DashboardSEO = () => {
 
   const loadStats = async () => {
     setLoading(true);
-    const [{ count: total }, { count: withSeo }, { data: latest }] = await Promise.all([
-      supabase.from("products").select("id", { count: "exact", head: true }),
-      supabase.from("products").select("id", { count: "exact", head: true }).not("seo_generated_at", "is", null),
+    const [{ data: statsRow }, { data: latest }] = await Promise.all([
+      supabase.rpc("get_seo_stats").maybeSingle(),
       supabase
         .from("products")
         .select("id, name, category, seo_meta_title, seo_meta_description, seo_keywords, seo_generated_at")
@@ -32,7 +31,10 @@ const DashboardSEO = () => {
         .order("seo_generated_at", { ascending: false })
         .limit(8),
     ]);
-    setStats({ total: total ?? 0, withSeo: withSeo ?? 0 });
+    setStats({
+      total: Number((statsRow as any)?.total ?? 0),
+      withSeo: Number((statsRow as any)?.with_seo ?? 0),
+    });
     setRecent(latest || []);
     setLoading(false);
   };

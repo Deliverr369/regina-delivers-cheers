@@ -1076,6 +1076,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_seo_stats: {
+        Args: never
+        Returns: {
+          total: number
+          with_seo: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
