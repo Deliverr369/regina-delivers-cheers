@@ -22,25 +22,14 @@ import type { Database } from "@/integrations/supabase/types";
 
 type ProductCategory = Database["public"]["Enums"]["product_category"];
 
-interface Product {
-  id: string;
-  name: string;
-  category: ProductCategory;
-  image_url: string | null;
-  store_id: string;
-  in_stock: boolean;
-  is_hidden: boolean | null;
-  description: string | null;
-}
-
 interface ProductGroup {
   name: string;
   category: ProductCategory;
   image_url: string | null;
   description: string | null;
   storeCount: number;
-  products: Product[];
   variantCount: number;
+  productIds?: string[];
 }
 
 interface Props {
@@ -54,8 +43,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
 
 const ProductCatalog = ({ onEdit }: Props) => {
   const { toast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [packPriceCounts, setPackPriceCounts] = useState<Record<string, number>>({});
+  const [groups, setGroups] = useState<ProductGroup[]>([]);
   const [stores, setStores] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -72,53 +60,27 @@ const ProductCatalog = ({ onEdit }: Props) => {
 
   const fetchData = async () => {
     setLoading(true);
-    
-    // Fetch all products in batches to avoid the 1000-row limit
-    let allProducts: Product[] = [];
-    let from = 0;
-    const batchSize = 1000;
-    while (true) {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, category, image_url, store_id, in_stock, is_hidden, description")
-        .order("name")
-        .range(from, from + batchSize - 1);
-      if (error || !data || data.length === 0) break;
-      allProducts = allProducts.concat(data as Product[]);
-      if (data.length < batchSize) break;
-      from += batchSize;
-    }
-
-    const [storesRes, packsRes] = await Promise.all([
+    const [groupsRes, storesRes] = await Promise.all([
+      supabase.rpc("get_product_catalog_groups"),
       supabase.from("stores").select("id, name").order("name"),
-      supabase.from("product_pack_prices").select("product_id"),
     ]);
-    setProducts(allProducts);
+    const rows = (groupsRes.data || []) as Array<{
+      name: string; category: ProductCategory; image_url: string | null;
+      description: string | null; store_count: number; variant_count: number;
+    }>;
+    setGroups(rows.map(r => ({
+      name: r.name,
+      category: r.category,
+      image_url: r.image_url,
+      description: r.description,
+      storeCount: r.store_count,
+      variantCount: r.variant_count,
+    })));
     setStores(storesRes.data || []);
-    const counts: Record<string, number> = {};
-    (packsRes.data || []).forEach((pp: any) => {
-      counts[pp.product_id] = (counts[pp.product_id] || 0) + 1;
-    });
-    setPackPriceCounts(counts);
     setLoading(false);
   };
 
-  const groups = useMemo(() => {
-    const map: Record<string, ProductGroup> = {};
-    products.forEach((p) => {
-      const key = p.name.toLowerCase().trim();
-      if (!map[key]) {
-        map[key] = { name: p.name, category: p.category, image_url: p.image_url, description: p.description, storeCount: 0, products: [], variantCount: 0 };
-      }
-      map[key].products.push(p);
-      map[key].storeCount = map[key].products.length;
-      if (!map[key].image_url && p.image_url) map[key].image_url = p.image_url;
-    });
-    Object.values(map).forEach((g) => {
-      g.variantCount = Math.max(0, ...g.products.map(p => packPriceCounts[p.id] || 0));
-    });
-    return Object.values(map).sort((a, b) => a.name.localeCompare(b.name));
-  }, [products, packPriceCounts]);
+  // Groups come pre-aggregated from the server.
 
   const filtered = useMemo(() => {
     return groups.filter((g) => {
@@ -161,11 +123,18 @@ const ProductCatalog = ({ onEdit }: Props) => {
   const handleDeleteGroup = async () => {
     if (!deletingGroup) return;
     setSaving(true);
-    const ids = deletingGroup.products.map(p => p.id);
-    await supabase.from("product_pack_prices").delete().in("product_id", ids);
-    const { error } = await supabase.from("products").delete().in("id", ids);
-    if (error) toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
-    else { toast({ title: `Deleted "${deletingGroup.name}"` }); fetchData(); }
+    const { data: idRows } = await supabase
+      .from("products")
+      .select("id")
+      .eq("category", deletingGroup.category)
+      .ilike("name", deletingGroup.name);
+    const ids = (idRows || []).map((r: any) => r.id);
+    if (ids.length > 0) {
+      await supabase.from("product_pack_prices").delete().in("product_id", ids);
+      const { error } = await supabase.from("products").delete().in("id", ids);
+      if (error) toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
+      else { toast({ title: `Deleted "${deletingGroup.name}"` }); fetchData(); }
+    }
     setDeleteOpen(false);
     setDeletingGroup(null);
     setSaving(false);
@@ -183,8 +152,11 @@ const ProductCatalog = ({ onEdit }: Props) => {
       const { error: uploadError } = await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: blob.type || "image/jpeg" });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from("store-images").getPublicUrl(`products/${fileName}`);
-      const ids = uploadingGroup.products.map(p => p.id);
-      await supabase.from("products").update({ image_url: publicUrl }).in("id", ids);
+      await supabase
+        .from("products")
+        .update({ image_url: publicUrl })
+        .eq("category", uploadingGroup.category)
+        .ilike("name", uploadingGroup.name);
       toast({ title: "Image updated" });
       fetchData();
     } catch (err: any) {

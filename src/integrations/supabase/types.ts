@@ -1076,6 +1076,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_dashboard_overview: { Args: { _days?: number }; Returns: Json }
+      get_inventory_overview: {
+        Args: never
+        Returns: {
+          category: string
+          description: string
+          group_key: string
+          has_image: boolean
+          has_pricing: boolean
+          image_url: string
+          in_stock: boolean
+          is_visible: boolean
+          last_updated: string
+          name: string
+          price_max: number
+          price_min: number
+          product_ids: string[]
+          store_count: number
+          store_ids: string[]
+          variant_count: number
+        }[]
+      }
+      get_product_catalog_groups: {
+        Args: never
+        Returns: {
+          category: string
+          description: string
+          image_url: string
+          name: string
+          store_count: number
+          variant_count: number
+        }[]
+      }
       get_seo_stats: {
         Args: never
         Returns: {
