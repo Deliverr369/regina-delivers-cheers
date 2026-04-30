@@ -131,10 +131,13 @@ const DashboardOrders = () => {
   }, []);
 
   const fetchOrders = async () => {
+    // Fetch only the most recent 500 orders. Earlier orders aren't needed for
+    // the operational dashboard and pulling them slows the page massively.
     const { data, error } = await supabase
       .from("orders")
       .select("*, stores ( id, name )")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(500);
 
     if (error) {
       toast({ title: "Error", description: "Failed to fetch orders", variant: "destructive" });
