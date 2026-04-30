@@ -79,27 +79,42 @@ export const useInventoryData = () => {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    
-    // Fetch all products in batches to avoid 1000-row limit
-    let allProducts: InventoryProduct[] = [];
-    let from = 0;
-    const batchSize = 1000;
-    while (true) {
-      const { data, error } = await supabase
+
+    const PRODUCT_COLS =
+      "id,name,category,description,price,size,image_url,in_stock,is_hidden,display_order,store_id,created_at";
+    const BATCH = 1000;
+
+    // Get total count + stores + packs in parallel with the first product page
+    const [countRes, storesRes, packsRes, firstPageRes] = await Promise.all([
+      supabase.from("products").select("id", { count: "exact", head: true }),
+      supabase.from("stores").select("id, name").order("name"),
+      supabase.from("product_pack_prices").select("id,product_id,pack_size,price,is_hidden"),
+      supabase
         .from("products")
-        .select("*")
+        .select(PRODUCT_COLS)
         .order("name")
-        .range(from, from + batchSize - 1);
-      if (error || !data || data.length === 0) break;
-      allProducts = allProducts.concat(data as InventoryProduct[]);
-      if (data.length < batchSize) break;
-      from += batchSize;
+        .range(0, BATCH - 1),
+    ]);
+
+    let allProducts: InventoryProduct[] = (firstPageRes.data as InventoryProduct[] | null) || [];
+    const total = countRes.count ?? allProducts.length;
+
+    // Fetch remaining pages in parallel
+    if (total > BATCH) {
+      const ranges: Array<[number, number]> = [];
+      for (let from = BATCH; from < total; from += BATCH) {
+        ranges.push([from, Math.min(from + BATCH - 1, total - 1)]);
+      }
+      const pages = await Promise.all(
+        ranges.map(([from, to]) =>
+          supabase.from("products").select(PRODUCT_COLS).order("name").range(from, to)
+        )
+      );
+      pages.forEach((p) => {
+        if (p.data) allProducts = allProducts.concat(p.data as InventoryProduct[]);
+      });
     }
 
-    const [storesRes, packsRes] = await Promise.all([
-      supabase.from("stores").select("id, name").order("name"),
-      supabase.from("product_pack_prices").select("*"),
-    ]);
     setProducts(allProducts);
     setStores(storesRes.data || []);
     setPackPrices((packsRes.data as PackPrice[]) || []);
