@@ -13,8 +13,8 @@ export const CONTACT = {
   legalName: "Deliverr Delivery Services Inc.",
 
   // Canonical website (matches DomainCanonical.tsx)
-  siteUrl: "https://www.deliverr.ca",
-  logoUrl: "https://www.deliverr.ca/og-image.jpg",
+  siteUrl: "https://deliverr.store",
+  logoUrl: "https://deliverr.store/og-image.jpg",
 
   // Phone — keep the E.164 form for tel: + JSON-LD; display form for UI
   phoneE164: "+13065333333",
