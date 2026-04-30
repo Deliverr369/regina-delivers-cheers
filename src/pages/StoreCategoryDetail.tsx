@@ -14,6 +14,7 @@ import {
 import { organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
+import { CONTACT } from "@/config/contact";
 
 type Store = {
   id: string;
@@ -40,7 +41,7 @@ type Product = {
 
 type Category = "vape" | "spirits";
 
-const SITE = "https://www.deliverr.ca";
+const SITE = CONTACT.siteUrl;
 
 const CATEGORY_META: Record<
   Category,
