@@ -12,6 +12,7 @@ import { organizationJsonLd, localBusinessJsonLd, reginaServiceJsonLd } from "@/
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
+import { CONTACT } from "@/config/contact";
 
 type Store = {
   id: string;
@@ -44,7 +45,7 @@ type DirectoryConfig = {
   faqs: { q: string; a: string }[];
 };
 
-const SITE = "https://www.deliverr.ca";
+const SITE = CONTACT.siteUrl;
 
 /* -------------------------------------------------------------------------- */
 /*  Store resolvers                                                            */
