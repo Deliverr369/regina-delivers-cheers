@@ -80,22 +80,7 @@ const ProductCatalog = ({ onEdit }: Props) => {
     setLoading(false);
   };
 
-  const groups = useMemo(() => {
-    const map: Record<string, ProductGroup> = {};
-    products.forEach((p) => {
-      const key = p.name.toLowerCase().trim();
-      if (!map[key]) {
-        map[key] = { name: p.name, category: p.category, image_url: p.image_url, description: p.description, storeCount: 0, products: [], variantCount: 0 };
-      }
-      map[key].products.push(p);
-      map[key].storeCount = map[key].products.length;
-      if (!map[key].image_url && p.image_url) map[key].image_url = p.image_url;
-    });
-    Object.values(map).forEach((g) => {
-      g.variantCount = Math.max(0, ...g.products.map(p => packPriceCounts[p.id] || 0));
-    });
-    return Object.values(map).sort((a, b) => a.name.localeCompare(b.name));
-  }, [products, packPriceCounts]);
+  // Groups come pre-aggregated from the server.
 
   const filtered = useMemo(() => {
     return groups.filter((g) => {
