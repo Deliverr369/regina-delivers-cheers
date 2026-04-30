@@ -29,12 +29,12 @@ const Header = () => {
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const SHOP_LINKS = [
-    { to: "/alcohol-delivery-regina", label: "Alcohol Delivery" },
-    { to: "/beer-delivery-regina", label: "Beer Delivery" },
-    { to: "/wine-delivery-regina", label: "Wine Delivery" },
-    { to: "/liquor-delivery-regina", label: "Liquor Delivery" },
-    { to: "/grocery-delivery-regina", label: "Grocery Delivery" },
-    { to: "/smokes-delivery-regina", label: "Smokes & Vape" },
+    { to: "/products", label: "Alcohol Delivery" },
+    { to: "/products?category=beer", label: "Beer Delivery" },
+    { to: "/products?category=wine", label: "Wine Delivery" },
+    { to: "/products?category=spirits", label: "Liquor Delivery" },
+    { to: "/products?category=grocery", label: "Grocery Delivery" },
+    { to: "/products?category=smokes", label: "Smokes & Vape" },
   ];
 
   const AREA_LINKS = [
