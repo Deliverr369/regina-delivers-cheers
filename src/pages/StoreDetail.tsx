@@ -847,6 +847,8 @@ const StoreDetail = () => {
                     );
 
                     const renderQuickFilters = () => {
+                      // Hide Pack/Brand quick filters in the Beer section
+                      if (category === "beer") return null;
                       if (brandOptions.length === 0 && packOptions.length === 0 && !filtersActive) return null;
                       return (
                         <div className="space-y-2 mb-4">
