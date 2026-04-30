@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import { format, subDays, startOfDay, parseISO } from "date-fns";
 
-interface OrderData {
+interface RecentOrder {
   id: string;
   total: number;
   status: string | null;
@@ -17,113 +17,99 @@ interface OrderData {
   delivery_address: string;
 }
 
+interface DailyRow { date: string; orders: number; revenue: number }
+interface StatusRow { status: string; count: number }
+
 const CHART_COLORS = [
-  "hsl(354, 75%, 55%)",   // primary
-  "hsl(160, 60%, 45%)",   // emerald
-  "hsl(250, 60%, 55%)",   // violet
-  "hsl(40, 90%, 55%)",    // amber
-  "hsl(210, 70%, 55%)",   // blue
-  "hsl(0, 70%, 55%)",     // red
+  "hsl(354, 75%, 55%)",
+  "hsl(160, 60%, 45%)",
+  "hsl(250, 60%, 55%)",
+  "hsl(40, 90%, 55%)",
+  "hsl(210, 70%, 55%)",
+  "hsl(0, 70%, 55%)",
 ];
 
 const DashboardOverview = () => {
-  const [stats, setStats] = useState({ orders: 0, revenue: 0, users: 0, stores: 0 });
-  const [allOrders, setAllOrders] = useState<OrderData[]>([]);
-  const [recentOrders, setRecentOrders] = useState<OrderData[]>([]);
+  const [stats, setStats] = useState({ orders: 0, revenue: 0, users: 0, stores: 0, pending: 0 });
+  const [daily, setDaily] = useState<DailyRow[]>([]);
+  const [statusCounts, setStatusCounts] = useState<StatusRow[]>([]);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const run = async () => {
       try {
-        // Limit orders to last 60 days to keep payload small on mobile networks
-        const sinceIso = subDays(new Date(), 60).toISOString();
-        const [ordersRes, profilesRes, storesRes] = await Promise.all([
-          supabase
-            .from("orders")
-            .select("id, total, status, created_at, delivery_address")
-            .gte("created_at", sinceIso)
-            .order("created_at", { ascending: false })
-            .limit(1000),
-          supabase.from("profiles").select("id", { count: "exact", head: true }),
-          supabase.from("stores").select("id", { count: "exact", head: true }),
-        ]);
-
-        if (ordersRes.error) console.error("orders query error", ordersRes.error);
-        if (profilesRes.error) console.error("profiles query error", profilesRes.error);
-        if (storesRes.error) console.error("stores query error", storesRes.error);
-
-        const orders = (ordersRes.data || []) as OrderData[];
-        const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
-
+        const { data, error } = await supabase.rpc("get_dashboard_overview", { _days: 30 });
+        if (error) throw error;
+        const payload = (data as any) || {};
+        const totals = payload.totals || {};
         setStats({
-          orders: orders.length,
-          revenue,
-          users: profilesRes.count || 0,
-          stores: storesRes.count || 0,
+          orders: Number(totals.orders ?? 0),
+          revenue: Number(totals.revenue ?? 0),
+          users: Number(payload.users ?? 0),
+          stores: Number(payload.stores ?? 0),
+          pending: Number(totals.pending ?? 0),
         });
-        setAllOrders(orders);
-        setRecentOrders(orders.slice(0, 5));
+        setDaily(((payload.daily as any[]) || []).map((d) => ({
+          date: String(d.date),
+          orders: Number(d.orders),
+          revenue: Number(d.revenue),
+        })));
+        setStatusCounts(((payload.status as any[]) || []).map((s) => ({
+          status: String(s.status),
+          count: Number(s.count),
+        })));
+        setRecentOrders(((payload.recent as any[]) || []) as RecentOrder[]);
       } catch (err) {
         console.error("Dashboard overview fetch failed", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchStats();
+    run();
   }, []);
 
-  // Generate last 30 days revenue + order count data
+  // Build last-30-day series from server data (fill missing days)
   const dailyData = useMemo(() => {
-    const days = 30;
-    const data: { date: string; label: string; orders: number; revenue: number }[] = [];
-    for (let i = days - 1; i >= 0; i--) {
+    const map = new Map<string, DailyRow>();
+    daily.forEach((d) => map.set(d.date, d));
+    const out: { date: string; label: string; orders: number; revenue: number }[] = [];
+    for (let i = 29; i >= 0; i--) {
       const day = startOfDay(subDays(new Date(), i));
-      const dayStr = format(day, "yyyy-MM-dd");
-      const dayOrders = allOrders.filter((o) => {
-        const orderDay = format(startOfDay(parseISO(o.created_at)), "yyyy-MM-dd");
-        return orderDay === dayStr;
-      });
-      data.push({
-        date: dayStr,
+      const key = format(day, "yyyy-MM-dd");
+      const row = map.get(key);
+      out.push({
+        date: key,
         label: format(day, "MMM d"),
-        orders: dayOrders.length,
-        revenue: dayOrders.reduce((s, o) => s + Number(o.total), 0),
+        orders: row?.orders ?? 0,
+        revenue: row?.revenue ?? 0,
       });
     }
-    return data;
-  }, [allOrders]);
+    return out;
+  }, [daily]);
 
-  // Order status distribution for pie chart
-  const statusData = useMemo(() => {
-    const counts: Record<string, number> = {};
-    allOrders.forEach((o) => {
-      const s = o.status || "pending";
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({
-      name: name.replace(/_/g, " "),
-      value,
-    }));
-  }, [allOrders]);
+  const statusData = useMemo(
+    () => statusCounts.map((s) => ({ name: s.status.replace(/_/g, " "), value: s.count })),
+    [statusCounts]
+  );
 
-  // Weekly comparison for bar chart
   const weeklyData = useMemo(() => {
     const weeks: { name: string; orders: number; revenue: number }[] = [];
     for (let w = 3; w >= 0; w--) {
-      const weekStart = subDays(new Date(), (w + 1) * 7);
-      const weekEnd = subDays(new Date(), w * 7);
-      const weekOrders = allOrders.filter((o) => {
-        const d = parseISO(o.created_at);
-        return d >= weekStart && d < weekEnd;
+      const start = subDays(new Date(), (w + 1) * 7);
+      const end = subDays(new Date(), w * 7);
+      const inRange = daily.filter((d) => {
+        const dd = parseISO(d.date);
+        return dd >= start && dd < end;
       });
       weeks.push({
         name: `Week ${4 - w}`,
-        orders: weekOrders.length,
-        revenue: Math.round(weekOrders.reduce((s, o) => s + Number(o.total), 0)),
+        orders: inRange.reduce((s, d) => s + d.orders, 0),
+        revenue: Math.round(inRange.reduce((s, d) => s + d.revenue, 0)),
       });
     }
     return weeks;
-  }, [allOrders]);
+  }, [daily]);
 
   if (loading) {
     return (
@@ -144,8 +130,8 @@ const DashboardOverview = () => {
   }
 
   const statCards = [
-    { title: "Total Orders", value: stats.orders, icon: ShoppingCart, color: "text-primary", bg: "bg-primary/10", trend: "+12%" },
-    { title: "Total Revenue", value: `$${stats.revenue.toFixed(2)}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+8%" },
+    { title: "Total Orders (30d)", value: stats.orders, icon: ShoppingCart, color: "text-primary", bg: "bg-primary/10", trend: "+12%" },
+    { title: "Revenue (30d)", value: `$${stats.revenue.toFixed(2)}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+8%" },
     { title: "Registered Users", value: stats.users, icon: Users, color: "text-violet-600", bg: "bg-violet-50", trend: "+5%" },
     { title: "Active Stores", value: stats.stores, icon: Store, color: "text-amber-600", bg: "bg-amber-50", trend: "—" },
   ];
@@ -181,7 +167,6 @@ const DashboardOverview = () => {
         <p className="text-sm text-muted-foreground mt-1">Welcome back! Here's what's happening with Deliverr.</p>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => (
           <Card key={stat.title} className="border-border/50 hover:shadow-md transition-shadow">
@@ -204,7 +189,6 @@ const DashboardOverview = () => {
         ))}
       </div>
 
-      {/* Revenue Trend Chart (Full Width) */}
       <Card className="border-border/50">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -240,7 +224,6 @@ const DashboardOverview = () => {
         </CardContent>
       </Card>
 
-      {/* Weekly Comparison + Order Status Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-border/50">
           <CardHeader className="pb-2">
@@ -282,15 +265,7 @@ const DashboardOverview = () => {
               <div className="h-56 flex items-center">
                 <ResponsiveContainer width="50%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={statusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={75}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
+                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value">
                       {statusData.map((_, i) => (
                         <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
@@ -313,7 +288,6 @@ const DashboardOverview = () => {
         </Card>
       </div>
 
-      {/* Recent Orders + Quick Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-border/50">
           <CardHeader className="pb-3">
@@ -361,7 +335,7 @@ const DashboardOverview = () => {
               {[
                 { label: "Avg Order Value", value: stats.orders > 0 ? `$${(stats.revenue / stats.orders).toFixed(2)}` : "$0.00" },
                 { label: "Stores Active", value: `${stats.stores}` },
-                { label: "Pending Orders", value: recentOrders.filter(o => o.status === "pending").length.toString() },
+                { label: "Pending Orders", value: stats.pending.toString() },
                 { label: "Total Customers", value: stats.users.toString() },
               ].map((item) => (
                 <div key={item.label} className="p-3 rounded-xl bg-muted/40 text-center">
