@@ -34,24 +34,40 @@ const DashboardOverview = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [ordersRes, profilesRes, storesRes] = await Promise.all([
-        supabase.from("orders").select("id, total, status, created_at, delivery_address").order("created_at", { ascending: false }),
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("stores").select("id", { count: "exact", head: true }),
-      ]);
+      try {
+        // Limit orders to last 60 days to keep payload small on mobile networks
+        const sinceIso = subDays(new Date(), 60).toISOString();
+        const [ordersRes, profilesRes, storesRes] = await Promise.all([
+          supabase
+            .from("orders")
+            .select("id, total, status, created_at, delivery_address")
+            .gte("created_at", sinceIso)
+            .order("created_at", { ascending: false })
+            .limit(1000),
+          supabase.from("profiles").select("id", { count: "exact", head: true }),
+          supabase.from("stores").select("id", { count: "exact", head: true }),
+        ]);
 
-      const orders = (ordersRes.data || []) as OrderData[];
-      const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+        if (ordersRes.error) console.error("orders query error", ordersRes.error);
+        if (profilesRes.error) console.error("profiles query error", profilesRes.error);
+        if (storesRes.error) console.error("stores query error", storesRes.error);
 
-      setStats({
-        orders: orders.length,
-        revenue,
-        users: profilesRes.count || 0,
-        stores: storesRes.count || 0,
-      });
-      setAllOrders(orders);
-      setRecentOrders(orders.slice(0, 5));
-      setLoading(false);
+        const orders = (ordersRes.data || []) as OrderData[];
+        const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+
+        setStats({
+          orders: orders.length,
+          revenue,
+          users: profilesRes.count || 0,
+          stores: storesRes.count || 0,
+        });
+        setAllOrders(orders);
+        setRecentOrders(orders.slice(0, 5));
+      } catch (err) {
+        console.error("Dashboard overview fetch failed", err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchStats();
   }, []);
