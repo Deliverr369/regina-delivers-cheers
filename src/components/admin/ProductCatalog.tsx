@@ -152,8 +152,11 @@ const ProductCatalog = ({ onEdit }: Props) => {
       const { error: uploadError } = await supabase.storage.from("store-images").upload(`products/${fileName}`, blob, { contentType: blob.type || "image/jpeg" });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from("store-images").getPublicUrl(`products/${fileName}`);
-      const ids = uploadingGroup.products.map(p => p.id);
-      await supabase.from("products").update({ image_url: publicUrl }).in("id", ids);
+      await supabase
+        .from("products")
+        .update({ image_url: publicUrl })
+        .eq("category", uploadingGroup.category)
+        .ilike("name", uploadingGroup.name);
       toast({ title: "Image updated" });
       fetchData();
     } catch (err: any) {
