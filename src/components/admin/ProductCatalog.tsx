@@ -123,11 +123,18 @@ const ProductCatalog = ({ onEdit }: Props) => {
   const handleDeleteGroup = async () => {
     if (!deletingGroup) return;
     setSaving(true);
-    const ids = deletingGroup.products.map(p => p.id);
-    await supabase.from("product_pack_prices").delete().in("product_id", ids);
-    const { error } = await supabase.from("products").delete().in("id", ids);
-    if (error) toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
-    else { toast({ title: `Deleted "${deletingGroup.name}"` }); fetchData(); }
+    const { data: idRows } = await supabase
+      .from("products")
+      .select("id")
+      .eq("category", deletingGroup.category)
+      .ilike("name", deletingGroup.name);
+    const ids = (idRows || []).map((r: any) => r.id);
+    if (ids.length > 0) {
+      await supabase.from("product_pack_prices").delete().in("product_id", ids);
+      const { error } = await supabase.from("products").delete().in("id", ids);
+      if (error) toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
+      else { toast({ title: `Deleted "${deletingGroup.name}"` }); fetchData(); }
+    }
     setDeleteOpen(false);
     setDeletingGroup(null);
     setSaving(false);
