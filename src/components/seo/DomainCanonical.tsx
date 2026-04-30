@@ -3,9 +3,9 @@ import { useEffect } from "react";
 /**
  * Domain-aware SEO + redirect controller.
  *
- * - On the production domain (deliverr.ca / www.deliverr.ca) → indexable, canonical points to .ca
- * - On every other host (deliverr.store, *.lovable.app, previews, localhost) → noindex, nofollow
- * - On "old"/staging public hosts → 301-style client redirect to the matching deliverr.ca URL,
+ * - On the production domain (deliverr.store / www.deliverr.store) → indexable, canonical points to .store
+ * - On every other host (*.lovable.app, previews, localhost) → noindex, nofollow
+ * - On "old"/staging public hosts → 301-style client redirect to the matching deliverr.store URL,
  *   preserving the path, query string, and hash. Prevents broken links once .ca is live.
  *
  * Loop protection:
@@ -23,14 +23,12 @@ import { useEffect } from "react";
  *   - *.lovableproject.com
  *   - Capacitor / native shells (file://, capacitor://, ionic://)
  */
-const PROD_HOSTS = new Set(["deliverr.ca", "www.deliverr.ca"]);
-const PROD_ORIGIN = "https://www.deliverr.ca";
+const PROD_HOSTS = new Set(["deliverr.store", "www.deliverr.store"]);
+const PROD_ORIGIN = "https://deliverr.store";
 
-// Hosts that look like "old" public domains we want to redirect to .ca.
+// Hosts that look like "old" public domains we want to redirect to .store.
 // Add any future legacy hosts here.
 const REDIRECT_HOSTS = new Set([
-  "deliverr.store",
-  "www.deliverr.store",
   "regina-delivers-cheers.lovable.app",
 ]);
 

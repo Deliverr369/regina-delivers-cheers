@@ -7,19 +7,19 @@ exports[`StorePage JSON-LD — BreadcrumbList > matches snapshot 1`] = `
   "itemListElement": [
     {
       "@type": "ListItem",
-      "item": "https://regina-delivers-cheers.lovable.app/",
+      "item": "https://deliverr.store/",
       "name": "Home",
       "position": 1,
     },
     {
       "@type": "ListItem",
-      "item": "https://regina-delivers-cheers.lovable.app/stores",
+      "item": "https://deliverr.store/stores",
       "name": "Stores",
       "position": 2,
     },
     {
       "@type": "ListItem",
-      "item": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+      "item": "https://deliverr.store/liquor-stores/willow-park-wine-spirits",
       "name": "Willow Park Wine & Spirits",
       "position": 3,
     },
@@ -30,7 +30,7 @@ exports[`StorePage JSON-LD — BreadcrumbList > matches snapshot 1`] = `
 exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITH rating + reviews 1`] = `
 {
   "@context": "https://schema.org",
-  "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+  "@id": "https://deliverr.store/liquor-stores/willow-park-wine-spirits",
   "@type": "LocalBusiness",
   "address": {
     "@type": "PostalAddress",
@@ -151,7 +151,7 @@ exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITH
     "latitude": 50.4452,
     "longitude": -104.6189,
   },
-  "image": "https://regina-delivers-cheers.lovable.app/images/stores/willow-park-logo.png",
+  "image": "https://deliverr.store/images/stores/willow-park-logo.png",
   "makesOffer": {
     "@type": "Offer",
     "description": "Same-day delivery from Willow Park Wine & Spirits in Regina",
@@ -161,7 +161,7 @@ exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITH
   "name": "Willow Park Wine & Spirits (via Deliverr)",
   "openingHours": "Mo-Su 10:00-22:00",
   "parentOrganization": {
-    "@id": "https://www.deliverr.ca/#organization",
+    "@id": "https://deliverr.store/#organization",
   },
   "priceRange": "$$",
   "review": [
@@ -172,7 +172,7 @@ exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITH
         "name": "Deliverr customers",
       },
       "itemReviewed": {
-        "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+        "@id": "https://deliverr.store/liquor-stores/willow-park-wine-spirits",
       },
       "reviewBody": "Average customer rating of 4.9 out of 5 across 425 verified Deliverr deliveries from Willow Park Wine & Spirits in Regina.",
       "reviewRating": {
@@ -184,14 +184,14 @@ exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITH
     },
   ],
   "telephone": "+13065852266",
-  "url": "https://regina-delivers-cheers.lovable.app/liquor-stores/willow-park-wine-spirits",
+  "url": "https://deliverr.store/liquor-stores/willow-park-wine-spirits",
 }
 `;
 
 exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITHOUT rating + reviews 1`] = `
 {
   "@context": "https://schema.org",
-  "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/empire-offsale",
+  "@id": "https://deliverr.store/liquor-stores/empire-offsale",
   "@type": "LocalBusiness",
   "address": {
     "@type": "PostalAddress",
@@ -316,19 +316,19 @@ exports[`StorePage JSON-LD — LocalBusiness > matches snapshot for a store WITH
   "name": "Empire Offsale (via Deliverr)",
   "openingHours": "Mo-Su 10:00-22:00",
   "parentOrganization": {
-    "@id": "https://www.deliverr.ca/#organization",
+    "@id": "https://deliverr.store/#organization",
   },
   "priceRange": "$$",
   "review": undefined,
   "telephone": "+13067571755",
-  "url": "https://regina-delivers-cheers.lovable.app/liquor-stores/empire-offsale",
+  "url": "https://deliverr.store/liquor-stores/empire-offsale",
 }
 `;
 
 exports[`StorePage JSON-LD — LocalBusiness > matches snapshot when rating and reviews_count are zero 1`] = `
 {
   "@context": "https://schema.org",
-  "@id": "https://regina-delivers-cheers.lovable.app/liquor-stores/fresh-store",
+  "@id": "https://deliverr.store/liquor-stores/fresh-store",
   "@type": "LocalBusiness",
   "address": {
     "@type": "PostalAddress",
@@ -443,7 +443,7 @@ exports[`StorePage JSON-LD — LocalBusiness > matches snapshot when rating and 
     "latitude": 50.4452,
     "longitude": -104.6189,
   },
-  "image": "https://regina-delivers-cheers.lovable.app/images/stores/willow-park-logo.png",
+  "image": "https://deliverr.store/images/stores/willow-park-logo.png",
   "makesOffer": {
     "@type": "Offer",
     "description": "Same-day delivery from Fresh Liquor in Regina",
@@ -453,11 +453,11 @@ exports[`StorePage JSON-LD — LocalBusiness > matches snapshot when rating and 
   "name": "Fresh Liquor (via Deliverr)",
   "openingHours": "Mo-Su 10:00-22:00",
   "parentOrganization": {
-    "@id": "https://www.deliverr.ca/#organization",
+    "@id": "https://deliverr.store/#organization",
   },
   "priceRange": "$$",
   "review": undefined,
   "telephone": "+13065852266",
-  "url": "https://regina-delivers-cheers.lovable.app/liquor-stores/fresh-store",
+  "url": "https://deliverr.store/liquor-stores/fresh-store",
 }
 `;

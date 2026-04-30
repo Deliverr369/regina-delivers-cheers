@@ -9,6 +9,7 @@ import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
+import { CONTACT } from "@/config/contact";
 
 type FaqItem = { q: string; a: string };
 
@@ -448,7 +449,7 @@ const CategoryLanding = () => {
   if (!cfg) return <Navigate to="/stores" replace />;
 
   const path = `/${cfg.slug}`;
-  const url = `https://www.deliverr.ca${path}`;
+  const url = `${CONTACT.siteUrl}${path}`;
   const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
     buildFaqs(cfg),
     `CategoryLanding[${cfg.slug}]`,
@@ -469,7 +470,7 @@ const CategoryLanding = () => {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://www.deliverr.ca/" },
+              { "@type": "ListItem", position: 1, name: "Home", item: `${CONTACT.siteUrl}/` },
               { "@type": "ListItem", position: 2, name: cfg.name, item: url },
             ],
           },
