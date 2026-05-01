@@ -11,8 +11,20 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { useIsNative } from "@/hooks/useIsNative";
-import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2 } from "lucide-react";
+import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import AddressManager from "@/components/AddressManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { resetAgeVerification } from "@/lib/ageGate";
 
 interface ProfileData {
   full_name: string;
@@ -43,6 +55,30 @@ const Profile = () => {
   const [cards, setCards] = useState<SavedCard[]>([]);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      resetAgeVerification();
+      toast({
+        title: "Account deleted",
+        description: "Your account and personal data have been removed.",
+      });
+      navigate("/");
+    } catch (err: any) {
+      toast({
+        title: "Could not delete account",
+        description: err.message || "Please try again or contact support.",
+        variant: "destructive",
+      });
+      setDeletingAccount(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
