@@ -15,7 +15,7 @@ const Terms = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
           <h1 className="font-display text-4xl font-bold text-foreground mb-2">Terms of Service</h1>
-          <p className="text-muted-foreground mb-10">Last updated: April 25, 2026</p>
+          <p className="text-muted-foreground mb-10">Last updated: May 1, 2026</p>
 
           <div className="space-y-8">
             <section>
@@ -79,14 +79,29 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="font-display text-2xl font-bold mb-3">8. Changes</h2>
+              <h2 className="font-display text-2xl font-bold mb-3">8. Mobile app & account deletion</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                The Deliverr Android and iOS apps are provided in addition to our website. You
+                may delete your account at any time directly in the app under{" "}
+                <em>Profile → Danger Zone → Delete my account</em>, or by emailing{" "}
+                <a href="mailto:privacy@deliverr.app" className="text-primary hover:underline">
+                  privacy@deliverr.app
+                </a>
+                . Deletion permanently removes your profile, saved addresses, saved cards and
+                notification preferences; past orders are anonymized and retained for 7 years
+                for tax compliance.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="font-display text-2xl font-bold mb-3">9. Changes</h2>
               <p className="text-muted-foreground leading-relaxed">
                 We may update these terms. Continued use after an update constitutes acceptance.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-2xl font-bold mb-3">9. Contact</h2>
+              <h2 className="font-display text-2xl font-bold mb-3">10. Contact</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Questions about these terms? Email{" "}
                 <a href="mailto:support@deliverr.app" className="text-primary hover:underline">
