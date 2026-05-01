@@ -5,7 +5,7 @@
 // `estimated_total` is ignored — the authoritative amount comes from
 // re-pricing items against the database.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createStripeClient } from "../_shared/stripe.ts";
+import { createStripeClient, type StripeEnv } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,6 +57,7 @@ interface BodyIn {
   postal_code?: string;
   tip?: number;
   payment_method_id?: string;
+  environment?: StripeEnv;
   // Legacy field, intentionally ignored by the server now:
   estimated_total?: number;
 }
@@ -223,7 +224,8 @@ Deno.serve(async (req) => {
     const authorizedAmountCents = Math.round(estimatedTotal * (1 + BUFFER_PCT) * 100);
 
     // --- Stripe customer + intent ---
-    const stripe = createStripeClient("sandbox");
+    const env: StripeEnv = body.environment === "live" ? "live" : "sandbox";
+    const stripe = createStripeClient(env);
     const adminSupabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,

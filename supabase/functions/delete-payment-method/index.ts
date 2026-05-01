@@ -1,6 +1,6 @@
 // supabase/functions/delete-payment-method/index.ts
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createStripeClient } from "../_shared/stripe.ts";
+import { createStripeClient, type StripeEnv } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { payment_method_id } = await req.json();
+    const { payment_method_id, environment } = await req.json();
+    const env: StripeEnv = environment === "live" ? "live" : "sandbox";
     if (!payment_method_id || typeof payment_method_id !== "string") {
       return new Response(JSON.stringify({ error: "Invalid payment_method_id" }), {
         status: 400,
@@ -58,7 +59,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripe = createStripeClient("sandbox");
+    const stripe = createStripeClient(env);
     // Verify ownership before detaching
     const pm = await stripe.paymentMethods.retrieve(payment_method_id);
     if (pm.customer !== profile.stripe_customer_id) {

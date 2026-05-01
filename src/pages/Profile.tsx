@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { stripeEnv } from "@/lib/stripeEnv";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ const Profile = () => {
 
   const fetchCards = async () => {
     try {
-      const { data } = await supabase.functions.invoke("list-payment-methods", { body: {} });
+      const { data } = await supabase.functions.invoke("list-payment-methods", { body: { environment: stripeEnv } });
       setCards(data?.payment_methods || []);
     } catch (e) {
       console.warn("Failed to load cards", e);
@@ -66,7 +67,7 @@ const Profile = () => {
     setDeletingCardId(cardId);
     try {
       const { error } = await supabase.functions.invoke("delete-payment-method", {
-        body: { payment_method_id: cardId },
+        body: { payment_method_id: cardId, environment: stripeEnv },
       });
       if (error) throw error;
       setCards((prev) => prev.filter((c) => c.id !== cardId));
