@@ -1,6 +1,6 @@
 // supabase/functions/list-payment-methods/index.ts
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createStripeClient } from "../_shared/stripe.ts";
+import { createStripeClient, type StripeEnv } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,7 +49,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripe = createStripeClient("sandbox");
+    let env: StripeEnv = "sandbox";
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      if (body?.environment === "live" || body?.environment === "sandbox") {
+        env = body.environment;
+      }
+    } catch { /* no body, keep default */ }
+    const stripe = createStripeClient(env);
     const pms = await stripe.paymentMethods.list({
       customer: profile.stripe_customer_id,
       type: "card",
