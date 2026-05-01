@@ -19,6 +19,7 @@ import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { stripeEnv } from "@/lib/stripeEnv";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
@@ -224,7 +225,7 @@ const Checkout = () => {
     if (!user) return;
     (async () => {
       try {
-        const { data } = await supabase.functions.invoke("list-payment-methods", { body: {} });
+        const { data } = await supabase.functions.invoke("list-payment-methods", { body: { environment: stripeEnv } });
         const cards: SavedCard[] = data?.payment_methods || [];
         setSavedCards(cards);
         if (cards.length > 0) setSelectedCardId(cards[0].id);
@@ -291,6 +292,7 @@ const Checkout = () => {
           body: {
             ...buildValidationPayload(),
             payment_method_id: selectedCardId !== "new" ? selectedCardId : undefined,
+            environment: stripeEnv,
           },
         });
         if (cancelled) return;

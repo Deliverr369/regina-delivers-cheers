@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { stripeEnv } from "@/lib/stripeEnv";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 
 interface OrderItemRow {
@@ -141,7 +142,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
       if (!isCod) {
         // Card: capture via Stripe edge function
         const { data, error } = await supabase.functions.invoke("capture-payment", {
-          body: { orderId: order.id, environment: "sandbox" },
+          body: { orderId: order.id, environment: stripeEnv },
         });
         if (error || (data && data.error)) {
           throw new Error(error?.message || data?.error || "Capture failed");
