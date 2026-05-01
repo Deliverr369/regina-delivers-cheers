@@ -9,7 +9,7 @@ interface SEOProps {
   jsonLd?: Record<string, any> | Record<string, any>[];
 }
 
-const SITE_URL = "https://deliverr.store";
+const SITE_URL = "https://www.deliverr.ca";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 const setMeta = (selector: string, attrs: Record<string, string>) => {
