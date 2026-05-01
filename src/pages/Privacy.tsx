@@ -25,7 +25,7 @@ const Privacy = () => {
             <h1 className="font-display text-4xl md:text-5xl font-extrabold text-foreground mb-3">
               Privacy Policy
             </h1>
-            <p className="text-muted-foreground">Last updated: April 27, 2026</p>
+            <p className="text-muted-foreground">Last updated: May 1, 2026</p>
           </div>
         </section>
 
@@ -127,7 +127,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="font-display text-2xl font-bold mb-3">8. Your rights</h2>
+              <h2 className="font-display text-2xl font-bold mb-3">8. Your rights & account deletion</h2>
               <p className="text-muted-foreground leading-relaxed mb-2">
                 Under PIPEDA you have the right to:
               </p>
@@ -139,11 +139,18 @@ const Privacy = () => {
                 <li>File a complaint with the Office of the Privacy Commissioner of Canada.</li>
               </ul>
               <p className="text-muted-foreground leading-relaxed mt-3">
-                To exercise any of these rights, email{" "}
+                <strong>Delete your account in-app:</strong> open the Deliverr app or website,
+                go to <em>Profile → Danger Zone → Delete my account</em>. This permanently
+                removes your profile, saved addresses, saved cards and notification preferences.
+                Past orders are anonymized and retained for 7 years as required by Canadian tax
+                law.
+              </p>
+              <p className="text-muted-foreground leading-relaxed mt-3">
+                You can also email{" "}
                 <a href="mailto:privacy@deliverr.app" className="text-primary hover:underline">
                   privacy@deliverr.app
-                </a>
-                . We will respond within 30 days.
+                </a>{" "}
+                to request deletion. We will respond within 30 days.
               </p>
             </section>
 

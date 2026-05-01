@@ -11,8 +11,20 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { useIsNative } from "@/hooks/useIsNative";
-import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2 } from "lucide-react";
+import { User, MapPin, Phone, CreditCard, Mail, Save, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import AddressManager from "@/components/AddressManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { resetAgeVerification } from "@/lib/ageGate";
 
 interface ProfileData {
   full_name: string;
@@ -43,6 +55,30 @@ const Profile = () => {
   const [cards, setCards] = useState<SavedCard[]>([]);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      resetAgeVerification();
+      toast({
+        title: "Account deleted",
+        description: "Your account and personal data have been removed.",
+      });
+      navigate("/");
+    } catch (err: any) {
+      toast({
+        title: "Could not delete account",
+        description: err.message || "Please try again or contact support.",
+        variant: "destructive",
+      });
+      setDeletingAccount(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
@@ -237,6 +273,62 @@ const Profile = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Danger Zone — required for Google Play Store account-deletion policy */}
+          <div className={`bg-card rounded-2xl border border-destructive/30 ${isNative ? "p-4" : "p-6 mb-6"}`}>
+            <div className={`flex items-center gap-2.5 ${isNative ? "mb-3" : "mb-4"}`}>
+              <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+              </div>
+              <h2 className={`font-display font-bold text-foreground ${isNative ? "text-[15px]" : "text-lg"}`}>Danger Zone</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+              Permanently delete your account, saved addresses, payment methods and personal
+              data. Past orders are anonymized and retained for 7 years as required by Canadian
+              tax law. This action cannot be undone.
+            </p>
+            <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full h-11 rounded-full font-semibold">
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete my account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete your Deliverr account?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently remove your profile, saved addresses, saved cards and
+                    notification preferences. Past orders will be anonymized but kept for tax
+                    records. Type <strong>DELETE</strong> to confirm.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Input
+                  autoFocus
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="Type DELETE to confirm"
+                  className="h-10"
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={deletingAccount}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDeleteAccount();
+                    }}
+                    disabled={confirmText !== "DELETE" || deletingAccount}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deletingAccount ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Deleting…</>
+                    ) : (
+                      "Delete forever"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
           {!isNative && (
