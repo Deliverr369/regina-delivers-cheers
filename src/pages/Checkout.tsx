@@ -780,7 +780,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 2. Delivery */}
-          <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="Pick a saved address or add a new one. Regina, SK only.">
+          <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="Regina, SK only">
             <CheckoutAddressPicker
               selectedId={props.selectedAddressId}
               onSelect={props.onAddressSelect}
