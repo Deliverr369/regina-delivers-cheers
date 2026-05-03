@@ -975,7 +975,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 4. Tip */}
-          <SectionCard step={5} icon={<Heart className="h-4 w-4" />} title="Add a tip for your driver" subtitle="100% of your tip goes directly to the driver.">
+          <SectionCard step={5} icon={<Heart className="h-4 w-4" />} title="Add a tip" subtitle="100% goes to your driver">
             <div className="grid grid-cols-4 gap-2.5">
               {[3, 5, 8].map((amt) => {
                 const selected = props.tipPreset === amt;
