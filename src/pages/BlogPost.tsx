@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Loader2, ArrowLeft, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import DOMPurify from "dompurify";
 
 interface Post {
   id: string;
@@ -32,7 +33,7 @@ const renderMarkdown = (md: string) => {
       out.push(
         <ul key={`ul-${out.length}`} className="list-disc pl-6 my-4 space-y-1">
           {listBuf.map((li, i) => (
-            <li key={i} dangerouslySetInnerHTML={{ __html: inline(li) }} />
+            <li key={i} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(inline(li)) }} />
           ))}
         </ul>
       );
@@ -40,10 +41,11 @@ const renderMarkdown = (md: string) => {
     }
   };
 
+  const safeUrl = (u: string) => (/^(https?:|mailto:|\/)/i.test(u.trim()) ? u : "#");
   const inline = (s: string) =>
     s
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-primary underline">$1</a>');
+      .replace(/\[(.+?)\]\((.+?)\)/g, (_m, t, u) => `<a href="${safeUrl(u)}" class="text-primary underline">${t}</a>`);
 
   lines.forEach((line, i) => {
     if (line.startsWith("# ")) {
@@ -61,7 +63,7 @@ const renderMarkdown = (md: string) => {
       flushList();
     } else {
       flushList();
-      out.push(<p key={i} className="my-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: inline(line) }} />);
+      out.push(<p key={i} className="my-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(inline(line)) }} />);
     }
   });
   flushList();
