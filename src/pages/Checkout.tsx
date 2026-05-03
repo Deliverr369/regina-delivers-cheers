@@ -1125,8 +1125,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 </div>
 
                 {/* Pricing adjustment notice */}
-                <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-3 text-[11px] text-muted-foreground leading-relaxed">
-                  <span className="font-semibold text-foreground">Note:</span> Final price will be adjusted to match in-store prices at pickup{isCod ? " — please bring extra cash in case the total differs slightly." : " and automatically reflected in your final charge. You'll only be charged the actual amount."}
+                <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-2.5 text-[11px] text-muted-foreground leading-relaxed">
+                  Final price matches in-store{isCod ? " — bring a little extra cash just in case." : ". You're only charged the actual amount."}
                 </div>
 
                 {/* CTA */}
