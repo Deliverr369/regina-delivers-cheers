@@ -1172,6 +1172,34 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </div>
         </div>
       </div>
+
+      {/* Mobile sticky checkout bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.08)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Total</p>
+            <p className="font-display text-xl font-bold text-foreground tracking-tight leading-none mt-0.5">
+              ${props.estimatedTotal.toFixed(2)}
+            </p>
+          </div>
+          <Button
+            type="submit"
+            className="h-12 px-5 gap-2 rounded-xl font-display font-bold text-sm bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 flex-shrink-0"
+            disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
+          >
+            {props.isSubmitting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> {isCod ? "Placing..." : "Authorizing..."}</>
+            ) : isCod ? (
+              <><Banknote className="h-4 w-4" /> Place order</>
+            ) : (
+              <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
+            )}
+          </Button>
+        </div>
+        <div className="flex items-center justify-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+          <ShieldCheck className="h-3 w-3 text-success" /> Secure checkout · 25–35 min delivery
+        </div>
+      </div>
     </form>
   );
 };
