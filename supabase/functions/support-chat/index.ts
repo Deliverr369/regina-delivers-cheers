@@ -93,7 +93,8 @@ async function fetchOrderContext(orderRef: string, userJwt: string | null) {
   }
   const order = orders[0];
 
-  if (userId && order.user_id !== userId) {
+  // Require authentication — order details must never leak to anonymous callers.
+  if (!userId || order.user_id !== userId) {
     return { found: false as const, reason: "not_authorized" };
   }
 

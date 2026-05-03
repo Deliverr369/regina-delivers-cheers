@@ -104,7 +104,8 @@ Deno.serve(async (req) => {
 
     // AuthZ — allow either admin user OR cron secret
     const cronSecret = req.headers.get("x-cron-secret");
-    const isCron = cronSecret === "auto-seo-cron";
+    const CRON_SECRET = Deno.env.get("CRON_SECRET");
+    const isCron = !!CRON_SECRET && cronSecret === CRON_SECRET;
 
     if (!isCron) {
       const authHeader = req.headers.get("Authorization");
