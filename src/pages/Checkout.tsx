@@ -506,27 +506,20 @@ const Checkout = () => {
       <Header />
       <main className="pt-header pb-20">
         {/* Page header */}
-        <div className="container mx-auto px-4 pt-8 pb-6">
+        <div className="container mx-auto px-4 pt-6 pb-4">
           <Link
             to="/cart"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to cart
           </Link>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-            <div>
-              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                Checkout
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1.5 flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5" />
-                Secure, encrypted payment · Powered by Stripe
-              </p>
-            </div>
-            <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-success" />
-              256-bit SSL encryption
+          <div className="flex items-end justify-between gap-3">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Checkout
+            </h1>
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5" /> Secure payment · Stripe
             </div>
           </div>
         </div>
@@ -765,12 +758,12 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="pb-28 lg:pb-0">
       <div className="grid lg:grid-cols-5 gap-6 lg:gap-8 min-w-0">
         {/* LEFT: Form */}
-        <div className="lg:col-span-3 space-y-5 min-w-0">
+        <div className="lg:col-span-3 space-y-4 min-w-0">
           {/* 1. Contact */}
-          <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information" subtitle="We'll send your receipt and updates here.">
+          <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information">
             <div className="grid sm:grid-cols-2 gap-3">
               <FieldInput label="First name" name="firstName" value={props.formData.firstName} onChange={handleChange} required />
               <FieldInput label="Last name" name="lastName" value={props.formData.lastName} onChange={handleChange} required />
@@ -780,7 +773,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 2. Delivery */}
-          <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="Pick a saved address or add a new one. Regina, SK only.">
+          <SectionCard step={2} icon={<MapPin className="h-4 w-4" />} title="Delivery address" subtitle="Regina, SK only">
             <CheckoutAddressPicker
               selectedId={props.selectedAddressId}
               onSelect={props.onAddressSelect}
@@ -800,7 +793,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 3. Delivery time */}
-          <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time" subtitle="Get it now or schedule for later — slots respect each store's hours.">
+          <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time">
             <div className="grid grid-cols-2 gap-2.5 mb-4">
               <button
                 type="button"
@@ -858,7 +851,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 3. Payment */}
-          <SectionCard step={4} icon={<CreditCard className="h-4 w-4" />} title="Payment method" subtitle={isCod ? "Pay the driver in cash on delivery." : "Your card is held — never charged more than the final price."}>
+          <SectionCard step={4} icon={<CreditCard className="h-4 w-4" />} title="Payment method">
             {/* Card / COD toggle */}
             <div className="grid grid-cols-2 gap-2.5 mb-4">
               <button
@@ -975,7 +968,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           {/* 4. Tip */}
-          <SectionCard step={5} icon={<Heart className="h-4 w-4" />} title="Add a tip for your driver" subtitle="100% of your tip goes directly to the driver.">
+          <SectionCard step={5} icon={<Heart className="h-4 w-4" />} title="Add a tip" subtitle="100% goes to your driver">
             <div className="grid grid-cols-4 gap-2.5">
               {[3, 5, 8].map((amt) => {
                 const selected = props.tipPreset === amt;
@@ -1132,8 +1125,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 </div>
 
                 {/* Pricing adjustment notice */}
-                <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-3 text-[11px] text-muted-foreground leading-relaxed">
-                  <span className="font-semibold text-foreground">Note:</span> Final price will be adjusted to match in-store prices at pickup{isCod ? " — please bring extra cash in case the total differs slightly." : " and automatically reflected in your final charge. You'll only be charged the actual amount."}
+                <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-2.5 text-[11px] text-muted-foreground leading-relaxed">
+                  Final price matches in-store{isCod ? " — bring a little extra cash just in case." : ". You're only charged the actual amount."}
                 </div>
 
                 {/* CTA */}
@@ -1170,6 +1163,34 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile sticky checkout bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.08)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Total</p>
+            <p className="font-display text-xl font-bold text-foreground tracking-tight leading-none mt-0.5">
+              ${props.estimatedTotal.toFixed(2)}
+            </p>
+          </div>
+          <Button
+            type="submit"
+            className="h-12 px-5 gap-2 rounded-xl font-display font-bold text-sm bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 flex-shrink-0"
+            disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
+          >
+            {props.isSubmitting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> {isCod ? "Placing..." : "Authorizing..."}</>
+            ) : isCod ? (
+              <><Banknote className="h-4 w-4" /> Place order</>
+            ) : (
+              <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
+            )}
+          </Button>
+        </div>
+        <div className="flex items-center justify-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+          <ShieldCheck className="h-3 w-3 text-success" /> Secure checkout · 25–35 min delivery
         </div>
       </div>
     </form>
