@@ -89,9 +89,15 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Require shared secret — function is invoked by the DB trigger only.
+  // Require shared secret OR service-role bearer (used by the DB trigger).
   const SEND_PUSH_SECRET = Deno.env.get("SEND_PUSH_SECRET");
-  if (!SEND_PUSH_SECRET || req.headers.get("x-internal-secret") !== SEND_PUSH_SECRET) {
+  const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const internal = req.headers.get("x-internal-secret");
+  const bearer = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  const authorized =
+    (SEND_PUSH_SECRET && internal === SEND_PUSH_SECRET) ||
+    (bearer && bearer === SERVICE_ROLE);
+  if (!authorized) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
