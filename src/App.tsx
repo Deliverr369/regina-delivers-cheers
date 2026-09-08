@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import type { ComponentType } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,54 +18,72 @@ import PushNotificationsMount from "./components/PushNotificationsMount";
 import SupportChatbot from "./components/SupportChatbot";
 import DomainCanonical from "./components/seo/DomainCanonical";
 
+// Retries a dynamic import once after a hard reload when the chunk is missing
+// (happens when a new deploy invalidates the previously cached chunk names).
+const lazyWithReload = <T extends { default: ComponentType<any> }>(
+  factory: () => Promise<T>,
+  key: string
+) =>
+  lazy(() =>
+    factory().catch((err) => {
+      const flag = `chunk-reload:${key}`;
+      if (!sessionStorage.getItem(flag)) {
+        sessionStorage.setItem(flag, "1");
+        window.location.reload();
+        return new Promise<T>(() => {});
+      }
+      throw err;
+    })
+  );
+
 // Lazy-loaded — split out of the initial bundle
-const Categories = lazy(() => import("./pages/Categories"));
-const StoreDetail = lazy(() => import("./pages/StoreDetail"));
-const Products = lazy(() => import("./pages/Products"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
-const HowItWorks = lazy(() => import("./pages/HowItWorks"));
-const Login = lazy(() => import("./pages/Login"));
-const Signup = lazy(() => import("./pages/Signup"));
-const Orders = lazy(() => import("./pages/Orders"));
-const OrderReceipt = lazy(() => import("./pages/OrderReceipt"));
-const Admin = lazy(() => import("./pages/Admin"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const About = lazy(() => import("./pages/About"));
-const Help = lazy(() => import("./pages/Help"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const ReginaLanding = lazy(() => import("./pages/ReginaLanding"));
-const Blog = lazy(() => import("./pages/Blog"));
-const BlogPost = lazy(() => import("./pages/BlogPost"));
-const StorePage = lazy(() => import("./pages/StorePage"));
-const CategoryLanding = lazy(() => import("./pages/CategoryLanding"));
-const StoreDirectoryLanding = lazy(() => import("./pages/StoreDirectoryLanding"));
-const StoreCategoryDetail = lazy(() => import("./pages/StoreCategoryDetail"));
+const Categories = lazyWithReload(() => import("./pages/Categories"), "Categories");
+const StoreDetail = lazyWithReload(() => import("./pages/StoreDetail"), "StoreDetail");
+const Products = lazyWithReload(() => import("./pages/Products"), "Products");
+const ProductDetail = lazyWithReload(() => import("./pages/ProductDetail"), "ProductDetail");
+const Cart = lazyWithReload(() => import("./pages/Cart"), "Cart");
+const Checkout = lazyWithReload(() => import("./pages/Checkout"), "Checkout");
+const OrderConfirmation = lazyWithReload(() => import("./pages/OrderConfirmation"), "OrderConfirmation");
+const HowItWorks = lazyWithReload(() => import("./pages/HowItWorks"), "HowItWorks");
+const Login = lazyWithReload(() => import("./pages/Login"), "Login");
+const Signup = lazyWithReload(() => import("./pages/Signup"), "Signup");
+const Orders = lazyWithReload(() => import("./pages/Orders"), "Orders");
+const OrderReceipt = lazyWithReload(() => import("./pages/OrderReceipt"), "OrderReceipt");
+const Admin = lazyWithReload(() => import("./pages/Admin"), "Admin");
+const Profile = lazyWithReload(() => import("./pages/Profile"), "Profile");
+const Favorites = lazyWithReload(() => import("./pages/Favorites"), "Favorites");
+const Onboarding = lazyWithReload(() => import("./pages/Onboarding"), "Onboarding");
+const About = lazyWithReload(() => import("./pages/About"), "About");
+const Help = lazyWithReload(() => import("./pages/Help"), "Help");
+const Privacy = lazyWithReload(() => import("./pages/Privacy"), "Privacy");
+const Terms = lazyWithReload(() => import("./pages/Terms"), "Terms");
+const NotFound = lazyWithReload(() => import("./pages/NotFound"), "NotFound");
+const ReginaLanding = lazyWithReload(() => import("./pages/ReginaLanding"), "ReginaLanding");
+const Blog = lazyWithReload(() => import("./pages/Blog"), "Blog");
+const BlogPost = lazyWithReload(() => import("./pages/BlogPost"), "BlogPost");
+const StorePage = lazyWithReload(() => import("./pages/StorePage"), "StorePage");
+const CategoryLanding = lazyWithReload(() => import("./pages/CategoryLanding"), "CategoryLanding");
+const StoreDirectoryLanding = lazyWithReload(() => import("./pages/StoreDirectoryLanding"), "StoreDirectoryLanding");
+const StoreCategoryDetail = lazyWithReload(() => import("./pages/StoreCategoryDetail"), "StoreCategoryDetail");
 
 // Admin dashboard — heavy, lazy-loaded as a group
-const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
-const DashboardOverview = lazy(() => import("./pages/dashboard/DashboardOverview"));
-const DashboardOrders = lazy(() => import("./pages/dashboard/DashboardOrders"));
-const DashboardProducts = lazy(() => import("./pages/dashboard/DashboardProducts"));
-const DashboardStores = lazy(() => import("./pages/dashboard/DashboardStores"));
-const DashboardStoreHours = lazy(() => import("./pages/dashboard/DashboardStoreHours"));
-const DashboardUsers = lazy(() => import("./pages/dashboard/DashboardUsers"));
-const DashboardBanners = lazy(() => import("./pages/dashboard/DashboardBanners"));
-const DashboardBulkImages = lazy(() => import("./pages/dashboard/DashboardBulkImages"));
-const DashboardAutoImages = lazy(() => import("./pages/dashboard/DashboardAutoImages"));
-const DashboardMatchImages = lazy(() => import("./pages/dashboard/DashboardMatchImages"));
-const DashboardInventory = lazy(() => import("./pages/dashboard/DashboardInventory"));
-const DashboardImporter = lazy(() => import("./pages/dashboard/DashboardImporter"));
-const DashboardSEO = lazy(() => import("./pages/dashboard/DashboardSEO"));
-const DashboardPushTest = lazy(() => import("./pages/dashboard/DashboardPushTest"));
-const DashboardBlog = lazy(() => import("./pages/dashboard/DashboardBlog"));
-const DashboardSecurity = lazy(() => import("./pages/dashboard/DashboardSecurity"));
+const DashboardLayout = lazyWithReload(() => import("./components/dashboard/DashboardLayout"), "DashboardLayout");
+const DashboardOverview = lazyWithReload(() => import("./pages/dashboard/DashboardOverview"), "DashboardOverview");
+const DashboardOrders = lazyWithReload(() => import("./pages/dashboard/DashboardOrders"), "DashboardOrders");
+const DashboardProducts = lazyWithReload(() => import("./pages/dashboard/DashboardProducts"), "DashboardProducts");
+const DashboardStores = lazyWithReload(() => import("./pages/dashboard/DashboardStores"), "DashboardStores");
+const DashboardStoreHours = lazyWithReload(() => import("./pages/dashboard/DashboardStoreHours"), "DashboardStoreHours");
+const DashboardUsers = lazyWithReload(() => import("./pages/dashboard/DashboardUsers"), "DashboardUsers");
+const DashboardBanners = lazyWithReload(() => import("./pages/dashboard/DashboardBanners"), "DashboardBanners");
+const DashboardBulkImages = lazyWithReload(() => import("./pages/dashboard/DashboardBulkImages"), "DashboardBulkImages");
+const DashboardAutoImages = lazyWithReload(() => import("./pages/dashboard/DashboardAutoImages"), "DashboardAutoImages");
+const DashboardMatchImages = lazyWithReload(() => import("./pages/dashboard/DashboardMatchImages"), "DashboardMatchImages");
+const DashboardInventory = lazyWithReload(() => import("./pages/dashboard/DashboardInventory"), "DashboardInventory");
+const DashboardImporter = lazyWithReload(() => import("./pages/dashboard/DashboardImporter"), "DashboardImporter");
+const DashboardSEO = lazyWithReload(() => import("./pages/dashboard/DashboardSEO"), "DashboardSEO");
+const DashboardPushTest = lazyWithReload(() => import("./pages/dashboard/DashboardPushTest"), "DashboardPushTest");
+const DashboardBlog = lazyWithReload(() => import("./pages/dashboard/DashboardBlog"), "DashboardBlog");
+const DashboardSecurity = lazyWithReload(() => import("./pages/dashboard/DashboardSecurity"), "DashboardSecurity");
 
 const queryClient = new QueryClient({
   defaultOptions: {
