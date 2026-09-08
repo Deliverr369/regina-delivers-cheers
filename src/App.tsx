@@ -17,8 +17,26 @@ import PushNotificationsMount from "./components/PushNotificationsMount";
 import SupportChatbot from "./components/SupportChatbot";
 import DomainCanonical from "./components/seo/DomainCanonical";
 
+// Retries a dynamic import once after a hard reload when the chunk is missing
+// (happens when a new deploy invalidates the previously cached chunk names).
+const lazyWithReload = <T extends { default: React.ComponentType<any> }>(
+  factory: () => Promise<T>,
+  key: string
+) =>
+  lazy(() =>
+    factory().catch((err) => {
+      const flag = `chunk-reload:${key}`;
+      if (!sessionStorage.getItem(flag)) {
+        sessionStorage.setItem(flag, "1");
+        window.location.reload();
+        return new Promise<T>(() => {});
+      }
+      throw err;
+    })
+  );
+
 // Lazy-loaded — split out of the initial bundle
-const Categories = lazy(() => import("./pages/Categories"));
+const Categories = lazyWithReload(() => import("./pages/Categories"), "Categories");
 const StoreDetail = lazy(() => import("./pages/StoreDetail"));
 const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
