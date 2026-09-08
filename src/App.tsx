@@ -37,6 +37,7 @@ const lazyWithReload = <T extends { default: ComponentType<any> }>(
   );
 
 // Lazy-loaded — split out of the initial bundle
+const SupportChatbot = lazyWithReload(() => import("./components/SupportChatbot"), "SupportChatbot");
 const Categories = lazyWithReload(() => import("./pages/Categories"), "Categories");
 const StoreDetail = lazyWithReload(() => import("./pages/StoreDetail"), "StoreDetail");
 const Products = lazyWithReload(() => import("./pages/Products"), "Products");
