@@ -65,6 +65,8 @@ const FeaturedStoresSection = () => {
                   <img
                     src={store.image_url || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=500&auto=format"}
                     alt={store.name}
+                    loading="lazy"
+                    decoding="async"
                     className={`max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500 ${
                       store.image_url?.includes('.png') ? '' : 'w-full h-full object-cover rounded-lg'
                     }`}

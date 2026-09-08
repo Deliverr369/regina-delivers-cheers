@@ -15,7 +15,7 @@ import Stores from "./pages/Stores";
 import OnboardingGate from "./components/OnboardingGate";
 import AgeGate from "./components/AgeGate";
 import PushNotificationsMount from "./components/PushNotificationsMount";
-import SupportChatbot from "./components/SupportChatbot";
+
 import DomainCanonical from "./components/seo/DomainCanonical";
 
 // Retries a dynamic import once after a hard reload when the chunk is missing
@@ -37,6 +37,7 @@ const lazyWithReload = <T extends { default: ComponentType<any> }>(
   );
 
 // Lazy-loaded — split out of the initial bundle
+const SupportChatbot = lazyWithReload(() => import("./components/SupportChatbot"), "SupportChatbot");
 const Categories = lazyWithReload(() => import("./pages/Categories"), "Categories");
 const StoreDetail = lazyWithReload(() => import("./pages/StoreDetail"), "StoreDetail");
 const Products = lazyWithReload(() => import("./pages/Products"), "Products");
@@ -115,7 +116,9 @@ const App = () => (
             <AgeGate />
             <OnboardingGate />
             <PushNotificationsMount />
-            <SupportChatbot />
+            <Suspense fallback={null}>
+              <SupportChatbot />
+            </Suspense>
             <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />

@@ -1,9 +1,9 @@
-import globalRegina from "@/assets/press-global-regina.png";
-import cbc from "@/assets/press-cbc.png";
-import innovationSk from "@/assets/press-innovation-sk.png";
-import morningstar from "@/assets/press-morningstar.png";
-import marketsInsider from "@/assets/press-markets-insider.png";
-import canadianInsider from "@/assets/press-canadian-insider.png";
+import globalRegina from "@/assets/press-global-regina.webp";
+import cbc from "@/assets/press-cbc.webp";
+import innovationSk from "@/assets/press-innovation-sk.webp";
+import morningstar from "@/assets/press-morningstar.webp";
+import marketsInsider from "@/assets/press-markets-insider.webp";
+import canadianInsider from "@/assets/press-canadian-insider.webp";
 
 const pressLogos = [
   { name: "Global Regina", src: globalRegina },
