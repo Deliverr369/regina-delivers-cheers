@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import catLiquor from "@/assets/cat-liquor.png";
-import catSmoke from "@/assets/cat-smoke.png";
-import catPharmacy from "@/assets/cat-pharmacy.png";
-import catPet from "@/assets/cat-pet.png";
-import catTakeout from "@/assets/cat-takeout.png";
-import catGrocery from "@/assets/cat-grocery.png";
+import catLiquor from "@/assets/cat-liquor.webp";
+import catSmoke from "@/assets/cat-smoke.webp";
+import catPharmacy from "@/assets/cat-pharmacy.webp";
+import catPet from "@/assets/cat-pet.webp";
+import catTakeout from "@/assets/cat-takeout.webp";
+import catGrocery from "@/assets/cat-grocery.webp";
 
 const categories = [
   {

@@ -16,12 +16,12 @@ import { useIsNative } from "@/hooks/useIsNative";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/seo/SEO";
-import tabLiquor from "@/assets/tab-liquor.png";
-import tabSmoke from "@/assets/tab-smoke.png";
-import tabTakeout from "@/assets/tab-takeout.png";
-import tabPharmacy from "@/assets/tab-pharmacy.png";
-import tabPet from "@/assets/tab-pet.png";
-import tabGrocery from "@/assets/tab-grocery.png";
+import tabLiquor from "@/assets/tab-liquor.webp";
+import tabSmoke from "@/assets/tab-smoke.webp";
+import tabTakeout from "@/assets/tab-takeout.webp";
+import tabPharmacy from "@/assets/tab-pharmacy.webp";
+import tabPet from "@/assets/tab-pet.webp";
+import tabGrocery from "@/assets/tab-grocery.webp";
 
 const sortOptions = [
   { value: "rating", label: "Highest Rated" },
