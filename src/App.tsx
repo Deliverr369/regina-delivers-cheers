@@ -116,7 +116,9 @@ const App = () => (
             <AgeGate />
             <OnboardingGate />
             <PushNotificationsMount />
-            <SupportChatbot />
+            <Suspense fallback={null}>
+              <SupportChatbot />
+            </Suspense>
             <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />
