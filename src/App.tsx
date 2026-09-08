@@ -15,7 +15,7 @@ import Stores from "./pages/Stores";
 import OnboardingGate from "./components/OnboardingGate";
 import AgeGate from "./components/AgeGate";
 import PushNotificationsMount from "./components/PushNotificationsMount";
-import SupportChatbot from "./components/SupportChatbot";
+
 import DomainCanonical from "./components/seo/DomainCanonical";
 
 // Retries a dynamic import once after a hard reload when the chunk is missing
