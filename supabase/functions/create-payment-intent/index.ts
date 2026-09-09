@@ -39,6 +39,24 @@ const timeToMin = (t: string) => {
   return (h || 0) * 60 + (m || 0);
 };
 
+// Store hours are stored in local Regina time; edge runtime is UTC.
+const STORE_TZ = "America/Regina";
+const localParts = (d: Date) => {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: STORE_TZ,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map((p) => [p.type, p.value]));
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return {
+    weekday: days.indexOf(parts.weekday as string),
+    minutes: Number(parts.hour) * 60 + Number(parts.minute),
+  };
+};
+
 interface ItemIn {
   product_id: string;
   store_id: string;
