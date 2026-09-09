@@ -184,12 +184,13 @@ Deno.serve(async (req) => {
       hoursByStore.get(h.store_id)!.push(h);
     }
     const now = new Date();
+    const nowLocal = localParts(now);
     const deliveryType = body.delivery_type || "asap";
     if (deliveryType === "asap") {
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
-        const day = list.find((d) => d.weekday === now.getDay());
-        const minsNow = now.getHours() * 60 + now.getMinutes();
+        const day = list.find((d) => d.weekday === nowLocal.weekday);
+        const minsNow = nowLocal.minutes;
         const open = day && !day.is_closed
           && minsNow >= timeToMin(day.open_time)
           && minsNow < timeToMin(day.close_time);
