@@ -50,7 +50,7 @@ const Products = () => {
       while (true) {
         const { data, error } = await supabase
           .from("products")
-          .select(`*, stores (id, name)`)
+          .select(`id, name, price, category, image_url, size, in_stock, stores (id, name)`)
           .eq("in_stock", true)
           .range(from, from + batchSize - 1);
         if (error) throw error;
