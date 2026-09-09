@@ -39,6 +39,24 @@ const timeToMin = (t: string) => {
   return (h || 0) * 60 + (m || 0);
 };
 
+// Store hours are stored in local Regina time; edge runtime is UTC.
+const STORE_TZ = "America/Regina";
+const localParts = (d: Date) => {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: STORE_TZ,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map((p) => [p.type, p.value]));
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return {
+    weekday: days.indexOf(parts.weekday as string),
+    minutes: Number(parts.hour) * 60 + Number(parts.minute),
+  };
+};
+
 interface ItemIn {
   product_id: string;
   store_id: string;
@@ -166,12 +184,13 @@ Deno.serve(async (req) => {
       hoursByStore.get(h.store_id)!.push(h);
     }
     const now = new Date();
+    const nowLocal = localParts(now);
     const deliveryType = body.delivery_type || "asap";
     if (deliveryType === "asap") {
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
-        const day = list.find((d) => d.weekday === now.getDay());
-        const minsNow = now.getHours() * 60 + now.getMinutes();
+        const day = list.find((d) => d.weekday === nowLocal.weekday);
+        const minsNow = nowLocal.minutes;
         const open = day && !day.is_closed
           && minsNow >= timeToMin(day.open_time)
           && minsNow < timeToMin(day.close_time);
@@ -194,7 +213,7 @@ Deno.serve(async (req) => {
       const [ss, ee] = body.scheduled_slot.split("-");
       const startMin = timeToMin(ss);
       const endMin = timeToMin(ee);
-      const weekday = slotStart.getDay();
+      const weekday = localParts(slotStart).weekday;
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
         const day = list.find((d) => d.weekday === weekday);
