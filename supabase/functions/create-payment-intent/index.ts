@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
       const [ss, ee] = body.scheduled_slot.split("-");
       const startMin = timeToMin(ss);
       const endMin = timeToMin(ee);
-      const weekday = slotStart.getDay();
+      const weekday = localParts(slotStart).weekday;
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
         const day = list.find((d) => d.weekday === weekday);
