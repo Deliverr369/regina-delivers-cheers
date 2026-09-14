@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, ChevronDown, Plus, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { safeImageUrl } from "@/lib/image-url";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -238,7 +238,7 @@ const Products = () => {
               items={filteredProducts}
               getKey={({ product }) => product.id}
               renderItem={({ product, storeCount }) => {
-                const sizes = getProductSizes(product.id);
+                const sizes = getProductSizes(product);
                 const currentSize = selectedSizes[product.id] || sizes[0]?.pack_size;
                 const displayPrice = getSelectedPrice(product);
 
