@@ -99,47 +99,23 @@ const OrderReceipt = () => {
 
   const status = statusConfig[order.status || "pending"];
   const items = (order.order_items || []) as any[];
-  // Single rounding helper — every money value goes through this once.
-  const r2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
-
-  const itemsTotal = items.reduce(
-    (s, i) => s + Number(i.price) * Number(i.quantity),
-    0
-  );
   const o = order as any;
+  const num = (n: unknown) => Number(n ?? 0);
 
-  // Prefer finalised amounts (store receipt confirmed) over estimates.
-  const hasFinal = o.final_total != null && Number(o.final_total) > 0;
-
-  const deliveryFee = r2(o.delivery_fee);
-  const convenienceFee = r2(o.convenience_fee);
-  const discount = r2(o.discount_amount);
-  const total = r2(hasFinal ? o.final_total : order.total);
-
-  // Tax rate implied by the order's own estimate, reused for final amounts.
-  const estSubtotal = Number(order.subtotal ?? itemsTotal);
-  const estTax = Number(order.tax || 0);
-  const taxRate = estSubtotal > 0 ? estTax / estSubtotal : 0;
-
-  let subtotal: number;
-  let tax: number;
-  if (hasFinal && o.final_subtotal != null && Number(o.final_subtotal) > 0) {
-    // final_subtotal is the store receipt total, tax included — split it back out.
-    const receipt = Number(o.final_subtotal);
-    tax = r2((receipt * taxRate) / (1 + taxRate));
-    subtotal = r2(receipt - tax);
-  } else {
-    subtotal = r2(estSubtotal);
-    tax = r2(estTax);
-  }
-
-  // Tip is not stored: it is whatever remains after the known lines.
-  const tipAmount = Math.max(
-    0,
-    r2(total - (subtotal + deliveryFee + convenienceFee + tax - discount))
-  );
+  // Every amount comes from the server (get_order_amounts), already rounded to
+  // cents, so the receipt can never drift from what was actually charged.
+  const a = amounts as any;
+  const subtotal = num(a?.subtotal);
+  const deliveryFee = num(a?.delivery_fee);
+  const convenienceFee = num(a?.convenience_fee);
+  const tax = num(a?.tax);
+  const discount = num(a?.discount);
+  const tipAmount = num(a?.tip);
+  const total = num(a?.total);
 
   const isCod = (o.payment_method || "") === "cod";
+
+
 
 
   return (
