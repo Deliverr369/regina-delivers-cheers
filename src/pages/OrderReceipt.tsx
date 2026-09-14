@@ -86,7 +86,15 @@ const OrderReceipt = () => {
   const items = (order.order_items || []) as any[];
   const itemsTotal = items.reduce((s, i) => s + Number(i.price) * Number(i.quantity), 0);
   const subtotal = Number(order.subtotal ?? itemsTotal);
+  const deliveryFee = Number((order as any).delivery_fee || 0);
+  const convenienceFee = Number((order as any).convenience_fee || 0);
+  const tax = Number(order.tax || 0);
+  const discount = Number((order as any).discount_amount || 0);
   const total = Number(order.total || 0);
+  const tipAmount = Math.max(
+    0,
+    total - (subtotal + deliveryFee + convenienceFee + tax - discount)
+  );
   const isCod = ((order as any).payment_method || "") === "cod";
 
   return (
