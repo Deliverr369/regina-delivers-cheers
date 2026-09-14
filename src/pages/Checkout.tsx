@@ -960,12 +960,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
             {!isCod && props.selectedCardId === "new" && (
               <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
-                <PaymentElement
-                  options={{
-                    layout: { type: "tabs", defaultCollapsed: false },
-                    wallets: { applePay: "auto", googlePay: "auto" },
-                  }}
-                />
+                {props.clientSecret ? (
+                  <PaymentElement
+                    options={{
+                      layout: { type: "tabs", defaultCollapsed: false },
+                      wallets: { applePay: "auto", googlePay: "auto" },
+                    }}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Add your Regina delivery address above to load the secure card form.
+                  </p>
+                )}
               </div>
             )}
           </SectionCard>

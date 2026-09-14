@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       limit: 20,
     });
 
-    const payment_methods = pms.data.map((pm) => ({
+    const payment_methods = (pms?.data ?? []).map((pm) => ({
       id: pm.id,
       brand: pm.card?.brand,
       last4: pm.card?.last4,
