@@ -137,7 +137,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
         }
         toast({ title: "Payment captured", description: `Charged $${newTotal.toFixed(2)} to customer.` });
       } else {
-        toast({ title: "Final price saved", description: `Collect $${newTotal.toFixed(2)} cash from customer.` });
+        toast({ title: "Final price saved", description: `Collect $${newTotal.toFixed(2)} from customer at the door.` });
       }
       onCaptured?.();
       onOpenChange(false);
@@ -248,7 +248,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">
-                  {isCod ? "Cash on delivery · estimate" : `Authorized hold $${authorized.toFixed(2)} · estimate`} $
+                  {isCod ? "Pay at the door · estimate" : `Authorized hold $${authorized.toFixed(2)} · estimate`} $
                   {estimatedTotal.toFixed(2)}
                 </span>
                 <span className={variancePct > 0 ? "text-amber-600" : "text-emerald-600"}>
