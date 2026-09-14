@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote, Zap, CalendarClock } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote, Zap, CalendarClock, RefreshCw } from "lucide-react";
 import CheckoutAddressPicker from "@/components/CheckoutAddressPicker";
 import type { SavedAddress } from "@/hooks/useAddresses";
 import { loadStripe } from "@stripe/stripe-js";
@@ -220,20 +220,29 @@ const Checkout = () => {
     })();
   }, [user]);
 
-  // Fetch saved cards once
-  useEffect(() => {
+  // Fetch saved cards (with retry + visible fallback when it fails)
+  const [savedCardsStatus, setSavedCardsStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const loadSavedCards = useCallback(async () => {
     if (!user) return;
-    (async () => {
-      try {
-        const { data } = await supabase.functions.invoke("list-payment-methods", { body: { environment: stripeEnv } });
-        const cards: SavedCard[] = data?.payment_methods || [];
-        setSavedCards(cards);
-        if (cards.length > 0) setSelectedCardId(cards[0].id);
-      } catch (err) {
-        console.warn("Failed to load saved cards", err);
-      }
-    })();
+    setSavedCardsStatus("loading");
+    try {
+      const { data, error } = await supabase.functions.invoke("list-payment-methods", { body: { environment: stripeEnv } });
+      if (error) throw error;
+      const cards: SavedCard[] = data?.payment_methods || [];
+      setSavedCards(cards);
+      setSavedCardsStatus("loaded");
+      if (cards.length > 0) setSelectedCardId(cards[0].id);
+    } catch (err) {
+      console.warn("Failed to load saved cards", err);
+      setSavedCards([]);
+      setSavedCardsStatus("error");
+      setSelectedCardId("new");
+    }
   }, [user]);
+  useEffect(() => {
+    if (!user) { setSavedCardsStatus("loaded"); return; }
+    loadSavedCards();
+  }, [user, loadSavedCards]);
 
   // Build the canonical server-validation payload from cart + form state.
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
