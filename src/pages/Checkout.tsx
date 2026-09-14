@@ -942,6 +942,42 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             )}
             {!isCod && <div className="h-4" />}
 
+            {!isCod && props.savedCardsStatus === "loading" && (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading your saved cards...
+              </p>
+            )}
+
+            {!isCod && props.savedCardsStatus === "error" && (
+              <div className="rounded-xl border border-[#F78B8E]/40 bg-[#F78B8E]/[0.06] p-4 mb-4 space-y-3">
+                <div className="flex gap-3">
+                  <AlertCircle className="h-4 w-4 text-[#E15B64] mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-foreground/85 leading-relaxed">
+                    We couldn't load your saved cards. You can try again, or just enter a new card below — it won't affect your order.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={props.onRetrySavedCards}
+                    className="gap-1.5"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Try again
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => props.setSelectedCardId("new")}
+                  >
+                    Use a new card instead
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {!isCod && props.savedCards.length > 0 && (
               <div className="space-y-2 mb-4">
                 {props.savedCards.map((card) => {
