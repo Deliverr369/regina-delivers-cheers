@@ -48,7 +48,7 @@ const OrderReceipt = () => {
   });
 
   // Amounts are computed server-side so the receipt always matches the charge.
-  const { data: amounts } = useQuery({
+  const { data: amounts, isLoading: amountsLoading } = useQuery({
     queryKey: ["order-amounts", id],
     queryFn: async () => {
       if (!id) return null;
@@ -68,7 +68,7 @@ const OrderReceipt = () => {
 
   const handlePrint = () => window.print();
 
-  if (authLoading || isLoading) {
+  if (authLoading || isLoading || amountsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -104,7 +104,17 @@ const OrderReceipt = () => {
 
   // Every amount comes from the server (get_order_amounts), already rounded to
   // cents, so the receipt can never drift from what was actually charged.
-  const a = amounts as any;
+  // If that call returns nothing, fall back to the order row so the receipt is
+  // never rendered as an all-zero order.
+  const a = (amounts as any) ?? {
+    subtotal: o.subtotal,
+    delivery_fee: o.delivery_fee,
+    convenience_fee: o.convenience_fee,
+    tax: o.tax,
+    discount: o.discount_amount,
+    tip: 0,
+    total: o.final_total ?? o.total,
+  };
   const subtotal = num(a?.subtotal);
   const deliveryFee = num(a?.delivery_fee);
   const convenienceFee = num(a?.convenience_fee);
