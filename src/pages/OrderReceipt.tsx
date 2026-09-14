@@ -260,20 +260,6 @@ const OrderReceipt = () => {
             {/* Totals */}
             <div className="rounded-xl bg-secondary/40 p-4 mb-6 space-y-1.5 text-sm">
               <Row label="Subtotal" value={fmtMoney(subtotal)} />
-              {deliveryFee > 0 && (
-                <Row label="Delivery fee" value={fmtMoney(deliveryFee)} />
-              )}
-              {convenienceFee > 0 && (
-                <Row label="Service fee" value={fmtMoney(convenienceFee)} />
-              )}
-              {tax > 0 && <Row label="Tax (SK)" value={fmtMoney(tax)} />}
-              {discount > 0 && (
-                <Row
-                  label={`Discount${order.promo_code ? ` (${order.promo_code})` : ""}`}
-                  value={`−${fmtMoney(discount)}`}
-                  className="text-success"
-                />
-              )}
               <Separator className="my-2" />
               <div className="flex items-baseline justify-between">
                 <span className="font-display text-base font-bold text-foreground">
