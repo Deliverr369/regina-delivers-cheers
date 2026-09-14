@@ -664,14 +664,42 @@ const getNextDays = (count = 7) => {
 };
 
 
+// Renders the Stripe card field inside its own <Elements> scope and hands the
+// live stripe/elements instances back to the parent form via a ref, so a new
+// payment intent only remounts this small block — never the whole checkout.
+const CardFields = ({
+  onReady,
+}: {
+  onReady: (v: { stripe: ReturnType<typeof useStripe>; elements: ReturnType<typeof useElements> }) => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  useEffect(() => {
+    onReady({ stripe, elements });
+  }, [stripe, elements, onReady]);
+  return (
+    <PaymentElement
+      options={{
+        layout: { type: "tabs", defaultCollapsed: false },
+        wallets: { applePay: "auto", googlePay: "auto" },
+      }}
+    />
+  );
+};
+
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const isCod = props.paymentMode === "cod";
-  // Hooks must be called unconditionally — but they throw if no <Elements> provider.
-  // In COD mode we render outside <Elements>, so swallow the error and use nulls.
-  let stripe: ReturnType<typeof useStripe> = null;
-  let elements: ReturnType<typeof useElements> = null;
-  try { stripe = useStripe(); } catch { /* COD mode — no Elements provider */ }
-  try { elements = useElements(); } catch { /* COD mode — no Elements provider */ }
+  const stripeRef = useRef<{
+    stripe: ReturnType<typeof useStripe>;
+    elements: ReturnType<typeof useElements>;
+  }>({ stripe: null, elements: null });
+  const handleCardReady = useCallback(
+    (v: { stripe: ReturnType<typeof useStripe>; elements: ReturnType<typeof useElements> }) => {
+      stripeRef.current = v;
+    },
+    [],
+  );
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
