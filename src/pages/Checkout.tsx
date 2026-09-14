@@ -575,28 +575,13 @@ const Checkout = () => {
               allStoresOpenNow,
               selectedAddressId,
               onAddressSelect: handleAddressSelect,
+              elementsOptions,
+              initLoading,
             };
 
-            if (paymentMode === "cod") {
-              return <CheckoutBody {...bodyProps} />;
-            }
-            if (initLoading) {
-              return (
-                <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
-                </div>
-              );
-            }
-            if (clientSecret && elementsOptions) {
-              return (
-                <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
-                  <CheckoutBody {...bodyProps} />
-                </Elements>
-              );
-            }
-            // No payment intent yet (e.g. no delivery address picked yet, or the
-            // intent failed). Still render the form so the shopper can enter an
-            // address / change options — never dead-end the checkout.
+            // The form stays mounted at all times; only the Stripe card field
+            // remounts when a new payment intent is issued, so the page never
+            // appears to reload while the shopper edits their order.
             return <CheckoutBody {...bodyProps} />;
           })()}
         </div>
