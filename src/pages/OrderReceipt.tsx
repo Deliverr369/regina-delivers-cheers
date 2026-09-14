@@ -86,7 +86,15 @@ const OrderReceipt = () => {
   const items = (order.order_items || []) as any[];
   const itemsTotal = items.reduce((s, i) => s + Number(i.price) * Number(i.quantity), 0);
   const subtotal = Number(order.subtotal ?? itemsTotal);
+  const deliveryFee = Number((order as any).delivery_fee || 0);
+  const convenienceFee = Number((order as any).convenience_fee || 0);
+  const tax = Number(order.tax || 0);
+  const discount = Number((order as any).discount_amount || 0);
   const total = Number(order.total || 0);
+  const tipAmount = Math.max(
+    0,
+    total - (subtotal + deliveryFee + convenienceFee + tax - discount)
+  );
   const isCod = ((order as any).payment_method || "") === "cod";
 
   return (
@@ -256,6 +264,21 @@ const OrderReceipt = () => {
             {/* Totals */}
             <div className="rounded-xl bg-secondary/40 p-4 mb-6 space-y-1.5 text-sm">
               <Row label="Subtotal" value={fmtMoney(subtotal)} />
+              {deliveryFee > 0 && (
+                <Row label="Delivery fee" value={fmtMoney(deliveryFee)} />
+              )}
+              {convenienceFee > 0 && (
+                <Row label="Convenience charge" value={fmtMoney(convenienceFee)} />
+              )}
+              {tax > 0 && <Row label="Tax (SK)" value={fmtMoney(tax)} />}
+              {tipAmount > 0 && <Row label="Tip" value={fmtMoney(tipAmount)} />}
+              {discount > 0 && (
+                <Row
+                  label={`Discount${order.promo_code ? ` (${order.promo_code})` : ""}`}
+                  value={`−${fmtMoney(discount)}`}
+                  className="text-success"
+                />
+              )}
               <Separator className="my-2" />
               <div className="flex items-baseline justify-between">
                 <span className="font-display text-base font-bold text-foreground">
