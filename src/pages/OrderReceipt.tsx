@@ -95,28 +95,35 @@ const OrderReceipt = () => {
 
   // Prefer finalised amounts (store receipt confirmed) over estimates.
   const hasFinal = o.final_total != null && Number(o.final_total) > 0;
-  const rawSubtotal =
-    hasFinal && o.final_subtotal != null && Number(o.final_subtotal) > 0
-      ? Number(o.final_subtotal)
-      : Number(order.subtotal ?? itemsTotal);
 
-  const subtotal = r2(rawSubtotal);
   const deliveryFee = r2(o.delivery_fee);
   const convenienceFee = r2(o.convenience_fee);
   const discount = r2(o.discount_amount);
   const total = r2(hasFinal ? o.final_total : order.total);
 
-  // Tax scales with the subtotal actually charged, using the order's own rate.
-  const estSubtotal = Number(order.subtotal || 0);
+  // Tax rate implied by the order's own estimate, reused for final amounts.
+  const estSubtotal = Number(order.subtotal ?? itemsTotal);
   const estTax = Number(order.tax || 0);
   const taxRate = estSubtotal > 0 ? estTax / estSubtotal : 0;
-  const tax = hasFinal ? r2(subtotal * taxRate) : r2(estTax);
+
+  let subtotal: number;
+  let tax: number;
+  if (hasFinal && o.final_subtotal != null && Number(o.final_subtotal) > 0) {
+    // final_subtotal is the store receipt total, tax included — split it back out.
+    const receipt = Number(o.final_subtotal);
+    tax = r2((receipt * taxRate) / (1 + taxRate));
+    subtotal = r2(receipt - tax);
+  } else {
+    subtotal = r2(estSubtotal);
+    tax = r2(estTax);
+  }
 
   // Tip is not stored: it is whatever remains after the known lines.
   const tipAmount = Math.max(
     0,
     r2(total - (subtotal + deliveryFee + convenienceFee + tax - discount))
   );
+
   const isCod = (o.payment_method || "") === "cod";
 
 
