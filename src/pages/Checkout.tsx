@@ -570,6 +570,8 @@ const Checkout = () => {
               paymentIntentId,
               onSuccess: handleSuccess,
               savedCards,
+              savedCardsStatus,
+              onRetrySavedCards: loadSavedCards,
               selectedCardId,
               setSelectedCardId,
               clientSecret: clientSecret || "",
@@ -617,6 +619,8 @@ interface CheckoutBodyProps extends PaymentFormProps {
   customTip: string;
   setCustomTip: (v: string) => void;
   savedCards: SavedCard[];
+  savedCardsStatus: "loading" | "loaded" | "error";
+  onRetrySavedCards: () => void;
   selectedCardId: string | "new";
   setSelectedCardId: (v: string | "new") => void;
   clientSecret: string;
