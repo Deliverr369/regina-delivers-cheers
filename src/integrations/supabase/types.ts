@@ -1098,6 +1098,19 @@ export type Database = {
           variant_count: number
         }[]
       }
+      get_order_amounts: {
+        Args: { _order_id: string }
+        Returns: {
+          convenience_fee: number
+          delivery_fee: number
+          discount: number
+          is_final: boolean
+          subtotal: number
+          tax: number
+          tip: number
+          total: number
+        }[]
+      }
       get_product_catalog_groups: {
         Args: never
         Returns: {
