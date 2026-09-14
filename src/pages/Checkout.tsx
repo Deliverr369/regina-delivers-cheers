@@ -325,7 +325,8 @@ const Checkout = () => {
         if (!cancelled) setInitLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, cartItems.length, estimatedTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, tip]);
 
