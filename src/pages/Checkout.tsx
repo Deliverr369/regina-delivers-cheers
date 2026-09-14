@@ -982,13 +982,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
             {!isCod && props.selectedCardId === "new" && (
               <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
-                {props.clientSecret ? (
-                  <PaymentElement
-                    options={{
-                      layout: { type: "tabs", defaultCollapsed: false },
-                      wallets: { applePay: "auto", googlePay: "auto" },
-                    }}
-                  />
+                {props.elementsOptions ? (
+                  <Elements
+                    stripe={stripePromise}
+                    options={props.elementsOptions}
+                    key={props.elementsOptions.clientSecret}
+                  >
+                    <CardFields onReady={handleCardReady} />
+                  </Elements>
+                ) : props.initLoading ? (
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Preparing secure payment...
+                  </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     Add your Regina delivery address above to load the secure card form.
@@ -1164,7 +1169,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 <Button
                   type="submit"
                   className="w-full h-14 gap-2 rounded-2xl font-display font-bold text-base bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-primary shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
-                  disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
+                  disabled={isCod ? props.isSubmitting : (!props.clientSecret || props.isSubmitting)}
                 >
                   {props.isSubmitting ? (
                     <><Loader2 className="h-5 w-5 animate-spin" /> {isCod ? "Placing order..." : "Authorizing..."}</>
@@ -1209,7 +1214,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           <Button
             type="submit"
             className="h-12 px-5 gap-2 rounded-xl font-display font-bold text-sm bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 flex-shrink-0"
-            disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
+            disabled={isCod ? props.isSubmitting : (!props.clientSecret || props.isSubmitting)}
           >
             {props.isSubmitting ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> {isCod ? "Placing..." : "Authorizing..."}</>
