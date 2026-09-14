@@ -471,7 +471,7 @@ const Checkout = () => {
       toast({
         title: multi ? `${createdOrderIds.length} orders placed!` : "Order placed!",
         description: isCod
-          ? "Cash on delivery — please have exact amount ready."
+          ? "Pay at the door — please have exact amount ready."
           : multi
             ? `Card authorized — ${createdOrderIds.length} stores will fulfill your items separately.`
             : "Card authorized — final amount confirmed by your store.",
@@ -904,8 +904,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                   <Banknote className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">Cash on delivery</p>
-                  <p className="text-[11px] text-muted-foreground">Pay the driver in cash</p>
+                  <p className="text-sm font-semibold text-foreground">Pay at the door</p>
+                  <p className="text-[11px] text-muted-foreground">Pay the driver when they arrive</p>
                 </div>
               </button>
             </div>
@@ -914,7 +914,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 flex gap-3">
                 <Banknote className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-foreground/80 leading-relaxed">
-                  <span className="font-semibold text-foreground">Pay with cash on delivery.</span> Please have approximately{" "}
+                  <span className="font-semibold text-foreground">Pay at the door.</span> Please have approximately{" "}
                   <span className="font-semibold text-foreground">${props.estimatedTotal.toFixed(2)}</span> ready. Final amount may vary based on in-store prices.
                 </p>
               </div>
@@ -1160,13 +1160,13 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                     </p>
                   </div>
                   <div className="text-right text-[11px] text-muted-foreground leading-tight">
-                    {isCod ? <>Pay in cash<br /><span className="text-foreground font-semibold">on delivery</span></> : <>Card hold<br /><span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span></>}
+                    {isCod ? <>Pay at the<br /><span className="text-foreground font-semibold">door</span></> : <>Card hold<br /><span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span></>}
                   </div>
                 </div>
 
                 {/* Pricing adjustment notice */}
                 <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-2.5 text-[11px] text-muted-foreground leading-relaxed">
-                  Final price matches in-store{isCod ? " — bring a little extra cash just in case." : ". You're only charged the actual amount."}
+                  Final price matches in-store{isCod ? " — bring a little extra just in case." : ". You're only charged the actual amount."}
                 </div>
 
                 {/* CTA */}
@@ -1178,7 +1178,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                   {props.isSubmitting ? (
                     <><Loader2 className="h-5 w-5 animate-spin" /> {isCod ? "Placing order..." : "Authorizing..."}</>
                   ) : isCod ? (
-                    <><Banknote className="h-4 w-4" /> Place order — Pay ${props.estimatedTotal.toFixed(2)} cash</>
+                    <><Banknote className="h-4 w-4" /> Place order — Pay ${props.estimatedTotal.toFixed(2)} at the door</>
                   ) : (
                     <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
                   )}

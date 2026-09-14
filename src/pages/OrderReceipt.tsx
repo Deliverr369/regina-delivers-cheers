@@ -315,7 +315,7 @@ const OrderReceipt = () => {
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
               {isCod ? (
                 <>
-                  <Banknote className="h-3.5 w-3.5" /> Paid by cash on delivery
+                  <Banknote className="h-3.5 w-3.5" /> Paid at the door
                 </>
               ) : (
                 <>
