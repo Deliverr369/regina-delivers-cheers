@@ -84,18 +84,48 @@ const OrderReceipt = () => {
 
   const status = statusConfig[order.status || "pending"];
   const items = (order.order_items || []) as any[];
-  const itemsTotal = items.reduce((s, i) => s + Number(i.price) * Number(i.quantity), 0);
-  const subtotal = Number(order.subtotal ?? itemsTotal);
-  const deliveryFee = Number((order as any).delivery_fee || 0);
-  const convenienceFee = Number((order as any).convenience_fee || 0);
-  const tax = Number(order.tax || 0);
-  const discount = Number((order as any).discount_amount || 0);
-  const total = Number(order.total || 0);
+  // Single rounding helper — every money value goes through this once.
+  const r2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
+
+  const itemsTotal = items.reduce(
+    (s, i) => s + Number(i.price) * Number(i.quantity),
+    0
+  );
+  const o = order as any;
+
+  // Prefer finalised amounts (store receipt confirmed) over estimates.
+  const hasFinal = o.final_total != null && Number(o.final_total) > 0;
+
+  const deliveryFee = r2(o.delivery_fee);
+  const convenienceFee = r2(o.convenience_fee);
+  const discount = r2(o.discount_amount);
+  const total = r2(hasFinal ? o.final_total : order.total);
+
+  // Tax rate implied by the order's own estimate, reused for final amounts.
+  const estSubtotal = Number(order.subtotal ?? itemsTotal);
+  const estTax = Number(order.tax || 0);
+  const taxRate = estSubtotal > 0 ? estTax / estSubtotal : 0;
+
+  let subtotal: number;
+  let tax: number;
+  if (hasFinal && o.final_subtotal != null && Number(o.final_subtotal) > 0) {
+    // final_subtotal is the store receipt total, tax included — split it back out.
+    const receipt = Number(o.final_subtotal);
+    tax = r2((receipt * taxRate) / (1 + taxRate));
+    subtotal = r2(receipt - tax);
+  } else {
+    subtotal = r2(estSubtotal);
+    tax = r2(estTax);
+  }
+
+  // Tip is not stored: it is whatever remains after the known lines.
   const tipAmount = Math.max(
     0,
-    total - (subtotal + deliveryFee + convenienceFee + tax - discount)
+    r2(total - (subtotal + deliveryFee + convenienceFee + tax - discount))
   );
-  const isCod = ((order as any).payment_method || "") === "cod";
+
+  const isCod = (o.payment_method || "") === "cod";
+
 
   return (
     <div className="min-h-screen bg-background">
