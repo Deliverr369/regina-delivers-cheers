@@ -1122,6 +1122,27 @@ export type Database = {
           variant_count: number
         }[]
       }
+      get_public_catalog: {
+        Args: {
+          _category?: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _sort?: string
+        }
+        Returns: {
+          category: string
+          id: string
+          image_url: string
+          name: string
+          pack_prices: Json
+          price: number
+          size: string
+          store_count: number
+          store_id: string
+          store_name: string
+        }[]
+      }
       get_seo_stats: {
         Args: never
         Returns: {
@@ -1136,6 +1157,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_public_catalog_groups: { Args: never; Returns: undefined }
       validate_promo_code: {
         Args: { _code: string; _order_amount: number }
         Returns: {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, ChevronDown, Plus, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { safeImageUrl } from "@/lib/image-url";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductDetailModal from "@/components/ProductDetailModal";
 import { SEO } from "@/components/seo/SEO";
+import { VirtualizedProductGrid } from "@/components/VirtualizedProductGrid";
 
 const categories = [
   { id: "all", name: "All Products" },
@@ -41,99 +42,64 @@ const Products = () => {
   const activeCategory = searchParams.get("category") || "all";
   const sortBy = searchParams.get("sort") || "name";
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["all-products"],
-    queryFn: async () => {
-      let allProducts: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      while (true) {
-        const { data, error } = await supabase
-          .from("products")
-          .select(`id, name, price, category, image_url, size, in_stock, stores (id, name)`)
-          .eq("in_stock", true)
-          .range(from, from + batchSize - 1);
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-        allProducts = allProducts.concat(data);
-        if (data.length < batchSize) break;
-        from += batchSize;
-      }
-      return allProducts;
+  // Debounce the search box so typing doesn't fire a request per keystroke
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  const PAGE_SIZE = 200;
+
+  // The catalogue is grouped, filtered and sorted in the database and streamed
+  // one page at a time — the browser never downloads the whole catalogue.
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["public-catalog", activeCategory, debouncedSearch, sortBy],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const { data, error } = await supabase.rpc("get_public_catalog", {
+        _category: activeCategory,
+        _search: debouncedSearch || null,
+        _sort: sortBy,
+        _limit: PAGE_SIZE,
+        _offset: pageParam as number,
+      });
+      if (error) throw error;
+      return (data ?? []) as any[];
     },
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < PAGE_SIZE ? undefined : allPages.length * PAGE_SIZE,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 
-  const { data: packPrices = [] } = useQuery({
-    queryKey: ["all-pack-prices"],
-    queryFn: async () => {
-      let allPrices: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      while (true) {
-        const { data, error } = await supabase
-          .from("product_pack_prices")
-          .select("*")
-          .eq("is_hidden", false)
-          .range(from, from + batchSize - 1);
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-        allPrices = allPrices.concat(data);
-        if (data.length < batchSize) break;
-        from += batchSize;
-      }
-      return allPrices;
-    },
-  });
+  const filteredProducts = useMemo(
+    () =>
+      (data?.pages.flat() ?? []).map((product: any) => ({
+        product,
+        storeCount: Number(product.store_count) || 1,
+      })),
+    [data]
+  );
 
-  // Extract leading numeric pack count for sorting (e.g. "24 Cans" -> 24, "750ml" -> 750)
-  const getPackSortValue = (packSize: string): number => {
-    const match = String(packSize || "").match(/(\d+(?:\.\d+)?)/);
-    return match ? parseFloat(match[1]) : 0;
-  };
-
-  // Map pack prices by product_id, sorted largest -> smallest
-  const packPriceMap = useMemo(() => {
-    const map = new Map<string, any[]>();
-    packPrices.forEach((pp: any) => {
-      const list = map.get(pp.product_id) || [];
-      list.push(pp);
-      map.set(pp.product_id, list);
-    });
-    map.forEach((list) => {
-      list.sort((a, b) => getPackSortValue(b.pack_size) - getPackSortValue(a.pack_size));
-    });
-    return map;
-  }, [packPrices]);
-
-  // Deduplicate products by name+category, keeping lowest price
-  const deduplicatedProducts = (() => {
-    const map = new Map<string, { product: typeof products[0]; storeCount: number }>();
-    products.forEach((p) => {
-      const key = `${p.name.toLowerCase().trim()}::${p.category}`;
-      const existing = map.get(key);
-      if (!existing) {
-        map.set(key, { product: p, storeCount: 1 });
-      } else {
-        existing.storeCount++;
-        if (Number(p.price) < Number(existing.product.price)) {
-          existing.product = p;
-        }
-      }
-    });
-    return Array.from(map.values());
-  })();
-
-  const filteredProducts = deduplicatedProducts
-    .filter(({ product }) => {
-      const matchesCategory = activeCategory === "all" || product.category === activeCategory;
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    })
-    .sort((a, b) => {
-      if (sortBy === "price-low") return Number(a.product.price) - Number(b.product.price);
-      if (sortBy === "price-high") return Number(b.product.price) - Number(a.product.price);
-      return a.product.name.localeCompare(b.product.name);
-    });
+  // Load the next page as the shopper nears the bottom of the grid
+  useEffect(() => {
+    const onScroll = () => {
+      if (!hasNextPage || isFetchingNextPage) return;
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 1200;
+      if (nearBottom) fetchNextPage();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleCategoryChange = (category: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -151,12 +117,11 @@ const Products = () => {
     setSearchParams(newParams);
   };
 
-  const getProductSizes = (productId: string) => {
-    return packPriceMap.get(productId) || [];
-  };
+  const getProductSizes = (product: any): any[] =>
+    Array.isArray(product?.pack_prices) ? product.pack_prices : [];
 
   const getSelectedPrice = (product: any) => {
-    const sizes = getProductSizes(product.id);
+    const sizes = getProductSizes(product);
     const selectedSize = selectedSizes[product.id];
     if (selectedSize) {
       const match = sizes.find((s: any) => s.pack_size === selectedSize);
@@ -167,12 +132,12 @@ const Products = () => {
   };
 
   const getSelectedSizeLabel = (product: any) => {
-    const sizes = getProductSizes(product.id);
+    const sizes = getProductSizes(product);
     if (sizes.length === 0) return null;
     return selectedSizes[product.id] || sizes[0]?.pack_size;
   };
 
-  const handleAddToCart = (product: typeof products[0]) => {
+  const handleAddToCart = (product: any) => {
     const price = getSelectedPrice(product);
     const sizeLabel = getSelectedSizeLabel(product);
     addToCart({
@@ -180,8 +145,8 @@ const Products = () => {
       name: sizeLabel ? `${product.name} (${sizeLabel})` : product.name,
       price,
       image: product.image_url || "",
-      storeId: product.stores?.id || "",
-      storeName: product.stores?.name || "",
+      storeId: product.store_id || "",
+      storeName: product.store_name || "",
     });
     toast({
       title: "Added to cart",
@@ -267,25 +232,27 @@ const Products = () => {
             </div>
           )}
 
-          {/* Products Grid */}
+          {/* Products Grid — virtualized so only on-screen cards are rendered */}
           {!isLoading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {filteredProducts.map(({ product, storeCount }, index) => {
-                const sizes = getProductSizes(product.id);
+            <VirtualizedProductGrid
+              items={filteredProducts}
+              getKey={({ product }) => product.id}
+              renderItem={({ product, storeCount }) => {
+                const sizes = getProductSizes(product);
                 const currentSize = selectedSizes[product.id] || sizes[0]?.pack_size;
                 const displayPrice = getSelectedPrice(product);
 
                 return (
                   <div
-                    key={product.id}
-                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all animate-fade-in flex flex-col cursor-pointer group"
-                    style={{ animationDelay: `${index * 0.03}s` }}
+                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all flex flex-col cursor-pointer group h-full"
                     onClick={() => setOpenProductId(product.id)}
                   >
                     <div className="aspect-square overflow-hidden">
                       <img 
                         src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format&fm=jpg"} 
                         alt={product.name} 
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                       />
                     </div>
@@ -303,7 +270,7 @@ const Products = () => {
                         <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
                           {sizes.map((s: any) => (
                             <button
-                              key={s.id}
+                              key={`${product.id}-${s.pack_size}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedSizes(prev => ({ ...prev, [product.id]: s.pack_size }));
@@ -341,8 +308,8 @@ const Products = () => {
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              }}
+            />
           )}
 
           {!isLoading && filteredProducts.length === 0 && (
