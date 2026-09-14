@@ -10,21 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { stripeEnv } from "@/lib/stripeEnv";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 
-interface OrderItemRow {
-  id: string;
-  product_name: string;
-  quantity: number;
-  price: number;
-  estimated_price: number | null;
-  final_price: number | null;
-}
-
 interface OrderRow {
   id: string;
   user_id: string;
   subtotal: number;
   tax: number;
   delivery_fee: number | null;
+  convenience_fee: number | null;
   total: number;
   estimated_subtotal: number | null;
   estimated_total: number | null;
@@ -47,8 +39,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
   const [loading, setLoading] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [order, setOrder] = useState<OrderRow | null>(null);
-  const [items, setItems] = useState<OrderItemRow[]>([]);
-  const [finalPrices, setFinalPrices] = useState<Record<string, string>>({});
+  const [receipt, setReceipt] = useState<string>("");
 
   useEffect(() => {
     if (!open || !orderId) return;
@@ -57,43 +48,50 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
 
   const loadOrder = async (id: string) => {
     setLoading(true);
-    const [orderRes, itemsRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("id", id).maybeSingle(),
-      supabase.from("order_items").select("*").eq("order_id", id),
-    ]);
-    if (orderRes.error || !orderRes.data) {
+    const { data, error } = await supabase.from("orders").select("*").eq("id", id).maybeSingle();
+    if (error || !data) {
       toast({ title: "Error", description: "Failed to load order", variant: "destructive" });
       setLoading(false);
       return;
     }
-    setOrder(orderRes.data as OrderRow);
-    const its = (itemsRes.data || []) as OrderItemRow[];
-    setItems(its);
-    const initial: Record<string, string> = {};
-    its.forEach((it) => {
-      const v = it.final_price ?? it.estimated_price ?? it.price;
-      initial[it.id] = String(Number(v).toFixed(2));
-    });
-    setFinalPrices(initial);
+    const o = data as OrderRow;
+    setOrder(o);
+    // Default to the estimated store receipt (items + tax), which is what the
+    // shopper will be replacing with the real till receipt amount.
+    const estReceipt =
+      o.final_subtotal != null
+        ? Number(o.final_subtotal)
+        : Number(o.estimated_subtotal ?? o.subtotal) + Number(o.tax || 0);
+    setReceipt(estReceipt.toFixed(2));
     setLoading(false);
   };
 
-  const computeFinalSubtotal = () =>
-    items.reduce((sum, it) => {
-      const p = parseFloat(finalPrices[it.id] || "0");
-      return sum + (isNaN(p) ? 0 : p) * it.quantity;
-    }, 0);
-
-  const finalSubtotal = computeFinalSubtotal();
-  const taxRate = order && order.subtotal > 0 ? Number(order.tax) / Number(order.subtotal) : 0.11;
-  const newTax = finalSubtotal * taxRate;
   const deliveryFee = Number(order?.delivery_fee || 0);
-  const newTotal = finalSubtotal + newTax + deliveryFee;
+  const convenienceFee = Number(order?.convenience_fee || 0);
+  // Tip isn't stored separately — it's whatever the original total carried on
+  // top of items + tax + fees. It stays exactly as the customer chose.
+  const estimatedTotal = Number(order?.estimated_total || order?.total || 0);
+  const tip = Math.max(
+    0,
+    Math.round(
+      (estimatedTotal -
+        (Number(order?.estimated_subtotal ?? order?.subtotal ?? 0) +
+          Number(order?.tax || 0) +
+          deliveryFee +
+          convenienceFee)) *
+        100,
+    ) / 100,
+  );
+
+  const receiptAmount = (() => {
+    const v = parseFloat(receipt);
+    return isNaN(v) ? 0 : v;
+  })();
+
+  const newTotal = receiptAmount + deliveryFee + convenienceFee + tip;
   const authorized = Number(order?.authorized_amount || 0);
   const exceedsAuth = authorized > 0 && newTotal > authorized;
-  const estimated = Number(order?.estimated_total || order?.total || 0);
-  const variancePct = estimated > 0 ? ((newTotal - estimated) / estimated) * 100 : 0;
-
+  const variancePct = estimatedTotal > 0 ? ((newTotal - estimatedTotal) / estimatedTotal) * 100 : 0;
   const isCod = !order?.stripe_payment_intent_id;
 
   const handleCapture = async () => {
@@ -108,39 +106,29 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
     }
     setCapturing(true);
     try {
-      // Persist final prices and adjustments
-      const adjustments: any[] = [];
-      for (const it of items) {
-        const newPrice = parseFloat(finalPrices[it.id] || "0");
-        const oldPrice = Number(it.estimated_price ?? it.price);
-        if (newPrice !== oldPrice) {
-          adjustments.push({
+      const oldTotal = Number(order.final_total ?? order.estimated_total ?? order.total);
+      if (newTotal !== oldTotal) {
+        await supabase.from("order_price_adjustments").insert([
+          {
             order_id: order.id,
-            order_item_id: it.id,
-            field: "item_price",
-            old_value: oldPrice,
-            new_value: newPrice,
-          });
-        }
-        await supabase.from("order_items").update({ final_price: newPrice }).eq("id", it.id);
-      }
-      if (adjustments.length > 0) {
-        await supabase.from("order_price_adjustments").insert(adjustments);
+            field: "final_total",
+            old_value: oldTotal,
+            new_value: newTotal,
+          },
+        ]);
       }
 
       await supabase
         .from("orders")
         .update({
-          final_subtotal: finalSubtotal,
+          final_subtotal: receiptAmount,
           final_total: newTotal,
-          tax: newTax,
           total: newTotal,
           ...(isCod ? { payment_status: "captured" } : {}),
         })
         .eq("id", order.id);
 
       if (!isCod) {
-        // Card: capture via Stripe edge function
         const { data, error } = await supabase.functions.invoke("capture-payment", {
           body: { orderId: order.id, environment: stripeEnv },
         });
@@ -170,7 +158,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
         <SheetHeader>
           <SheetTitle>Confirm Final Price</SheetTitle>
           <SheetDescription>
-            Adjust item prices to match what was actually purchased, then capture the payment.
+            Enter the store receipt total (taxes included). Delivery, fees and the tip are added automatically.
           </SheetDescription>
         </SheetHeader>
 
@@ -180,7 +168,6 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
           </div>
         ) : (
           <div className="mt-6 space-y-5">
-            {/* Status banner */}
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="font-mono text-xs">#{order.id.slice(0, 8)}</Badge>
               <Badge className="bg-blue-100 text-blue-800 border-0 capitalize">
@@ -193,25 +180,28 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
               )}
             </div>
 
-            {/* Authorization summary */}
-            <div className="rounded-lg border bg-muted/30 p-4 space-y-1.5 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Estimated total</span><span>${estimated.toFixed(2)}</span></div>
-              {!isCod ? (
-                <div className="flex justify-between"><span className="text-muted-foreground">Authorized hold</span><span className="font-medium">${authorized.toFixed(2)}</span></div>
-              ) : (
-                <div className="flex justify-between"><span className="text-muted-foreground">Payment method</span><span className="font-medium">Cash on delivery</span></div>
-              )}
-              <Separator className="my-2" />
-              <div className="flex justify-between font-semibold">
-                <span>New final total</span>
-                <span className={!isCod && exceedsAuth ? "text-destructive" : "text-foreground"}>${newTotal.toFixed(2)}</span>
+            {/* Receipt entry */}
+            <div className="rounded-lg border p-4 space-y-2">
+              <Label htmlFor="receipt-total" className="text-sm font-medium">
+                Store receipt total (taxes included)
+              </Label>
+              <div className="flex items-center gap-2">
+                <span className="text-lg text-muted-foreground">$</span>
+                <Input
+                  id="receipt-total"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  value={receipt}
+                  onChange={(e) => setReceipt(e.target.value)}
+                  className="h-12 text-lg font-semibold"
+                  autoFocus
+                />
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Variance vs estimate</span>
-                <span className={variancePct > 0 ? "text-amber-600" : "text-emerald-600"}>
-                  {variancePct >= 0 ? "+" : ""}{variancePct.toFixed(1)}%
-                </span>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Type exactly what the till receipt says — no need to change taxes.
+              </p>
             </div>
 
             {!isCod && exceedsAuth && (
@@ -219,52 +209,53 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
                 <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium">Exceeds authorized amount</p>
-                  <p className="text-xs mt-0.5">Reduce items or contact customer for re-authorization before capturing.</p>
+                  <p className="text-xs mt-0.5">
+                    Authorized hold is ${authorized.toFixed(2)}. Lower the receipt total or contact the customer for
+                    re-authorization.
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* Items */}
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Line items</Label>
-              {items.length === 0 && (
-                <div className="p-4 rounded-lg border border-dashed text-sm text-muted-foreground text-center">
-                  No line items recorded for this order. You can still save a final total below.
-                </div>
-              )}
-              {items.map((it) => {
-                const orig = Number(it.estimated_price ?? it.price);
-                const cur = parseFloat(finalPrices[it.id] || "0");
-                const changed = !isNaN(cur) && cur !== orig;
-                return (
-                  <div key={it.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{it.product_name}</p>
-                      <p className="text-xs text-muted-foreground">Qty {it.quantity} · est ${orig.toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-muted-foreground">$</span>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={finalPrices[it.id] || ""}
-                        onChange={(e) => setFinalPrices((p) => ({ ...p, [it.id]: e.target.value }))}
-                        className={`w-24 h-9 text-right ${changed ? "border-amber-500" : ""}`}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
             {/* Totals */}
             <div className="rounded-lg border p-4 space-y-1.5 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>${finalSubtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>${newTax.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>${deliveryFee.toFixed(2)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Receipt total (incl. tax)</span>
+                <span>${receiptAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Delivery</span>
+                <span>${deliveryFee.toFixed(2)}</span>
+              </div>
+              {convenienceFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Service fee</span>
+                  <span>${convenienceFee.toFixed(2)}</span>
+                </div>
+              )}
+              {tip > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Driver tip</span>
+                  <span>${tip.toFixed(2)}</span>
+                </div>
+              )}
               <Separator className="my-2" />
-              <div className="flex justify-between font-bold text-base"><span>Total to charge</span><span>${newTotal.toFixed(2)}</span></div>
+              <div className="flex justify-between font-bold text-base">
+                <span>Total to charge</span>
+                <span className={!isCod && exceedsAuth ? "text-destructive" : "text-foreground"}>
+                  ${newTotal.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {isCod ? "Cash on delivery · estimate" : `Authorized hold $${authorized.toFixed(2)} · estimate`} $
+                  {estimatedTotal.toFixed(2)}
+                </span>
+                <span className={variancePct > 0 ? "text-amber-600" : "text-emerald-600"}>
+                  {variancePct >= 0 ? "+" : ""}
+                  {variancePct.toFixed(1)}%
+                </span>
+              </div>
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -281,7 +272,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
                 ) : isCod ? (
                   <>Save final price ${newTotal.toFixed(2)}</>
                 ) : (
-                  <>Confirm & Capture ${newTotal.toFixed(2)}</>
+                  <>Confirm &amp; Capture ${newTotal.toFixed(2)}</>
                 )}
               </Button>
             </div>
