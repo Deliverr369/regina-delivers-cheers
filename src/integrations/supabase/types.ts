@@ -482,13 +482,6 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "public_catalog_groups"
-            referencedColumns: ["id"]
-          },
         ]
       }
       order_price_adjustments: {
@@ -683,24 +676,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "beer_pack_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "public_catalog_groups"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "product_pack_prices_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_pack_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "public_catalog_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -1094,31 +1073,7 @@ export type Database = {
       }
     }
     Views: {
-      public_catalog_groups: {
-        Row: {
-          category: string | null
-          gkey: string | null
-          id: string | null
-          image_url: string | null
-          min_price: number | null
-          name: string | null
-          pack_prices: Json | null
-          price: number | null
-          size: string | null
-          store_count: number | null
-          store_id: string | null
-          store_name: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "stores"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       get_dashboard_overview: { Args: { _days?: number }; Returns: Json }
