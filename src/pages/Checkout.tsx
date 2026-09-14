@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote, Zap, CalendarClock } from "lucide-react";
 import CheckoutAddressPicker from "@/components/CheckoutAddressPicker";
@@ -285,6 +285,9 @@ const Checkout = () => {
       return;
     }
     let cancelled = false;
+    // Debounced so rapid edits (tip, slot, address) don't re-create the intent
+    // on every keystroke/click.
+    const timer = setTimeout(() => {
     (async () => {
       setInitLoading(true);
       try {
@@ -322,7 +325,8 @@ const Checkout = () => {
         if (!cancelled) setInitLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, cartItems.length, estimatedTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, tip]);
 
@@ -575,28 +579,13 @@ const Checkout = () => {
               allStoresOpenNow,
               selectedAddressId,
               onAddressSelect: handleAddressSelect,
+              elementsOptions,
+              initLoading,
             };
 
-            if (paymentMode === "cod") {
-              return <CheckoutBody {...bodyProps} />;
-            }
-            if (initLoading) {
-              return (
-                <div className="flex items-center justify-center py-32 gap-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin" /> Preparing secure payment...
-                </div>
-              );
-            }
-            if (clientSecret && elementsOptions) {
-              return (
-                <Elements stripe={stripePromise} options={elementsOptions} key={clientSecret}>
-                  <CheckoutBody {...bodyProps} />
-                </Elements>
-              );
-            }
-            // No payment intent yet (e.g. no delivery address picked yet, or the
-            // intent failed). Still render the form so the shopper can enter an
-            // address / change options — never dead-end the checkout.
+            // The form stays mounted at all times; only the Stripe card field
+            // remounts when a new payment intent is issued, so the page never
+            // appears to reload while the shopper edits their order.
             return <CheckoutBody {...bodyProps} />;
           })()}
         </div>
@@ -637,6 +626,8 @@ interface CheckoutBodyProps extends PaymentFormProps {
   allStoresOpenNow: boolean;
   selectedAddressId: string | null;
   onAddressSelect: (addr: SavedAddress) => void;
+  elementsOptions: { clientSecret: string; appearance: { theme: "stripe" } } | undefined;
+  initLoading: boolean;
 }
 
 /* ─── Delivery scheduling helpers ─── */
@@ -677,14 +668,42 @@ const getNextDays = (count = 7) => {
 };
 
 
+// Renders the Stripe card field inside its own <Elements> scope and hands the
+// live stripe/elements instances back to the parent form via a ref, so a new
+// payment intent only remounts this small block — never the whole checkout.
+const CardFields = ({
+  onReady,
+}: {
+  onReady: (v: { stripe: ReturnType<typeof useStripe>; elements: ReturnType<typeof useElements> }) => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  useEffect(() => {
+    onReady({ stripe, elements });
+  }, [stripe, elements, onReady]);
+  return (
+    <PaymentElement
+      options={{
+        layout: { type: "tabs", defaultCollapsed: false },
+        wallets: { applePay: "auto", googlePay: "auto" },
+      }}
+    />
+  );
+};
+
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const isCod = props.paymentMode === "cod";
-  // Hooks must be called unconditionally — but they throw if no <Elements> provider.
-  // In COD mode we render outside <Elements>, so swallow the error and use nulls.
-  let stripe: ReturnType<typeof useStripe> = null;
-  let elements: ReturnType<typeof useElements> = null;
-  try { stripe = useStripe(); } catch { /* COD mode — no Elements provider */ }
-  try { elements = useElements(); } catch { /* COD mode — no Elements provider */ }
+  const stripeRef = useRef<{
+    stripe: ReturnType<typeof useStripe>;
+    elements: ReturnType<typeof useElements>;
+  }>({ stripe: null, elements: null });
+  const handleCardReady = useCallback(
+    (v: { stripe: ReturnType<typeof useStripe>; elements: ReturnType<typeof useElements> }) => {
+      stripeRef.current = v;
+    },
+    [],
+  );
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -729,10 +748,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       return;
     }
 
-    if (!stripe) { props.setIsSubmitting(false); return; }
+    if (!props.clientSecret) {
+      props.setError("Payment is still getting ready — one moment, then try again.");
+      props.setIsSubmitting(false);
+      return;
+    }
     const usingSavedCard = props.selectedCardId !== "new";
 
     if (usingSavedCard) {
+      const stripe = stripeRef.current.stripe ?? (await stripePromise);
+      if (!stripe) { props.setIsSubmitting(false); return; }
       const result = await stripe.confirmCardPayment(props.clientSecret);
       if (result.error) {
         props.setError(result.error.message || "Payment authorization failed");
@@ -740,7 +765,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
         return;
       }
     } else {
-      if (!elements) { props.setIsSubmitting(false); return; }
+      const { stripe, elements } = stripeRef.current;
+      if (!stripe || !elements) { props.setIsSubmitting(false); return; }
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: { return_url: window.location.origin + "/order-confirmation" },
@@ -960,13 +986,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
             {!isCod && props.selectedCardId === "new" && (
               <div className="rounded-xl border border-input bg-background/60 p-4 transition-shadow focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.12)] focus-within:border-ring">
-                {props.clientSecret ? (
-                  <PaymentElement
-                    options={{
-                      layout: { type: "tabs", defaultCollapsed: false },
-                      wallets: { applePay: "auto", googlePay: "auto" },
-                    }}
-                  />
+                {props.elementsOptions ? (
+                  <Elements
+                    stripe={stripePromise}
+                    options={props.elementsOptions}
+                    key={props.elementsOptions.clientSecret}
+                  >
+                    <CardFields onReady={handleCardReady} />
+                  </Elements>
+                ) : props.initLoading ? (
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Preparing secure payment...
+                  </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     Add your Regina delivery address above to load the secure card form.
@@ -1142,7 +1173,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 <Button
                   type="submit"
                   className="w-full h-14 gap-2 rounded-2xl font-display font-bold text-base bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-primary shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
-                  disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
+                  disabled={isCod ? props.isSubmitting : (!props.clientSecret || props.isSubmitting)}
                 >
                   {props.isSubmitting ? (
                     <><Loader2 className="h-5 w-5 animate-spin" /> {isCod ? "Placing order..." : "Authorizing..."}</>
@@ -1187,7 +1218,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           <Button
             type="submit"
             className="h-12 px-5 gap-2 rounded-xl font-display font-bold text-sm bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 flex-shrink-0"
-            disabled={isCod ? props.isSubmitting : (!stripe || !elements || props.isSubmitting)}
+            disabled={isCod ? props.isSubmitting : (!props.clientSecret || props.isSubmitting)}
           >
             {props.isSubmitting ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> {isCod ? "Placing..." : "Authorizing..."}</>
