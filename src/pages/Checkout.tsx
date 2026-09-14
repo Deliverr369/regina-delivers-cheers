@@ -285,6 +285,9 @@ const Checkout = () => {
       return;
     }
     let cancelled = false;
+    // Debounced so rapid edits (tip, slot, address) don't re-create the intent
+    // on every keystroke/click.
+    const timer = setTimeout(() => {
     (async () => {
       setInitLoading(true);
       try {
