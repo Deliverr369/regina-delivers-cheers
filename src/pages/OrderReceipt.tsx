@@ -48,7 +48,7 @@ const OrderReceipt = () => {
   });
 
   // Amounts are computed server-side so the receipt always matches the charge.
-  const { data: amounts } = useQuery({
+  const { data: amounts, isLoading: amountsLoading } = useQuery({
     queryKey: ["order-amounts", id],
     queryFn: async () => {
       if (!id) return null;
@@ -68,7 +68,7 @@ const OrderReceipt = () => {
 
   const handlePrint = () => window.print();
 
-  if (authLoading || isLoading) {
+  if (authLoading || isLoading || amountsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
