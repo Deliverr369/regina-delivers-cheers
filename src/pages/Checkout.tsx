@@ -622,6 +622,8 @@ interface CheckoutBodyProps extends PaymentFormProps {
   allStoresOpenNow: boolean;
   selectedAddressId: string | null;
   onAddressSelect: (addr: SavedAddress) => void;
+  elementsOptions: { clientSecret: string; appearance: { theme: "stripe" } } | undefined;
+  initLoading: boolean;
 }
 
 /* ─── Delivery scheduling helpers ─── */
