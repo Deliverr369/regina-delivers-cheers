@@ -84,18 +84,41 @@ const OrderReceipt = () => {
 
   const status = statusConfig[order.status || "pending"];
   const items = (order.order_items || []) as any[];
-  const itemsTotal = items.reduce((s, i) => s + Number(i.price) * Number(i.quantity), 0);
-  const subtotal = Number(order.subtotal ?? itemsTotal);
-  const deliveryFee = Number((order as any).delivery_fee || 0);
-  const convenienceFee = Number((order as any).convenience_fee || 0);
-  const tax = Number(order.tax || 0);
-  const discount = Number((order as any).discount_amount || 0);
-  const total = Number(order.total || 0);
+  // Single rounding helper — every money value goes through this once.
+  const r2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
+
+  const itemsTotal = items.reduce(
+    (s, i) => s + Number(i.price) * Number(i.quantity),
+    0
+  );
+  const o = order as any;
+
+  // Prefer finalised amounts (store receipt confirmed) over estimates.
+  const hasFinal = o.final_total != null && Number(o.final_total) > 0;
+  const rawSubtotal =
+    hasFinal && o.final_subtotal != null && Number(o.final_subtotal) > 0
+      ? Number(o.final_subtotal)
+      : Number(order.subtotal ?? itemsTotal);
+
+  const subtotal = r2(rawSubtotal);
+  const deliveryFee = r2(o.delivery_fee);
+  const convenienceFee = r2(o.convenience_fee);
+  const discount = r2(o.discount_amount);
+  const total = r2(hasFinal ? o.final_total : order.total);
+
+  // Tax scales with the subtotal actually charged, using the order's own rate.
+  const estSubtotal = Number(order.subtotal || 0);
+  const estTax = Number(order.tax || 0);
+  const taxRate = estSubtotal > 0 ? estTax / estSubtotal : 0;
+  const tax = hasFinal ? r2(subtotal * taxRate) : r2(estTax);
+
+  // Tip is not stored: it is whatever remains after the known lines.
   const tipAmount = Math.max(
     0,
-    total - (subtotal + deliveryFee + convenienceFee + tax - discount)
+    r2(total - (subtotal + deliveryFee + convenienceFee + tax - discount))
   );
-  const isCod = ((order as any).payment_method || "") === "cod";
+  const isCod = (o.payment_method || "") === "cod";
+
 
   return (
     <div className="min-h-screen bg-background">
