@@ -47,6 +47,21 @@ const OrderReceipt = () => {
     enabled: !!id && !!user,
   });
 
+  // Amounts are computed server-side so the receipt always matches the charge.
+  const { data: amounts } = useQuery({
+    queryKey: ["order-amounts", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase.rpc("get_order_amounts", {
+        _order_id: id,
+      });
+      if (error) throw error;
+      return (data as any[])?.[0] ?? null;
+    },
+    enabled: !!id && !!user,
+  });
+
+
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
   }, [authLoading, user, navigate]);
