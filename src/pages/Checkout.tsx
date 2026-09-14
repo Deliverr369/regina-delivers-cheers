@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, ShieldCheck, Loader2, User, Heart, Lock, Sparkles, Plus, Check, Banknote, Zap, CalendarClock } from "lucide-react";
 import CheckoutAddressPicker from "@/components/CheckoutAddressPicker";
@@ -744,10 +744,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       return;
     }
 
-    if (!stripe) { props.setIsSubmitting(false); return; }
+    if (!props.clientSecret) {
+      props.setError("Payment is still getting ready — one moment, then try again.");
+      props.setIsSubmitting(false);
+      return;
+    }
     const usingSavedCard = props.selectedCardId !== "new";
 
     if (usingSavedCard) {
+      const stripe = stripeRef.current.stripe ?? (await stripePromise);
+      if (!stripe) { props.setIsSubmitting(false); return; }
       const result = await stripe.confirmCardPayment(props.clientSecret);
       if (result.error) {
         props.setError(result.error.message || "Payment authorization failed");
@@ -755,7 +761,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
         return;
       }
     } else {
-      if (!elements) { props.setIsSubmitting(false); return; }
+      const { stripe, elements } = stripeRef.current;
+      if (!stripe || !elements) { props.setIsSubmitting(false); return; }
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: { return_url: window.location.origin + "/order-confirmation" },
