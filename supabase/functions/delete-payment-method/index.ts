@@ -47,9 +47,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
     const { data: profile } = await adminSupabase
-      .from("profiles")
+      .from("customer_billing")
       .select("stripe_customer_id")
-      .eq("id", userData.user.id)
+      .eq("user_id", userData.user.id)
       .maybeSingle();
 
     if (!profile?.stripe_customer_id) {

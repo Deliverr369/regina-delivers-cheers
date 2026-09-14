@@ -594,12 +594,10 @@ const Checkout = () => {
                 </Elements>
               );
             }
-            return (
-              <Alert variant="destructive" className="rounded-xl">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>Could not initialize payment. Please refresh.</AlertDescription>
-              </Alert>
-            );
+            // No payment intent yet (e.g. no delivery address picked yet, or the
+            // intent failed). Still render the form so the shopper can enter an
+            // address / change options — never dead-end the checkout.
+            return <CheckoutBody {...bodyProps} />;
           })()}
         </div>
       </main>

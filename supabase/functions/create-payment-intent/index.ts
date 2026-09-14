@@ -252,11 +252,17 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await adminSupabase
       .from("profiles")
-      .select("stripe_customer_id, full_name, email")
+      .select("full_name, email")
       .eq("id", user.id)
       .maybeSingle();
 
-    let customerId = profile?.stripe_customer_id as string | null;
+    const { data: billing } = await adminSupabase
+      .from("customer_billing")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    let customerId = billing?.stripe_customer_id as string | null;
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email || profile?.email || undefined,
@@ -265,9 +271,8 @@ Deno.serve(async (req) => {
       });
       customerId = customer.id;
       await adminSupabase
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
+        .from("customer_billing")
+        .upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
     }
 
     const intentParams: any = {
