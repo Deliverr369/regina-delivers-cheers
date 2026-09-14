@@ -19,6 +19,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductDetailModal from "@/components/ProductDetailModal";
 import { SEO } from "@/components/seo/SEO";
+import { VirtualizedProductGrid } from "@/components/VirtualizedProductGrid";
 
 const categories = [
   { id: "all", name: "All Products" },
@@ -41,48 +42,50 @@ const Products = () => {
   const activeCategory = searchParams.get("category") || "all";
   const sortBy = searchParams.get("sort") || "name";
 
+  // Fetch a large table in parallel pages: the first page reports the exact
+  // total, the remaining pages are then requested all at once.
+  const fetchAllPaged = async (
+    table: "products" | "product_pack_prices",
+    columns: string,
+    applyFilters: (q: any) => any
+  ) => {
+    const batchSize = 1000;
+    const page = async (from: number) => {
+      const { data, error, count } = await applyFilters(
+        (supabase.from(table) as any).select(columns, { count: from === 0 ? "exact" : undefined })
+      ).range(from, from + batchSize - 1);
+      if (error) throw error;
+      return { rows: (data ?? []) as any[], count: count ?? null };
+    };
+    const first = await page(0);
+    const total = first.count ?? first.rows.length;
+    if (total <= batchSize) return first.rows;
+    const offsets: number[] = [];
+    for (let from = batchSize; from < total; from += batchSize) offsets.push(from);
+    const rest = await Promise.all(offsets.map((from) => page(from)));
+    return rest.reduce((acc, r) => acc.concat(r.rows), first.rows);
+  };
+
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["all-products"],
-    queryFn: async () => {
-      let allProducts: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      while (true) {
-        const { data, error } = await supabase
-          .from("products")
-          .select(`id, name, price, category, image_url, size, in_stock, stores (id, name)`)
-          .eq("in_stock", true)
-          .range(from, from + batchSize - 1);
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-        allProducts = allProducts.concat(data);
-        if (data.length < batchSize) break;
-        from += batchSize;
-      }
-      return allProducts;
-    },
+    queryFn: () =>
+      fetchAllPaged(
+        "products",
+        `id, name, price, category, image_url, size, in_stock, stores (id, name)`,
+        (q) => q.eq("in_stock", true)
+      ),
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 
   const { data: packPrices = [] } = useQuery({
     queryKey: ["all-pack-prices"],
-    queryFn: async () => {
-      let allPrices: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      while (true) {
-        const { data, error } = await supabase
-          .from("product_pack_prices")
-          .select("*")
-          .eq("is_hidden", false)
-          .range(from, from + batchSize - 1);
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-        allPrices = allPrices.concat(data);
-        if (data.length < batchSize) break;
-        from += batchSize;
-      }
-      return allPrices;
-    },
+    queryFn: () =>
+      fetchAllPaged("product_pack_prices", "product_id, pack_size, price, is_hidden", (q) =>
+        q.eq("is_hidden", false)
+      ),
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 
   // Extract leading numeric pack count for sorting (e.g. "24 Cans" -> 24, "750ml" -> 750)
@@ -106,7 +109,7 @@ const Products = () => {
   }, [packPrices]);
 
   // Deduplicate products by name+category, keeping lowest price
-  const deduplicatedProducts = (() => {
+  const deduplicatedProducts = useMemo(() => {
     const map = new Map<string, { product: typeof products[0]; storeCount: number }>();
     products.forEach((p) => {
       const key = `${p.name.toLowerCase().trim()}::${p.category}`;
@@ -121,19 +124,22 @@ const Products = () => {
       }
     });
     return Array.from(map.values());
-  })();
+  }, [products]);
 
-  const filteredProducts = deduplicatedProducts
-    .filter(({ product }) => {
-      const matchesCategory = activeCategory === "all" || product.category === activeCategory;
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    })
-    .sort((a, b) => {
-      if (sortBy === "price-low") return Number(a.product.price) - Number(b.product.price);
-      if (sortBy === "price-high") return Number(b.product.price) - Number(a.product.price);
-      return a.product.name.localeCompare(b.product.name);
-    });
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return deduplicatedProducts
+      .filter(({ product }) => {
+        const matchesCategory = activeCategory === "all" || product.category === activeCategory;
+        const matchesSearch = product.name.toLowerCase().includes(q);
+        return matchesCategory && matchesSearch;
+      })
+      .sort((a, b) => {
+        if (sortBy === "price-low") return Number(a.product.price) - Number(b.product.price);
+        if (sortBy === "price-high") return Number(b.product.price) - Number(a.product.price);
+        return a.product.name.localeCompare(b.product.name);
+      });
+  }, [deduplicatedProducts, activeCategory, searchQuery, sortBy]);
 
   const handleCategoryChange = (category: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -267,25 +273,27 @@ const Products = () => {
             </div>
           )}
 
-          {/* Products Grid */}
+          {/* Products Grid — virtualized so only on-screen cards are rendered */}
           {!isLoading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {filteredProducts.map(({ product, storeCount }, index) => {
+            <VirtualizedProductGrid
+              items={filteredProducts}
+              getKey={({ product }) => product.id}
+              renderItem={({ product, storeCount }) => {
                 const sizes = getProductSizes(product.id);
                 const currentSize = selectedSizes[product.id] || sizes[0]?.pack_size;
                 const displayPrice = getSelectedPrice(product);
 
                 return (
                   <div
-                    key={product.id}
-                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all animate-fade-in flex flex-col cursor-pointer group"
-                    style={{ animationDelay: `${index * 0.03}s` }}
+                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all flex flex-col cursor-pointer group h-full"
                     onClick={() => setOpenProductId(product.id)}
                   >
                     <div className="aspect-square overflow-hidden">
                       <img 
                         src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format&fm=jpg"} 
                         alt={product.name} 
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                       />
                     </div>
@@ -303,7 +311,7 @@ const Products = () => {
                         <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
                           {sizes.map((s: any) => (
                             <button
-                              key={s.id}
+                              key={`${product.id}-${s.pack_size}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedSizes(prev => ({ ...prev, [product.id]: s.pack_size }));
@@ -341,8 +349,8 @@ const Products = () => {
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              }}
+            />
           )}
 
           {!isLoading && filteredProducts.length === 0 && (

@@ -202,30 +202,46 @@ const StoreDetail = () => {
     queryFn: async () => {
       const allProducts: any[] = [];
       const allPrices: PackPrice[] = [];
-      let from = 0;
       const batchSize = 1000;
-      while (true) {
-        const { data, error } = await supabase
+      const columns =
+        "id, store_id, name, description, price, category, subcategory, image_url, size, in_stock, is_hidden, display_order, product_pack_prices!product_pack_prices_product_id_fkey(product_id, pack_size, price, is_hidden)";
+
+      const fetchPage = async (from: number) => {
+        const { data, error, count } = await supabase
           .from("products")
-          .select("id, store_id, name, description, price, category, subcategory, image_url, size, in_stock, is_hidden, display_order, product_pack_prices!product_pack_prices_product_id_fkey(product_id, pack_size, price, is_hidden)")
+          .select(columns, { count: from === 0 ? "exact" : undefined })
           .eq("store_id", id!)
           .eq("in_stock", true)
           .range(from, from + batchSize - 1);
         if (error) throw error;
-        if (!data || data.length === 0) break;
-        for (const row of data) {
+        return { rows: (data ?? []) as any[], count: count ?? null };
+      };
+
+      // First page also returns the total count so the remaining pages can be
+      // fetched in parallel instead of one-after-another.
+      const first = await fetchPage(0);
+      const pages: any[][] = [first.rows];
+      const total = first.count ?? first.rows.length;
+      if (total > batchSize) {
+        const offsets: number[] = [];
+        for (let from = batchSize; from < total; from += batchSize) offsets.push(from);
+        const rest = await Promise.all(offsets.map((from) => fetchPage(from)));
+        for (const page of rest) pages.push(page.rows);
+      }
+
+      for (const rows of pages) {
+        for (const row of rows) {
           const { product_pack_prices, ...product } = row as any;
           allProducts.push(product);
           if (Array.isArray(product_pack_prices)) {
             for (const pp of product_pack_prices) allPrices.push(pp as PackPrice);
           }
         }
-        if (data.length < batchSize) break;
-        from += batchSize;
       }
       return { products: allProducts, packPrices: allPrices };
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 
   const products = productsData.products;
