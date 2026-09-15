@@ -415,6 +415,9 @@ const Checkout = () => {
           : null;
       const window = deliveryType === "scheduled" && scheduledSlot ? formatSlotLabel(scheduledSlot) : null;
 
+      // Persist the 19+ attestation server-side; the database requires it before an order exists.
+      await recordAgeVerificationServerSide();
+
       // Insert one order per store, then its items.
       const createdOrderIds: string[] = [];
       for (let i = 0; i < calcs.length; i++) {
