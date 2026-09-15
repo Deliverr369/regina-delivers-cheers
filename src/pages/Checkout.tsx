@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { stripeEnv } from "@/lib/stripeEnv";
+import { recordAgeVerificationServerSide } from "@/lib/ageGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
@@ -413,6 +414,9 @@ const Checkout = () => {
           ? new Date(`${scheduledDate}T${scheduledSlot.split("-")[0]}:00`).toISOString()
           : null;
       const window = deliveryType === "scheduled" && scheduledSlot ? formatSlotLabel(scheduledSlot) : null;
+
+      // Persist the 19+ attestation server-side; the database requires it before an order exists.
+      await recordAgeVerificationServerSide();
 
       // Insert one order per store, then its items.
       const createdOrderIds: string[] = [];

@@ -758,6 +758,7 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          age_verified_at: string | null
           city: string | null
           created_at: string
           email: string | null
@@ -769,6 +770,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          age_verified_at?: string | null
           city?: string | null
           created_at?: string
           email?: string | null
@@ -780,6 +782,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          age_verified_at?: string | null
           city?: string | null
           created_at?: string
           email?: string | null
@@ -1076,6 +1079,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      confirm_age_19_plus: { Args: never; Returns: string }
       get_dashboard_overview: { Args: { _days?: number }; Returns: Json }
       get_inventory_overview: {
         Args: never
