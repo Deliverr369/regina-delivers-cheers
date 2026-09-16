@@ -980,7 +980,10 @@ const StoreDetail = () => {
                                 return (
                                   <button
                                     key={sub}
-                                    onClick={() => setCurrent(sub)}
+                                    onClick={() => {
+                                      setCurrent(sub);
+                                      document.getElementById("store-products")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                    }}
                                     className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-all ${
                                       active
                                         ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md font-semibold"
