@@ -865,6 +865,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     stripe: ReturnType<typeof useStripe>;
     elements: ReturnType<typeof useElements>;
   }>({ stripe: null, elements: null });
+  const [saveCard, setSaveCard] = useState(true);
   const handleCardReady = useCallback(
     (v: { stripe: ReturnType<typeof useStripe>; elements: ReturnType<typeof useElements> }) => {
       stripeRef.current = v;
