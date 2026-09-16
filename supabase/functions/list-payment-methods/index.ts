@@ -57,11 +57,23 @@ Deno.serve(async (req) => {
       }
     } catch { /* no body, keep default */ }
     const stripe = createStripeClient(env);
-    const pms = await stripe.paymentMethods.list({
-      customer: profile.stripe_customer_id,
-      type: "card",
-      limit: 20,
-    });
+
+    let pms;
+    try {
+      pms = await stripe.paymentMethods.list({
+        customer: profile.stripe_customer_id,
+        type: "card",
+        limit: 20,
+      });
+    } catch (e: any) {
+      // Stored customer belongs to a previous Stripe account — treat as "no saved cards".
+      if (e?.code === "resource_missing" || e?.statusCode === 404) {
+        return new Response(JSON.stringify({ payment_methods: [] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw e;
+    }
 
     const payment_methods = (pms?.data ?? []).map((pm) => ({
       id: pm.id,
@@ -70,6 +82,7 @@ Deno.serve(async (req) => {
       exp_month: pm.card?.exp_month,
       exp_year: pm.card?.exp_year,
     }));
+
 
     return new Response(JSON.stringify({ payment_methods }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
