@@ -956,7 +956,10 @@ const StoreDetail = () => {
                             </div>
                             <nav className="p-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto">
                               <button
-                                onClick={() => setCurrent("all")}
+                                onClick={() => {
+                                  setCurrent("all");
+                                  document.getElementById("store-products")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }}
                                 className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition-all ${
                                   currentValue === "all"
                                     ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md"
@@ -977,7 +980,10 @@ const StoreDetail = () => {
                                 return (
                                   <button
                                     key={sub}
-                                    onClick={() => setCurrent(sub)}
+                                    onClick={() => {
+                                      setCurrent(sub);
+                                      document.getElementById("store-products")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                    }}
                                     className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-all ${
                                       active
                                         ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md font-semibold"
@@ -997,7 +1003,7 @@ const StoreDetail = () => {
                         </aside>
 
                         {/* Main content */}
-                        <div className="min-w-0">
+                        <div id="store-products" className="min-w-0 scroll-mt-24">
                           <div className="flex items-end justify-between flex-wrap gap-3 mb-5 pb-4 border-b border-border/60">
                             <div className="flex items-center gap-3">
                               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-2xl shadow-sm">{activeEmoji}</span>

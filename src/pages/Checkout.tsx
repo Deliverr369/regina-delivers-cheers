@@ -105,7 +105,7 @@ const Checkout = () => {
   );
   const deliveryFee = uniqueStores.reduce((sum, [, name]) => sum + getDeliveryFee(name), 0);
   const convenienceFee = subtotal * 0.12;
-  const tax = subtotal * 0.11;
+  const tax = deliveryFee * 0.05;
 
   const [tipPreset, setTipPreset] = useState<number | "custom" | null>(3);
   const [customTip, setCustomTip] = useState<string>("");
@@ -418,7 +418,7 @@ const Checkout = () => {
         const sub = g.items.reduce((s, i) => s + i.price * i.quantity, 0);
         const fee = getDeliveryFee(g.storeName);
         const conv = sub * 0.12;
-        const tx = sub * 0.11;
+        const tx = fee * 0.05;
         return {
           ...g,
           subtotal: sub,
@@ -558,7 +558,7 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/40 via-background to-background">
       <Header />
-      <main className="pt-header pb-20">
+      <main className="pt-header pb-28 sm:pb-20">
         {/* Page header */}
         <div className="container mx-auto px-4 pt-6 pb-4">
           <Link
@@ -1017,7 +1017,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="pb-28 lg:pb-0">
+    <form onSubmit={handleSubmit} className="pb-10">
       <div className="max-w-3xl mx-auto space-y-4 min-w-0">
           {/* 1. Contact */}
           <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information">
@@ -1293,12 +1293,12 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 )}
 
                 {props.elementsOptions && (
-                  <label className="mt-4 flex items-center gap-2.5 cursor-pointer select-none">
+                  <label className="mt-4 flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={saveCard}
                       onChange={(e) => setSaveCard(e.target.checked)}
-                      className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+                      className="h-3.5 w-3.5 shrink-0 rounded border border-primary/60 bg-background text-primary accent-primary focus:ring-2 focus:ring-primary/30"
                     />
                     <span className="text-sm text-foreground">Save this card for future orders</span>
                   </label>
@@ -1368,34 +1368,6 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           </SectionCard>
 
           <OrderSummaryCard {...props} />
-      </div>
-
-      {/* Mobile sticky checkout bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.08)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Total</p>
-            <p className="font-display text-xl font-bold text-foreground tracking-tight leading-none mt-0.5">
-              ${props.estimatedTotal.toFixed(2)}
-            </p>
-          </div>
-          <Button
-            type="submit"
-            className="h-12 px-5 gap-2 rounded-xl font-display font-bold text-sm bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 flex-shrink-0"
-            disabled={isCod ? props.isSubmitting : (!props.clientSecret || props.isSubmitting)}
-          >
-            {props.isSubmitting ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> {isCod ? "Placing..." : "Authorizing..."}</>
-            ) : isCod ? (
-              <><Banknote className="h-4 w-4" /> Place order</>
-            ) : (
-              <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
-            )}
-          </Button>
-        </div>
-        <div className="flex items-center justify-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
-          <ShieldCheck className="h-3 w-3 text-success" /> Secure checkout · 25–35 min delivery
-        </div>
       </div>
     </form>
   );

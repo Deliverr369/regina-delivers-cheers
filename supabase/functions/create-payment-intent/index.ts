@@ -30,7 +30,7 @@ const getDeliveryFee = (storeName: string): number => {
 };
 
 const CONVENIENCE_PCT = 0.12;
-const TAX_PCT = 0.11;
+const TAX_PCT = 0.05; // tax on delivery fees only
 const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 const LEAD_TIME_MS = 60 * 60 * 1000;
 
@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
     subtotal = round2(subtotal);
     deliveryFee = round2(deliveryFee);
     const convenienceFee = round2(subtotal * CONVENIENCE_PCT);
-    const tax = round2(subtotal * TAX_PCT);
+    const tax = round2(deliveryFee * TAX_PCT);
     const estimatedTotal = round2(subtotal + deliveryFee + convenienceFee + tax + tip);
     if (estimatedTotal <= 0) return json(400, { error: "Order total must be > $0" });
     const authorizedAmountCents = Math.round(estimatedTotal * (1 + BUFFER_PCT) * 100);
@@ -308,7 +308,6 @@ Deno.serve(async (req) => {
       customer: customerId,
       // Saving the card is opt-in via the checkout checkbox; the client calls
       // set-save-card before confirming, which sets card-level setup_future_usage.
-      payment_method_options: { card: { setup_future_usage: "off_session" } },
       metadata: {
         user_id: user.id,
         estimated_total: String(estimatedTotal),

@@ -301,7 +301,7 @@ const OrderReceipt = () => {
               {convenienceFee > 0 && (
                 <Row label="Convenience charge" value={fmtMoney(convenienceFee)} />
               )}
-              {tax > 0 && <Row label="Tax (SK)" value={fmtMoney(tax)} />}
+              {tax > 0 && <Row label="Tax (delivery)" value={fmtMoney(tax)} />}
               {tipAmount > 0 && <Row label="Tip" value={fmtMoney(tipAmount)} />}
               {discount > 0 && (
                 <Row
