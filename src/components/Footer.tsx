@@ -220,12 +220,18 @@ const Footer = () => {
                   ),
                 },
                 {
-                  label: "Interac",
+                  label: "Apple Pay",
                   svg: (
-                    <svg viewBox="0 0 56 22" className="h-5 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="22" height="22" rx="3" fill="#FFB800" />
-                      <text x="11" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="7" fill="#000">I</text>
-                      <text x="40" y="14" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="9" fill="#000">erac</text>
+                    <svg viewBox="0 0 56 16" className="h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg">
+                      <text x="28" y="13" textAnchor="middle" fontFamily="Helvetica, Arial, sans-serif" fontWeight="700" fontSize="13" fill="#000"> Pay</text>
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Google Pay",
+                  svg: (
+                    <svg viewBox="0 0 64 16" className="h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg">
+                      <text x="32" y="13" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="700" fontSize="12" fill="#5F6368">G Pay</text>
                     </svg>
                   ),
                 },

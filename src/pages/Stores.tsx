@@ -13,6 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsNative } from "@/hooks/useIsNative";
+import { useStoreOpenNow } from "@/hooks/useStoreOpenNow";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/seo/SEO";
@@ -33,6 +34,7 @@ const sortOptions = [
 const Stores = () => {
   const [searchParams] = useSearchParams();
   const isNative = useIsNative();
+  const { isOpen: isStoreOpen } = useStoreOpenNow();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);
@@ -120,7 +122,7 @@ const Stores = () => {
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.address.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .filter((store) => !showOpenOnly || store.is_open)
+    .filter((store) => !showOpenOnly || isStoreOpen(store.id, store.is_open))
     .sort((a, b) => {
       if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
       if (sortBy === "delivery") return (a.delivery_time || "").localeCompare(b.delivery_time || "");
@@ -456,7 +458,7 @@ const Stores = () => {
                       />
                     )}
                     <div className="absolute top-3 left-3 flex gap-2">
-                      {store.is_open ? (
+                      {isStoreOpen(store.id, store.is_open) ? (
                         <Badge className="rounded-full bg-success/15 text-success border border-success/25 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide shadow-sm backdrop-blur-sm hover:bg-success/15">
                           <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-success" />
                           Open

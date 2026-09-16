@@ -15,6 +15,7 @@ import { organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
 import { CONTACT } from "@/config/contact";
+import { useStoreOpenNow } from "@/hooks/useStoreOpenNow";
 
 type Store = {
   id: string;
@@ -134,6 +135,7 @@ const CATEGORY_META: Record<
 const StoreCategoryDetail = ({ category }: { category: Category }) => {
   const { slug } = useParams();
   const { pathname } = useLocation();
+  const { isOpen: isStoreOpen } = useStoreOpenNow();
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [productCount, setProductCount] = useState(0);
@@ -289,7 +291,7 @@ const StoreCategoryDetail = ({ category }: { category: Category }) => {
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  {store.is_open ? (
+                  {isStoreOpen(store.id, store.is_open) ? (
                     <Badge className="bg-green-600 hover:bg-green-600">
                       <CheckCircle2 className="h-3 w-3 mr-1" /> Open Now
                     </Badge>
