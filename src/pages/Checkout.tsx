@@ -709,8 +709,10 @@ const CardFields = ({
       options={{
         layout: { type: "tabs", defaultCollapsed: false },
         wallets: { applePay: "auto", googlePay: "auto" },
+        paymentMethodOrder: ["card"],
       }}
     />
+
   );
 };
 

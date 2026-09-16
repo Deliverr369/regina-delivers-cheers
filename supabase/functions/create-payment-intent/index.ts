@@ -315,12 +315,11 @@ Deno.serve(async (req) => {
       },
     };
 
+    intentParams.payment_method_types = ["card"];
     if (body.payment_method_id) {
       intentParams.payment_method = body.payment_method_id;
-      intentParams.payment_method_types = ["card"];
-    } else {
-      intentParams.automatic_payment_methods = { enabled: true };
     }
+
 
     const intent = await stripe.paymentIntents.create(intentParams);
 
