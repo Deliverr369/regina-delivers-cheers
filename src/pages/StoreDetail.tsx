@@ -956,7 +956,10 @@ const StoreDetail = () => {
                             </div>
                             <nav className="p-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto">
                               <button
-                                onClick={() => setCurrent("all")}
+                                onClick={() => {
+                                  setCurrent("all");
+                                  document.getElementById("store-products")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }}
                                 className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition-all ${
                                   currentValue === "all"
                                     ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md"
