@@ -322,12 +322,30 @@ const Checkout = () => {
       setInitLoading(false);
       return;
     }
+    // Don't try until the delivery time is actually usable — otherwise the
+    // server rejects it (store closed) and the hold sticks at $0.00.
+    const hoursLoaded = Object.keys(storeHours).length > 0;
+    const timeReady =
+      deliveryType === "asap"
+        ? !hoursLoaded || allStoresOpenNow
+        : Boolean(scheduledDate && scheduledSlot) &&
+          (!hoursLoaded || isSlotAvailable(scheduledDate, scheduledSlot, cartStoreIds, storeHours));
+    if (!timeReady) {
+      setClientSecret(null);
+      setPaymentIntentId("");
+      setAuthorizedAmount(0);
+      setInitLoading(false);
+      return;
+    }
     let cancelled = false;
     // Debounced so rapid edits (tip, slot, address) don't re-create the intent
     // on every keystroke/click.
     const timer = setTimeout(() => {
     (async () => {
       setInitLoading(true);
+      // A previous attempt may have failed because the slot was closed; clear it
+      // so a freshly picked open time isn't masked by a stale error.
+      setError(null);
       try {
         const { data, error } = await supabase.functions.invoke("create-payment-intent", {
           body: {
@@ -371,7 +389,7 @@ const Checkout = () => {
     // the customer already typed. The authorization carries a +20% buffer and the
     // real amount is captured later from the store receipt, so a tip change does
     // not need a new intent.
-  }, [user, cartItems.length, baseTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot]);
+  }, [user, cartItems.length, baseTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, allStoresOpenNow, storeHours, cartStoreIds]);
 
   const handleSuccess = async () => {
     if (!user) return;
