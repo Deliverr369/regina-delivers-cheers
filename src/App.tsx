@@ -15,6 +15,7 @@ import Stores from "./pages/Stores";
 import OnboardingGate from "./components/OnboardingGate";
 import AgeGate from "./components/AgeGate";
 import PushNotificationsMount from "./components/PushNotificationsMount";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 import DomainCanonical from "./components/seo/DomainCanonical";
 
@@ -115,6 +116,7 @@ const App = () => (
             <DomainCanonical />
             <AgeGate />
             <OnboardingGate />
+            <PaymentTestModeBanner />
             <PushNotificationsMount />
             <Suspense fallback={null}>
               <SupportChatbot />

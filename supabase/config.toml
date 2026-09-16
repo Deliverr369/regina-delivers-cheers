@@ -11,3 +11,15 @@ verify_jwt = false
 
 [functions.payments-webhook]
 verify_jwt = false
+
+[functions.create-payment-intent]
+verify_jwt = false
+
+[functions.list-payment-methods]
+verify_jwt = false
+
+[functions.delete-payment-method]
+verify_jwt = false
+
+[functions.capture-payment]
+verify_jwt = false
