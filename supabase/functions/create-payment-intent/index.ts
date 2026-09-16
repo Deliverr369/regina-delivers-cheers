@@ -308,7 +308,6 @@ Deno.serve(async (req) => {
       customer: customerId,
       // Saving the card is opt-in via the checkout checkbox; the client calls
       // set-save-card before confirming, which sets card-level setup_future_usage.
-      payment_method_options: { card: { setup_future_usage: "off_session" } },
       metadata: {
         user_id: user.id,
         estimated_total: String(estimatedTotal),
