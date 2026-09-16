@@ -31,6 +31,17 @@ const categories = [
   { id: "grocery", name: "Grocery" },
 ];
 
+/** Pretty label for a raw category id (e.g. "ciders_seltzers" → "Ciders & Seltzers"). */
+const categoryLabel = (id?: string | null) => {
+  if (!id) return "";
+  const match = categories.find((c) => c.id === id.toLowerCase());
+  if (match) return match.name;
+  return id.replace(/_/g, " & ").replace(/\b\w/g, (m) => m.toUpperCase());
+};
+
+/** Catalog names sometimes carry a stray leading dash/space. */
+const cleanName = (name?: string | null) => (name || "").replace(/^[\s\-–—]+/, "").trim();
+
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
