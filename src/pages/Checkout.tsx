@@ -344,7 +344,12 @@ const Checkout = () => {
     }, 500);
     return () => { cancelled = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.length, estimatedTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, tip]);
+    // NOTE: `tip` is deliberately NOT a dependency. Re-creating the PaymentIntent
+    // swaps the client secret and remounts the Stripe card form, wiping anything
+    // the customer already typed. The authorization carries a +20% buffer and the
+    // real amount is captured later from the store receipt, so a tip change does
+    // not need a new intent.
+  }, [user, cartItems.length, baseTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot]);
 
   const handleSuccess = async () => {
     if (!user) return;
