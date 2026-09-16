@@ -744,6 +744,16 @@ const CardFields = ({
         // We show our own "save this card" checkbox instead of Stripe's
         // save-your-information / mandate block.
         terms: { card: "never" },
+        // Hide Stripe's contact fields (they trigger the Link save-info box).
+        // We already collect name/email/phone in step 1 and pass them at confirm.
+        fields: {
+          billingDetails: {
+            name: "never",
+            email: "never",
+            phone: "never",
+            address: "never",
+          },
+        },
       }}
     />
 
@@ -978,7 +988,23 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       }
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
-        confirmParams: { return_url: window.location.origin + "/order-confirmation" },
+        confirmParams: {
+          return_url: window.location.origin + "/order-confirmation",
+          payment_method_data: {
+            billing_details: {
+              name: `${props.formData.firstName} ${props.formData.lastName}`.trim(),
+              email: props.formData.email,
+              phone: props.formData.phone,
+              address: {
+                line1: props.formData.address,
+                city: props.formData.city,
+                state: "SK",
+                postal_code: (props.formData.postalCode || "").trim().toUpperCase(),
+                country: "CA",
+              },
+            },
+          },
+        },
         redirect: "if_required",
       });
       if (stripeError) {
