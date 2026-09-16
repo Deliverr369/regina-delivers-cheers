@@ -540,8 +540,12 @@ const Checkout = () => {
         <Header />
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4 text-center py-20">
-            <h1 className="font-display text-2xl font-bold mb-4">Please log in to checkout</h1>
-            <Link to="/login"><Button className="rounded-full">Log In</Button></Link>
+            <h1 className="font-display text-2xl font-bold mb-3">Log in or sign up to finish your order</h1>
+            <p className="text-muted-foreground text-sm mb-6">New here? Signing up takes a few seconds and fills in your checkout details automatically.</p>
+            <div className="flex items-center justify-center gap-3">
+              <Link to="/login?redirect=%2Fcheckout"><Button className="rounded-full px-6">Log in</Button></Link>
+              <Link to="/signup?redirect=%2Fcheckout"><Button variant="outline" className="rounded-full px-6">Sign up</Button></Link>
+            </div>
           </div>
         </main>
         <Footer />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import logo from "@/assets/deliverr-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirectTo = params.get("redirect") || "/stores";
   const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ const Login = () => {
       setError(error.message);
       setIsLoading(false);
     } else {
-      navigate("/stores");
+      navigate(redirectTo);
     }
   };
 
@@ -86,10 +88,12 @@ const Login = () => {
                 </Button>
               </form>
 
-              <p className="text-center text-muted-foreground text-sm mt-5">
-                Don't have an account?{" "}
-                <Link to="/signup" className="text-primary hover:underline font-medium">Sign up</Link>
-              </p>
+              <div className="grid grid-cols-2 gap-3 mt-5">
+                <Button className="w-full h-10 rounded-full font-semibold" disabled>Log in</Button>
+                <Link to={`/signup?redirect=${encodeURIComponent(redirectTo)}`}>
+                  <Button variant="outline" className="w-full h-10 rounded-full font-semibold">Sign up</Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
