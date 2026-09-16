@@ -263,6 +263,19 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     let customerId = billing?.stripe_customer_id as string | null;
+
+    // The stored customer may belong to a previous Stripe account (e.g. after
+    // reconnecting payments). Verify it still exists before using it.
+    if (customerId) {
+      try {
+        const existing: any = await stripe.customers.retrieve(customerId);
+        if (!existing || existing.deleted) customerId = null;
+      } catch (e: any) {
+        if (e?.code === "resource_missing" || e?.statusCode === 404) customerId = null;
+        else throw e;
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email || profile?.email || undefined,
@@ -274,6 +287,7 @@ Deno.serve(async (req) => {
         .from("customer_billing")
         .upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
     }
+
 
     const intentParams: any = {
       amount: authorizedAmountCents,
