@@ -987,6 +987,25 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             {props.cityError && (
               <p className="text-xs text-destructive mt-2">{props.cityError}</p>
             )}
+            {props.selectedAddressId && (
+              <div className="mt-3">
+                <FieldInput
+                  label="Postal code"
+                  name="postalCode"
+                  value={props.formData.postalCode}
+                  onChange={(e) =>
+                    props.setFormData((prev) => ({ ...prev, postalCode: e.target.value.toUpperCase() }))
+                  }
+                  placeholder="S4R 6V6"
+                  required
+                />
+                {!CA_POSTAL_RE.test((props.formData.postalCode || "").trim()) && (
+                  <p className="text-xs mt-1" style={{ color: "#F78B8E" }}>
+                    Add the postal code for this address so we can confirm delivery (Regina starts with S4).
+                  </p>
+                )}
+              </div>
+            )}
             <div className="mt-3">
               <FieldInput
                 label="Delivery instructions (optional)"
