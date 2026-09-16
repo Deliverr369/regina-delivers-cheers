@@ -36,7 +36,7 @@ import {
 
 const stripePromise = loadStripe(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string);
 
-const BUFFER_PCT = 0.3; // +30% pre-authorization buffer
+const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 
 const getDeliveryFee = (storeName: string) => {
   const n = (storeName || "").toLowerCase();
@@ -946,7 +946,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-foreground/80 leading-relaxed">
                   <span className="font-semibold text-foreground">Final pricing confirmed by your store.</span> We'll authorize up to{" "}
-                  <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +30% buffer). Only the actual amount is charged.
+                  <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +20% buffer). Only the actual amount is charged.
                 </p>
               </div>
             )}
