@@ -1003,7 +1003,7 @@ const StoreDetail = () => {
                         </aside>
 
                         {/* Main content */}
-                        <div className="min-w-0">
+                        <div id="store-products" className="min-w-0 scroll-mt-24">
                           <div className="flex items-end justify-between flex-wrap gap-3 mb-5 pb-4 border-b border-border/60">
                             <div className="flex items-center gap-3">
                               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-2xl shadow-sm">{activeEmoji}</span>
