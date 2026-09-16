@@ -228,6 +228,12 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
                 <span className="text-muted-foreground">Delivery</span>
                 <span>${deliveryFee.toFixed(2)}</span>
               </div>
+              {deliveryTax > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax (delivery)</span>
+                  <span>${deliveryTax.toFixed(2)}</span>
+                </div>
+              )}
               {convenienceFee > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Service fee</span>
