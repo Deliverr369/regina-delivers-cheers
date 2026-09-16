@@ -716,6 +716,9 @@ const CardFields = ({
         layout: { type: "tabs", defaultCollapsed: false },
         wallets: { applePay: "auto", googlePay: "auto" },
         paymentMethodOrder: ["card"],
+        // We show our own "save this card" checkbox instead of Stripe's
+        // save-your-information / mandate block.
+        terms: { card: "never" },
       }}
     />
 
