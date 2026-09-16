@@ -116,6 +116,7 @@ const App = () => (
             <DomainCanonical />
             <AgeGate />
             <OnboardingGate />
+            <PaymentTestModeBanner />
             <PushNotificationsMount />
             <Suspense fallback={null}>
               <SupportChatbot />
