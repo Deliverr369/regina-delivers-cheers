@@ -114,7 +114,8 @@ const Checkout = () => {
     return tipPreset ?? 0;
   }, [tipPreset, customTip]);
 
-  const estimatedTotal = subtotal + deliveryFee + convenienceFee + tax + tip;
+  const baseTotal = subtotal + deliveryFee + convenienceFee + tax;
+  const estimatedTotal = baseTotal + tip;
 
   // Delivery scheduling
   const [deliveryType, setDeliveryType] = useState<"asap" | "scheduled">("asap");
