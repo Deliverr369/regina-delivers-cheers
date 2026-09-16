@@ -56,6 +56,9 @@ interface FormData {
   deliveryInstructions: string;
 }
 
+// Canadian postal code (space optional). Must be a Regina S4 code to deliver.
+const CA_POSTAL_RE = /^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ][ -]?\d[ABCEGHJKLMNPRSTVWXYZ]\d$/i;
+
 interface PaymentFormProps {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
