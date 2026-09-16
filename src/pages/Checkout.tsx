@@ -56,6 +56,9 @@ interface FormData {
   deliveryInstructions: string;
 }
 
+// Canadian postal code (space optional). Must be a Regina S4 code to deliver.
+const CA_POSTAL_RE = /^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ][ -]?\d[ABCEGHJKLMNPRSTVWXYZ]\d$/i;
+
 interface PaymentFormProps {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
@@ -196,6 +199,24 @@ const Checkout = () => {
     }));
     setCityError(addr.city.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
   }, []);
+
+  // Keep the saved address record in sync when the customer fills in a missing
+  // postal code — the server validates against the stored row, not the form.
+  useEffect(() => {
+    const pc = (formData.postalCode || "").trim().toUpperCase();
+    if (!user || !selectedAddressId) return;
+    if (!CA_POSTAL_RE.test(pc) || !/^S4/i.test(pc)) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      if (cancelled) return;
+      await supabase
+        .from("user_addresses")
+        .update({ postal_code: pc })
+        .eq("id", selectedAddressId)
+        .eq("user_id", user.id);
+    }, 600);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [formData.postalCode, selectedAddressId, user]);
 
   // Auto-fill from saved profile on login
   useEffect(() => {
@@ -986,6 +1007,25 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             />
             {props.cityError && (
               <p className="text-xs text-destructive mt-2">{props.cityError}</p>
+            )}
+            {props.selectedAddressId && (
+              <div className="mt-3">
+                <FieldInput
+                  label="Postal code"
+                  name="postalCode"
+                  value={props.formData.postalCode}
+                  onChange={(e) =>
+                    props.setFormData((prev) => ({ ...prev, postalCode: e.target.value.toUpperCase() }))
+                  }
+                  placeholder="S4R 6V6"
+                  required
+                />
+                {!CA_POSTAL_RE.test((props.formData.postalCode || "").trim()) && (
+                  <p className="text-xs mt-1" style={{ color: "#F78B8E" }}>
+                    Add the postal code for this address so we can confirm delivery (Regina starts with S4).
+                  </p>
+                )}
+              </div>
             )}
             <div className="mt-3">
               <FieldInput
