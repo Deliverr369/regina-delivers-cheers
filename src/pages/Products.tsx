@@ -31,6 +31,17 @@ const categories = [
   { id: "grocery", name: "Grocery" },
 ];
 
+/** Pretty label for a raw category id (e.g. "ciders_seltzers" → "Ciders & Seltzers"). */
+const categoryLabel = (id?: string | null) => {
+  if (!id) return "";
+  const match = categories.find((c) => c.id === id.toLowerCase());
+  if (match) return match.name;
+  return id.replace(/_/g, " & ").replace(/\b\w/g, (m) => m.toUpperCase());
+};
+
+/** Catalog names sometimes carry a stray leading dash/space. */
+const cleanName = (name?: string | null) => (name || "").replace(/^[\s\-–—]+/, "").trim();
+
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -171,7 +182,7 @@ const Products = () => {
               All Products
             </h1>
             <p className="text-muted-foreground">
-              Browse {filteredProducts.length} products from Regina's liquor stores
+              Browse beer, wine, spirits and more from Regina's local stores
             </p>
           </div>
 
@@ -257,10 +268,10 @@ const Products = () => {
                       />
                     </div>
                     <div className="p-3 flex flex-col flex-1">
-                      <Badge variant="secondary" className="text-xs mb-2 capitalize w-fit">
-                        {product.category}
+                      <Badge variant="secondary" className="text-xs mb-2 w-fit">
+                        {categoryLabel(product.category)}
                       </Badge>
-                      <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2">{product.name}</h4>
+                      <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2">{cleanName(product.name)}</h4>
                       <p className="text-xs text-muted-foreground mb-2">
                         {storeCount > 1 ? `Available at ${storeCount} stores` : product.stores?.name}
                       </p>
