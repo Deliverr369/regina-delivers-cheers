@@ -28,7 +28,7 @@ const Cart = () => {
   const discount = getDiscountAmount();
   const discountedSubtotal = Math.max(0, subtotal - discount);
   const convenienceFee = discountedSubtotal * 0.12;
-  const tax = discountedSubtotal * 0.11;
+  const tax = deliveryFee * 0.05;
   const total = discountedSubtotal + deliveryFee + convenienceFee + tax;
 
   if (cartItems.length === 0) {
