@@ -71,7 +71,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
   // Tip isn't stored separately — it's whatever the original total carried on
   // top of items + tax + fees. It stays exactly as the customer chose.
   const estimatedTotal = Number(order?.estimated_total || order?.total || 0);
-  const deliveryTax = round2(deliveryFee * 0.05);
+  const deliveryTax = Math.round(deliveryFee * 0.05 * 100) / 100;
   const tip = Math.max(
     0,
     Math.round(
