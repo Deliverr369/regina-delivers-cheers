@@ -268,7 +268,7 @@ export const useInventoryData = () => {
   const resetFilters = () => setFilters(defaultFilters);
 
   return {
-    loading, stores, products, packPrices, packsByProduct,
+    loading, error, stores, products, packPrices, packsByProduct,
     groups: filtered, allGroups: groups, insights, filters,
     updateFilter, resetFilters, selectedKeys, selectedGroups,
     toggleSelect, selectAll, clearSelection, fetchData,

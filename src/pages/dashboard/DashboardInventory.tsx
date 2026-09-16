@@ -17,7 +17,7 @@ import StoreAssignmentModal from "@/components/inventory/StoreAssignmentModal";
 const DashboardInventory = () => {
   const { toast } = useToast();
   const {
-    loading, stores, packPrices, packsByProduct,
+    loading, error, stores, packPrices, packsByProduct,
     groups, allGroups, insights, filters,
     updateFilter, resetFilters, selectedKeys, selectedGroups,
     toggleSelect, selectAll, clearSelection, fetchData,
