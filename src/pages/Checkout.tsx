@@ -744,6 +744,16 @@ const CardFields = ({
         // We show our own "save this card" checkbox instead of Stripe's
         // save-your-information / mandate block.
         terms: { card: "never" },
+        // Hide Stripe's contact fields (they trigger the Link save-info box).
+        // We already collect name/email/phone in step 1 and pass them at confirm.
+        fields: {
+          billingDetails: {
+            name: "never",
+            email: "never",
+            phone: "never",
+            address: "never",
+          },
+        },
       }}
     />
 
