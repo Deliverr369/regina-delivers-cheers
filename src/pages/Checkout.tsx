@@ -105,7 +105,7 @@ const Checkout = () => {
   );
   const deliveryFee = uniqueStores.reduce((sum, [, name]) => sum + getDeliveryFee(name), 0);
   const convenienceFee = subtotal * 0.12;
-  const tax = subtotal * 0.11;
+  const tax = deliveryFee * 0.05;
 
   const [tipPreset, setTipPreset] = useState<number | "custom" | null>(3);
   const [customTip, setCustomTip] = useState<string>("");
