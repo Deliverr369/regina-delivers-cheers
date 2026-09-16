@@ -722,6 +722,143 @@ const CardFields = ({
   );
 };
 
+const OrderSummaryCard = (props: CheckoutBodyProps) => {
+  const isCod = props.paymentMode === "cod";
+  return (
+    <div className="relative rounded-2xl bg-card/95 backdrop-blur-xl border border-border/70 shadow-xl shadow-foreground/[0.04] overflow-hidden">
+      {/* Top accent */}
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
+
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-display text-lg font-bold text-foreground">Order summary</h2>
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground bg-secondary px-2 py-1 rounded-full">
+            {props.cartItems.length} item{props.cartItems.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        {/* Items */}
+        <div className="space-y-3 mb-5 max-h-52 overflow-y-auto pr-1 -mr-1">
+          {props.cartItems.map((item) => (
+            <div key={item.id} className="flex gap-3 items-center group">
+              <div className="relative h-12 w-12 flex-shrink-0 rounded-xl bg-secondary border border-border overflow-hidden">
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="h-full w-full object-contain p-1 transition-transform group-hover:scale-105"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-base">🍾</div>
+                )}
+                <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-foreground text-background text-[10px] font-bold flex items-center justify-center">
+                  {item.quantity}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate leading-tight">{item.name}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{item.storeName}</p>
+              </div>
+              <span className="text-sm font-semibold text-foreground shrink-0">
+                ${(item.price * item.quantity).toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <Separator className="mb-4" />
+
+        {/* Price breakdown */}
+        <div className="space-y-2.5 mb-5 text-sm">
+          <Row label="Subtotal" value={`$${props.subtotal.toFixed(2)}`} muted />
+          <Row label={`Delivery${props.storeBreakdown.length > 1 ? ` (${props.storeBreakdown.length} stores)` : ""}`} value={`$${props.deliveryFee.toFixed(2)}`} muted />
+          {props.storeBreakdown.length > 1 && (
+            <div className="pl-3 border-l-2 border-border space-y-1">
+              {props.storeBreakdown.map((s) => (
+                <div key={s.id} className="flex justify-between text-muted-foreground text-xs">
+                  <span className="truncate pr-2">{s.name}</span>
+                  <span>${s.fee.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <Row label="Service fee (12%)" value={`$${props.convenienceFee.toFixed(2)}`} muted />
+          <Row label="Tax" value={`$${props.tax.toFixed(2)}`} muted />
+          {props.tip > 0 && (
+            <Row
+              label={<span className="flex items-center gap-1"><Heart className="h-3 w-3 fill-primary text-primary" /> Driver tip</span>}
+              value={`$${props.tip.toFixed(2)}`}
+            />
+          )}
+        </div>
+
+        <Separator className="mb-4" />
+
+        {props.storeBreakdown.length > 1 && (
+          <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-foreground/80">
+            <p className="font-semibold text-foreground mb-0.5">
+              {props.storeBreakdown.length} separate orders
+            </p>
+            <p className="leading-snug">
+              Items from different stores ship as their own orders. You'll be charged once, but each store fulfills its part separately.
+            </p>
+          </div>
+        )}
+
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Estimated total</p>
+            <p className="font-display text-3xl font-bold text-foreground mt-0.5 tracking-tight">
+              ${props.estimatedTotal.toFixed(2)}
+            </p>
+          </div>
+          <div className="text-right text-[11px] text-muted-foreground leading-tight">
+            {isCod ? <>Pay at the<br /><span className="text-foreground font-semibold">door</span></> : <>Card hold<br /><span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span></>}
+          </div>
+        </div>
+
+        {/* Pricing adjustment notice */}
+        <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-2.5 text-[11px] text-muted-foreground leading-relaxed">
+          Final price matches in-store{isCod ? " — bring a little extra just in case." : ". You're only charged the actual amount."}
+        </div>
+
+        {/* CTA */}
+        <Button
+          type="submit"
+          className="w-full h-14 gap-2 rounded-2xl font-display font-bold text-base bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-primary shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
+          disabled={isCod ? props.isSubmitting : (!props.clientSecret || props.isSubmitting)}
+        >
+          {props.isSubmitting ? (
+            <><Loader2 className="h-5 w-5 animate-spin" /> {isCod ? "Placing order..." : "Authorizing..."}</>
+          ) : isCod ? (
+            <><Banknote className="h-4 w-4" /> Place order — Pay ${props.estimatedTotal.toFixed(2)} at the door</>
+          ) : (
+            <><Lock className="h-4 w-4" /> Authorize ${props.authorizedAmount.toFixed(2)}</>
+          )}
+        </Button>
+
+        {/* Trust signals */}
+        <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            25–35 min delivery
+          </div>
+          <div className="flex items-center gap-1.5 justify-end">
+            <ShieldCheck className="h-3.5 w-3.5 text-success" />
+            Secure checkout
+          </div>
+        </div>
+
+        <p className="text-[10px] text-muted-foreground/80 text-center mt-4 leading-relaxed">
+          Must be 19+. Valid government ID required on delivery.<br />
+          By placing this order you agree to our terms of service.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const CheckoutBody = (props: CheckoutBodyProps) => {
   const isCod = props.paymentMode === "cod";
   const stripeRef = useRef<{
