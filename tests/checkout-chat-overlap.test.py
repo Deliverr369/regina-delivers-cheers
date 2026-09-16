@@ -99,11 +99,7 @@ async def run_check(page, name, viewport):
     await dismiss_age_gate(page)
 
     auth_btn = page.locator("button").filter(has_text="Authorize").first
-    chat_btn = page.locator("button").filter(has_text=lambda t: "chat" in t.lower() if t else False).first
-
-    # Fallback chat selectors
-    if not await chat_btn.is_visible():
-        chat_btn = page.locator("[aria-label*='chat' i], [data-testid='support-chat-button']").first
+    chat_btn = page.locator("button[aria-label='Open support chat']").first
 
     assert await auth_btn.is_visible(), f"[{name}] Authorize button not found"
     assert await chat_btn.is_visible(), f"[{name}] Chat button not found"
