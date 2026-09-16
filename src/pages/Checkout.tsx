@@ -1293,12 +1293,12 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                 )}
 
                 {props.elementsOptions && (
-                  <label className="mt-4 flex items-center gap-2.5 cursor-pointer select-none">
+                  <label className="mt-4 flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={saveCard}
                       onChange={(e) => setSaveCard(e.target.checked)}
-                      className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+                      className="h-3.5 w-3.5 shrink-0 rounded border border-primary/60 bg-background text-primary accent-primary focus:ring-2 focus:ring-primary/30"
                     />
                     <span className="text-sm text-foreground">Save this card for future orders</span>
                   </label>
