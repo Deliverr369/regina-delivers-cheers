@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { MessageCircle, X, Send, Sparkles, Loader2, Phone, Mail, Package, ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
@@ -196,6 +197,10 @@ const SupportChatbot = () => {
   };
 
   const showOrderIdPrompt = mode === "order_status" && !orderId;
+  // On checkout the mobile pay bar is pinned to the bottom — lift the chat
+  // bubble so it never covers the Authorize button.
+  const { pathname } = useLocation();
+  const liftForCheckout = pathname === "/checkout";
 
   return (
     <>
@@ -204,8 +209,9 @@ const SupportChatbot = () => {
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close support chat" : "Open support chat"}
         className={cn(
-          "fixed bottom-5 right-5 z-50 h-14 w-14 rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center transition-all hover:scale-110 active:scale-95",
+          "fixed right-5 z-50 h-14 w-14 rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center transition-all hover:scale-110 active:scale-95",
           "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground",
+          liftForCheckout ? "bottom-28 lg:bottom-5" : "bottom-5",
         )}
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
