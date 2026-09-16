@@ -17,7 +17,7 @@ import StoreAssignmentModal from "@/components/inventory/StoreAssignmentModal";
 const DashboardInventory = () => {
   const { toast } = useToast();
   const {
-    loading, stores, packPrices, packsByProduct,
+    loading, error, stores, packPrices, packsByProduct,
     groups, allGroups, insights, filters,
     updateFilter, resetFilters, selectedKeys, selectedGroups,
     toggleSelect, selectAll, clearSelection, fetchData,
@@ -109,6 +109,16 @@ const DashboardInventory = () => {
           </Button>
         </div>
       </div>
+
+      {/* Load failure */}
+      {error && !loading && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 flex items-center justify-between gap-3">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button size="sm" variant="outline" className="h-8 rounded-lg text-xs" onClick={fetchData}>
+            Try again
+          </Button>
+        </div>
+      )}
 
       {/* Insights */}
       <InsightsCards
