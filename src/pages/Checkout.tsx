@@ -200,6 +200,24 @@ const Checkout = () => {
     setCityError(addr.city.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
   }, []);
 
+  // Keep the saved address record in sync when the customer fills in a missing
+  // postal code — the server validates against the stored row, not the form.
+  useEffect(() => {
+    const pc = (formData.postalCode || "").trim().toUpperCase();
+    if (!user || !selectedAddressId) return;
+    if (!CA_POSTAL_RE.test(pc) || !/^S4/i.test(pc)) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      if (cancelled) return;
+      await supabase
+        .from("user_addresses")
+        .update({ postal_code: pc })
+        .eq("id", selectedAddressId)
+        .eq("user_id", user.id);
+    }, 600);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [formData.postalCode, selectedAddressId, user]);
+
   // Auto-fill from saved profile on login
   useEffect(() => {
     if (!user) return;
