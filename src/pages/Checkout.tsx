@@ -716,6 +716,9 @@ const CardFields = ({
         layout: { type: "tabs", defaultCollapsed: false },
         wallets: { applePay: "auto", googlePay: "auto" },
         paymentMethodOrder: ["card"],
+        // We show our own "save this card" checkbox instead of Stripe's
+        // save-your-information / mandate block.
+        terms: { card: "never" },
       }}
     />
 
@@ -865,6 +868,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     stripe: ReturnType<typeof useStripe>;
     elements: ReturnType<typeof useElements>;
   }>({ stripe: null, elements: null });
+  const [saveCard, setSaveCard] = useState(true);
   const handleCardReady = useCallback(
     (v: { stripe: ReturnType<typeof useStripe>; elements: ReturnType<typeof useElements> }) => {
       stripeRef.current = v;
@@ -935,6 +939,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     } else {
       const { stripe, elements } = stripeRef.current;
       if (!stripe || !elements) { props.setIsSubmitting(false); return; }
+      // Honour the "save this card" checkbox before confirming.
+      try {
+        await supabase.functions.invoke("set-save-card", {
+          body: {
+            payment_intent_id: props.paymentIntentId,
+            save: saveCard,
+            environment: stripeEnv,
+          },
+        });
+      } catch (err) {
+        console.warn("Could not apply save-card preference", err);
+      }
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: { return_url: window.location.origin + "/order-confirmation" },
@@ -1204,6 +1220,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                   <p className="text-sm text-muted-foreground">
                     Add your Regina delivery address above to load the secure card form.
                   </p>
+                )}
+
+                {props.elementsOptions && (
+                  <label className="mt-4 flex items-center gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={saveCard}
+                      onChange={(e) => setSaveCard(e.target.checked)}
+                      className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+                    />
+                    <span className="text-sm text-foreground">Save this card for future orders</span>
+                  </label>
                 )}
               </div>
             )}
