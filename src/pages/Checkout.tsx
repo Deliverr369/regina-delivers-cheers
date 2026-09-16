@@ -988,7 +988,23 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       }
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
-        confirmParams: { return_url: window.location.origin + "/order-confirmation" },
+        confirmParams: {
+          return_url: window.location.origin + "/order-confirmation",
+          payment_method_data: {
+            billing_details: {
+              name: `${props.formData.firstName} ${props.formData.lastName}`.trim(),
+              email: props.formData.email,
+              phone: props.formData.phone,
+              address: {
+                line1: props.formData.address,
+                city: props.formData.city,
+                state: "SK",
+                postal_code: (props.formData.postalCode || "").trim().toUpperCase(),
+                country: "CA",
+              },
+            },
+          },
+        },
         redirect: "if_required",
       });
       if (stripeError) {
