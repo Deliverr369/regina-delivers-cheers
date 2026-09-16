@@ -13,6 +13,7 @@ import { CONTACT } from "@/config/contact";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
 import { buildLocalBusinessJsonLd, buildBreadcrumbJsonLd } from "./storePageJsonLd";
+import { useStoreOpenNow } from "@/hooks/useStoreOpenNow";
 
 interface Store {
   id: string;
@@ -212,7 +213,7 @@ const StorePage = () => {
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  {store.is_open ? (
+                  {isStoreOpen(store.id, store.is_open) ? (
                     <Badge className="bg-green-600 hover:bg-green-600"><CheckCircle2 className="h-3 w-3 mr-1" />Open Now</Badge>
                   ) : (
                     <Badge variant="secondary">Closed</Badge>
