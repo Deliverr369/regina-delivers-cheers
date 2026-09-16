@@ -942,7 +942,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           body: {
             payment_intent_id: props.paymentIntentId,
             save: saveCard,
-            environment: getStripeEnv(),
+            environment: stripeEnv,
           },
         });
       } catch (err) {
