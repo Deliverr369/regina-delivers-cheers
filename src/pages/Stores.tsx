@@ -34,6 +34,7 @@ const sortOptions = [
 const Stores = () => {
   const [searchParams] = useSearchParams();
   const isNative = useIsNative();
+  const { isOpen: isStoreOpen } = useStoreOpenNow();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [showOpenOnly, setShowOpenOnly] = useState(false);

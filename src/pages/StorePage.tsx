@@ -38,6 +38,7 @@ const REGINA_NEIGHBORHOODS = [
 
 const StorePage = () => {
   const { slug } = useParams();
+  const { isOpen: isStoreOpen } = useStoreOpenNow();
   const [store, setStore] = useState<Store | null>(null);
   const [productCount, setProductCount] = useState(0);
   const [loading, setLoading] = useState(true);

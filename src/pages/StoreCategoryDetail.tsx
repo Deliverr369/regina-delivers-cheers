@@ -135,6 +135,7 @@ const CATEGORY_META: Record<
 const StoreCategoryDetail = ({ category }: { category: Category }) => {
   const { slug } = useParams();
   const { pathname } = useLocation();
+  const { isOpen: isStoreOpen } = useStoreOpenNow();
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [productCount, setProductCount] = useState(0);
