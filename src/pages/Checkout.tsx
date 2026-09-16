@@ -36,7 +36,7 @@ import {
 
 const stripePromise = loadStripe(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string);
 
-const BUFFER_PCT = 0.3; // +30% pre-authorization buffer
+const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 
 const getDeliveryFee = (storeName: string) => {
   const n = (storeName || "").toLowerCase();

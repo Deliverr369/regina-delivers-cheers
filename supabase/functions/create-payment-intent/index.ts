@@ -31,7 +31,7 @@ const getDeliveryFee = (storeName: string): number => {
 
 const CONVENIENCE_PCT = 0.12;
 const TAX_PCT = 0.11;
-const BUFFER_PCT = 0.3;
+const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 const LEAD_TIME_MS = 60 * 60 * 1000;
 
 const timeToMin = (t: string) => {
