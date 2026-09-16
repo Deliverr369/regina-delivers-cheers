@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, User, Phone, MapPin, ArrowRight, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const redirectTo = params.get("redirect") || "/stores";
-  const { signUp } = useAuth();
+  const { signUp, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -30,6 +30,12 @@ const Signup = () => {
     address: "",
     postalCode: "",
   });
+
+  // Already signed in? Skip the signup form.
+  useEffect(() => {
+    if (user) navigate(redirectTo, { replace: true });
+  }, [user, redirectTo, navigate]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));

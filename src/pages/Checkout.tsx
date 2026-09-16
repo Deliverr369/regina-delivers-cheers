@@ -28,7 +28,8 @@ import {
   isStoreOpenNow,
   groupHoursByStore,
   getDayHours,
-  toLocalDateStr,
+  storeDateStr,
+  weekdayOfDateStr,
   formatDayHours,
   type StoreHourRow,
   type HoursByStore,
@@ -724,17 +725,18 @@ const formatSlotLabel = (slot: string) => {
 
 const getNextDays = (count = 7) => {
   const days: { value: string; label: string; sub: string; weekday: number }[] = [];
-  const today = new Date();
   for (let i = 0; i < count; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const value = toLocalDateStr(d);
+    // Store-local calendar days, so a device in another timezone still sees
+    // the same "Today" as the Regina stores do.
+    const value = storeDateStr(i);
+    const [y, m, d] = value.split("-").map(Number);
+    const utc = new Date(Date.UTC(y, m - 1, d));
     const label =
       i === 0 ? "Today" :
       i === 1 ? "Tomorrow" :
-      d.toLocaleDateString(undefined, { weekday: "short" });
-    const sub = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    days.push({ value, label, sub, weekday: d.getDay() });
+      utc.toLocaleDateString(undefined, { weekday: "short", timeZone: "UTC" });
+    const sub = utc.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+    days.push({ value, label, sub, weekday: utc.getUTCDay() });
   }
   return days;
 };
@@ -1306,7 +1308,9 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Add your Regina delivery address above to load the secure card form.
+                    {!props.formData.address
+                      ? "Add your Regina delivery address above to load the secure card form."
+                      : "Choose an available delivery time above to load the secure card form."}
                   </p>
                 )}
 
@@ -1531,7 +1535,7 @@ const ScheduledSlotPicker = (p: ScheduledSlotPickerProps) => {
           {p.cartStoreIds.length > 0 && Object.keys(p.storeHours).length > 0 && (
             <div className="mt-2 space-y-0.5">
               {p.cartStoreIds.map((id) => {
-                const weekday = new Date(p.scheduledDate + "T00:00:00").getDay();
+                const weekday = weekdayOfDateStr(p.scheduledDate);
                 const day = getDayHours(id, weekday, p.storeHours);
                 return (
                   <p key={id} className="text-[11px] text-muted-foreground">

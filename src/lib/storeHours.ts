@@ -35,15 +35,69 @@ export const formatTime12 = (t: string): string => {
   return `${hr}:00 ${period}`;
 };
 
-/** Local-date YYYY-MM-DD (no UTC drift). */
-export const toLocalDateStr = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+/**
+ * Everything below is evaluated in STORE time (America/Regina), never the
+ * shopper's device timezone — a phone set to another zone must not change
+ * whether a Regina store counts as open. Regina has no DST (fixed UTC-6),
+ * so wall-clock ↔ instant conversion is a constant offset.
+ */
+export const STORE_TZ = "America/Regina";
+const STORE_UTC_OFFSET_MIN = -6 * 60;
 
-/** Build a Date for a given local YYYY-MM-DD + HH:MM. */
+const WEEKDAY_INDEX: Record<string, number> = {
+  Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+};
+
+const storeFmt = new Intl.DateTimeFormat("en-US", {
+  timeZone: STORE_TZ,
+  hour12: false,
+  weekday: "short",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** Current wall-clock parts in store time. */
+export const storeNowParts = (now = new Date()) => {
+  const parts = Object.fromEntries(
+    storeFmt.formatToParts(now).map((p) => [p.type, p.value]),
+  ) as Record<string, string>;
+  const hour = Number(parts.hour) % 24; // en-US hour12:false can emit "24"
+  return {
+    weekday: WEEKDAY_INDEX[parts.weekday] ?? 0,
+    year: Number(parts.year),
+    month: Number(parts.month),
+    day: Number(parts.day),
+    minutes: hour * 60 + Number(parts.minute),
+    dateStr: `${parts.year}-${parts.month}-${parts.day}`,
+  };
+};
+
+/** Weekday (0=Sun) for a YYYY-MM-DD string, timezone-independent. */
+export const weekdayOfDateStr = (dateStr: string): number => {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).getUTCDay();
+};
+
+/** Store-local date YYYY-MM-DD, `offsetDays` from today. */
+export const storeDateStr = (offsetDays = 0, now = new Date()): string => {
+  const p = storeNowParts(now);
+  const d = new Date(Date.UTC(p.year, p.month - 1, p.day + offsetDays));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+};
+
+/** Kept for compatibility: store-local date string for a given instant. */
+export const toLocalDateStr = (d: Date): string => storeNowParts(d).dateStr;
+
+/** The real instant of a store wall-clock YYYY-MM-DD + HH:MM. */
 export const localDateTime = (dateStr: string, time: string): Date => {
   const [hh, mm] = time.split(":").map(Number);
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0);
+  return new Date(
+    Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0) - STORE_UTC_OFFSET_MIN * 60_000,
+  );
 };
 
 /** Hours rows grouped by store id. */
@@ -68,12 +122,12 @@ export const getDayHours = (
   return list.find((r) => r.weekday === weekday) ?? null;
 };
 
-/** Is a store open RIGHT NOW (used for ASAP gating)? */
+/** Is a store open RIGHT NOW in store time (used for ASAP gating)? */
 export const isStoreOpenNow = (storeId: string, byStore: HoursByStore, now = new Date()): boolean => {
-  const day = getDayHours(storeId, now.getDay(), byStore);
+  const p = storeNowParts(now);
+  const day = getDayHours(storeId, p.weekday, byStore);
   if (!day || day.is_closed) return false;
-  const mins = now.getHours() * 60 + now.getMinutes();
-  return mins >= timeToMinutes(day.open_time) && mins < timeToMinutes(day.close_time);
+  return p.minutes >= timeToMinutes(day.open_time) && p.minutes < timeToMinutes(day.close_time);
 };
 
 /**
@@ -93,7 +147,7 @@ export const isSlotAvailable = (
   if (slotStart.getTime() - now.getTime() < LEAD_TIME_MINUTES * 60 * 1000) return false;
 
   const { start, end } = slotToMinutes(slot);
-  const weekday = slotStart.getDay();
+  const weekday = weekdayOfDateStr(dateStr);
 
   // Slot must fit within EVERY store's open window for that weekday
   for (const id of storeIds) {
