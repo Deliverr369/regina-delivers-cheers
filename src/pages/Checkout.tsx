@@ -255,17 +255,23 @@ const Checkout = () => {
     return {
       items: cartItems
         .map((it) => {
-          const m = String(it.id).match(UUID_RE);
-          return m
-            ? {
-                product_id: m[0],
-                store_id: it.storeId,
-                quantity: it.quantity,
-                price: Number(it.price),
-              }
-            : null;
+          const rawId = String(it.id);
+          const m = rawId.match(UUID_RE);
+          if (!m) return null;
+          // Cart ids are `${productId}-${packSize|single}` — the server needs the
+          // pack size to price the line against product_pack_prices.
+          const suffix = rawId.slice(m[0].length).replace(/^-/, "");
+          const packSize = suffix && suffix !== "single" ? suffix : null;
+          return {
+            product_id: m[0],
+            store_id: it.storeId,
+            quantity: it.quantity,
+            price: Number(it.price),
+            pack_size: packSize,
+          };
         })
         .filter(Boolean),
+
       delivery_type: deliveryType,
       scheduled_at: scheduledAt,
       scheduled_slot: deliveryType === "scheduled" ? scheduledSlot : null,
