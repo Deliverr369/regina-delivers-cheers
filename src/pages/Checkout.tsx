@@ -1221,6 +1221,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                     Add your Regina delivery address above to load the secure card form.
                   </p>
                 )}
+
+                {props.elementsOptions && (
+                  <label className="mt-4 flex items-center gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={saveCard}
+                      onChange={(e) => setSaveCard(e.target.checked)}
+                      className="h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+                    />
+                    <span className="text-sm text-foreground">Save this card for future orders</span>
+                  </label>
+                )}
               </div>
             )}
           </SectionCard>
