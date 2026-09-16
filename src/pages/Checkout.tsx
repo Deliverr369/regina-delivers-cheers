@@ -389,7 +389,7 @@ const Checkout = () => {
     // the customer already typed. The authorization carries a +20% buffer and the
     // real amount is captured later from the store receipt, so a tip change does
     // not need a new intent.
-  }, [user, cartItems.length, baseTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot]);
+  }, [user, cartItems.length, baseTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, allStoresOpenNow, storeHours, cartStoreIds]);
 
   const handleSuccess = async () => {
     if (!user) return;
