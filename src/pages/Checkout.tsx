@@ -951,9 +951,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="pb-28 lg:pb-0">
-      <div className="grid lg:grid-cols-5 gap-6 lg:gap-8 min-w-0">
-        {/* LEFT: Form */}
-        <div className="lg:col-span-3 space-y-4 min-w-0">
+      <div className="max-w-3xl mx-auto space-y-4 min-w-0">
           {/* 1. Contact */}
           <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information">
             <div className="grid sm:grid-cols-2 gap-3">
