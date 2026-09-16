@@ -65,12 +65,34 @@ Deno.serve(async (req) => {
       }, 409);
     }
 
-    const stripe = createStripeClient(env);
     const amountToCapture = Math.round(finalTotal * 100);
 
-    const captured = await stripe.paymentIntents.capture(order.stripe_payment_intent_id, {
-      amount_to_capture: amountToCapture,
-    });
+    // The order doesn't record which Stripe environment created the intent
+    // (live orders can be captured from the test-mode preview and vice versa),
+    // so fall back to the other environment when the intent isn't found.
+    const envOrder: StripeEnv[] = env === "live" ? ["live", "sandbox"] : ["sandbox", "live"];
+    let captured;
+    let lastErr: unknown = null;
+    for (const tryEnv of envOrder) {
+      try {
+        const stripe = createStripeClient(tryEnv);
+        captured = await stripe.paymentIntents.capture(order.stripe_payment_intent_id, {
+          amount_to_capture: amountToCapture,
+        });
+        break;
+      } catch (err) {
+        const code = (err as { code?: string })?.code;
+        lastErr = err;
+        if (code !== "resource_missing") throw err;
+      }
+    }
+    if (!captured) {
+      return json({
+        error:
+          "This order's payment was created in a different Stripe environment (test vs live) and can't be captured here.",
+        details: lastErr instanceof Error ? lastErr.message : String(lastErr),
+      }, 409);
+    }
 
     await supabase
       .from("orders")
