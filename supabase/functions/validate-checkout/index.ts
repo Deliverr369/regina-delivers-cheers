@@ -321,7 +321,7 @@ Deno.serve(async (req) => {
     subtotal = round2(subtotal);
     deliveryFee = round2(deliveryFee);
     const convenienceFee = round2(subtotal * CONVENIENCE_PCT);
-    const tax = round2(subtotal * TAX_PCT);
+    const tax = round2(deliveryFee * TAX_PCT);
     const estimatedTotal = round2(subtotal + deliveryFee + convenienceFee + tax + tip);
     const authorizedAmount = round2(estimatedTotal * (1 + BUFFER_PCT));
 
