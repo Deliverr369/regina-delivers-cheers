@@ -182,7 +182,7 @@ const Products = () => {
               All Products
             </h1>
             <p className="text-muted-foreground">
-              Browse {filteredProducts.length} products from Regina's liquor stores
+              Browse beer, wine, spirits and more from Regina's local stores
             </p>
           </div>
 
