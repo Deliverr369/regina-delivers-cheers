@@ -33,7 +33,7 @@ export const useStoreOpenNow = () => {
   /** `flag` is the store's `is_open` column. */
   const isOpen = (storeId: string, flag: boolean | null | undefined): boolean => {
     if (flag === false) return false;
-    if (!hours || !hours[storeId]) return flag !== false; // no hours set → trust the switch
+    if (!hours || !hours[storeId]) return true; // no hours set → trust the switch
     return isStoreOpenNow(storeId, hours);
   };
 
