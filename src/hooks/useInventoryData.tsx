@@ -74,51 +74,62 @@ export const useInventoryData = () => {
   const [packPrices, setPackPrices] = useState<PackPrice[]>([]);
   const [stores, setStores] = useState<StoreInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<InventoryFilters>(defaultFilters);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setError(null);
 
     const PRODUCT_COLS =
       "id,name,category,description,price,size,image_url,in_stock,is_hidden,display_order,store_id,created_at";
+    const PACK_COLS = "id,product_id,pack_size,price,is_hidden";
     const BATCH = 1000;
 
-    // Get total count + stores + packs in parallel with the first product page
-    const [countRes, storesRes, packsRes, firstPageRes] = await Promise.all([
-      supabase.from("products").select("id", { count: "exact", head: true }),
-      supabase.from("stores").select("id, name").order("name"),
-      supabase.from("product_pack_prices").select("id,product_id,pack_size,price,is_hidden"),
-      supabase
-        .from("products")
-        .select(PRODUCT_COLS)
-        .order("name")
-        .range(0, BATCH - 1),
-    ]);
-
-    let allProducts: InventoryProduct[] = (firstPageRes.data as InventoryProduct[] | null) || [];
-    const total = countRes.count ?? allProducts.length;
-
-    // Fetch remaining pages in parallel
-    if (total > BATCH) {
-      const ranges: Array<[number, number]> = [];
-      for (let from = BATCH; from < total; from += BATCH) {
-        ranges.push([from, Math.min(from + BATCH - 1, total - 1)]);
+    // Keyset pagination on the primary key: stable, index-ordered and never
+    // asks the database for a slow full-table sort or an exact row count.
+    const fetchAllByKeyset = async <T extends { id: string }>(
+      table: "products" | "product_pack_prices",
+      cols: string
+    ): Promise<T[]> => {
+      const rows: T[] = [];
+      let cursor: string | null = null;
+      // Hard stop so a runaway loop can never hang the admin screen.
+      for (let page = 0; page < 200; page++) {
+        let q = supabase.from(table).select(cols).order("id").limit(BATCH);
+        if (cursor) q = q.gt("id", cursor);
+        const { data, error: err } = await q;
+        if (err) throw err;
+        const batch = (data as unknown as T[]) || [];
+        rows.push(...batch);
+        if (batch.length < BATCH) break;
+        cursor = batch[batch.length - 1].id;
       }
-      const pages = await Promise.all(
-        ranges.map(([from, to]) =>
-          supabase.from("products").select(PRODUCT_COLS).order("name").range(from, to)
-        )
-      );
-      pages.forEach((p) => {
-        if (p.data) allProducts = allProducts.concat(p.data as InventoryProduct[]);
-      });
-    }
+      return rows;
+    };
 
-    setProducts(allProducts);
-    setStores(storesRes.data || []);
-    setPackPrices((packsRes.data as PackPrice[]) || []);
-    setLoading(false);
+    try {
+      const [storesRes, allProducts, allPacks] = await Promise.all([
+        supabase.from("stores").select("id, name").order("name"),
+        fetchAllByKeyset<InventoryProduct>("products", PRODUCT_COLS),
+        fetchAllByKeyset<PackPrice>("product_pack_prices", PACK_COLS),
+      ]);
+
+      if (storesRes.error) throw storesRes.error;
+
+      setProducts(allProducts);
+      setStores(storesRes.data || []);
+      setPackPrices(allPacks);
+    } catch (e: any) {
+      setError(
+        e?.code === "57014"
+          ? "The catalog took too long to load. Please try again."
+          : e?.message || "Couldn't load inventory. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
