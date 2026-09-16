@@ -936,6 +936,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     } else {
       const { stripe, elements } = stripeRef.current;
       if (!stripe || !elements) { props.setIsSubmitting(false); return; }
+      // Honour the "save this card" checkbox before confirming.
+      try {
+        await supabase.functions.invoke("set-save-card", {
+          body: {
+            payment_intent_id: props.paymentIntentId,
+            save: saveCard,
+            environment: getStripeEnv(),
+          },
+        });
+      } catch (err) {
+        console.warn("Could not apply save-card preference", err);
+      }
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: { return_url: window.location.origin + "/order-confirmation" },
