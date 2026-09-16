@@ -268,10 +268,10 @@ const Products = () => {
                       />
                     </div>
                     <div className="p-3 flex flex-col flex-1">
-                      <Badge variant="secondary" className="text-xs mb-2 capitalize w-fit">
-                        {product.category}
+                      <Badge variant="secondary" className="text-xs mb-2 w-fit">
+                        {categoryLabel(product.category)}
                       </Badge>
-                      <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2">{product.name}</h4>
+                      <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-2">{cleanName(product.name)}</h4>
                       <p className="text-xs text-muted-foreground mb-2">
                         {storeCount > 1 ? `Available at ${storeCount} stores` : product.stores?.name}
                       </p>
