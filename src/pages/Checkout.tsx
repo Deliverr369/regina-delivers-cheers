@@ -418,7 +418,7 @@ const Checkout = () => {
         const sub = g.items.reduce((s, i) => s + i.price * i.quantity, 0);
         const fee = getDeliveryFee(g.storeName);
         const conv = sub * 0.12;
-        const tx = sub * 0.11;
+        const tx = fee * 0.05;
         return {
           ...g,
           subtotal: sub,
