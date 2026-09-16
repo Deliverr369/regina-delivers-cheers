@@ -17,6 +17,7 @@
     "capacitor:update:after": "node scripts/patch-capacitor-ios.mjs && node scripts/patch-native-branding.mjs",
     "ios:repair": "node scripts/patch-capacitor-ios.mjs --require-ios",
     "lint": "eslint .",
+    "test:checkout-chat": "python3 tests/checkout-chat-overlap.test.py",
     "postinstall": "node scripts/patch-capacitor-ios.mjs",
     "preview": "vite preview"
   },
