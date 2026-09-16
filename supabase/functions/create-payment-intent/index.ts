@@ -140,15 +140,21 @@ Deno.serve(async (req) => {
     const prodById = new Map((products || []).map((p) => [p.id, p]));
     const storeById = new Map((stores || []).map((s) => [s.id, s]));
 
-    let needPackPrices = body.items.some((i) => i.pack_size);
+    // Always load pack prices: a cart line may carry a pack price without an
+    // explicit pack_size (e.g. added from the browse page).
     const packPriceByKey = new Map<string, number>();
-    if (needPackPrices) {
+    const packPricesByProduct = new Map<string, number[]>();
+    {
       const { data: packs } = await supabase
         .from("product_pack_prices")
         .select("product_id, pack_size, price, is_hidden")
         .in("product_id", productIds);
       for (const p of packs || []) {
-        if (!p.is_hidden) packPriceByKey.set(`${p.product_id}::${p.pack_size}`, Number(p.price));
+        if (p.is_hidden) continue;
+        packPriceByKey.set(`${p.product_id}::${p.pack_size}`, Number(p.price));
+        const list = packPricesByProduct.get(p.product_id) || [];
+        list.push(Number(p.price));
+        packPricesByProduct.set(p.product_id, list);
       }
     }
 
@@ -161,17 +167,23 @@ Deno.serve(async (req) => {
       if (p.store_id !== it.store_id) {
         return json(409, { error: `"${p.name}" does not belong to the selected store.` });
       }
-      const expectedUnit = it.pack_size
-        ? packPriceByKey.get(`${it.product_id}::${it.pack_size}`) ?? Number(p.price)
-        : Number(p.price);
-      if (!approxEq(expectedUnit, Number(it.price))) {
+
+      // Accept the base price or ANY live pack price for this product.
+      const candidates = [Number(p.price), ...(packPricesByProduct.get(it.product_id) || [])];
+      const keyed = it.pack_size ? packPriceByKey.get(`${it.product_id}::${it.pack_size}`) : undefined;
+      if (keyed !== undefined) candidates.unshift(keyed);
+
+      const expectedUnit = candidates.find((c) => approxEq(c, Number(it.price)));
+      if (expectedUnit === undefined) {
+        const shown = keyed ?? Number(p.price);
         return json(409, {
-          error: `Price for "${p.name}" changed (was $${Number(it.price).toFixed(2)}, now $${expectedUnit.toFixed(2)}). Please refresh your cart.`,
+          error: `Price for "${p.name}" changed (was $${Number(it.price).toFixed(2)}, now $${shown.toFixed(2)}). Please refresh your cart.`,
         });
       }
       const lineTotal = expectedUnit * it.quantity;
       storeSubtotals.set(it.store_id, round2((storeSubtotals.get(it.store_id) || 0) + lineTotal));
     }
+
 
     // --- Delivery time validation ---
     const { data: hours } = await supabase
