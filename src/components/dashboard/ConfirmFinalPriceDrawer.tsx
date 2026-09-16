@@ -71,6 +71,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
   // Tip isn't stored separately — it's whatever the original total carried on
   // top of items + tax + fees. It stays exactly as the customer chose.
   const estimatedTotal = Number(order?.estimated_total || order?.total || 0);
+  const deliveryTax = round2(deliveryFee * 0.05);
   const tip = Math.max(
     0,
     Math.round(
@@ -88,7 +89,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
     return isNaN(v) ? 0 : v;
   })();
 
-  const newTotal = receiptAmount + deliveryFee + convenienceFee + tip;
+  const newTotal = receiptAmount + deliveryFee + deliveryTax + convenienceFee + tip;
   const authorized = Number(order?.authorized_amount || 0);
   const exceedsAuth = authorized > 0 && newTotal > authorized;
   const variancePct = estimatedTotal > 0 ? ((newTotal - estimatedTotal) / estimatedTotal) * 100 : 0;
