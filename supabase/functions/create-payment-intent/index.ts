@@ -31,6 +31,13 @@ const getDeliveryFee = (storeName: string): number => {
 
 const CONVENIENCE_PCT = 0.12;
 const TAX_PCT = 0.05; // tax on delivery fees only
+// Stripe errors from the esm.sh build sometimes carry the code under `raw`.
+function isMissingResource(e: any): boolean {
+  return e?.code === "resource_missing" || e?.raw?.code === "resource_missing" ||
+    e?.statusCode === 404 || e?.raw?.statusCode === 404 ||
+    /No such (customer|payment_intent|payment_method)/i.test(String(e?.message || ""));
+}
+
 const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 const LEAD_TIME_MS = 60 * 60 * 1000;
 
@@ -283,7 +290,7 @@ Deno.serve(async (req) => {
         const existing: any = await stripe.customers.retrieve(customerId);
         if (!existing || existing.deleted) customerId = null;
       } catch (e: any) {
-        if (e?.code === "resource_missing" || e?.statusCode === 404) customerId = null;
+        if (isMissingResource(e)) customerId = null;
         else throw e;
       }
     }
@@ -311,6 +318,7 @@ Deno.serve(async (req) => {
       metadata: {
         user_id: user.id,
         estimated_total: String(estimatedTotal),
+        base_total: String(round2(estimatedTotal - tip)),
         buffer_pct: String(Math.round(BUFFER_PCT * 100)),
         validated: "true",
       },

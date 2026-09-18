@@ -67,7 +67,12 @@ Deno.serve(async (req) => {
       });
     } catch (e: any) {
       // Stored customer belongs to a previous Stripe account — treat as "no saved cards".
-      if (e?.code === "resource_missing" || e?.statusCode === 404) {
+      const missing = e?.code === "resource_missing" || e?.raw?.code === "resource_missing" ||
+        e?.statusCode === 404 || e?.raw?.statusCode === 404 ||
+        /No such customer/i.test(String(e?.message || ""));
+      if (missing) {
+        // Drop the stale link so the next payment creates a fresh customer.
+        await adminSupabase.from("customer_billing").update({ stripe_customer_id: null }).eq("user_id", userData.user.id);
         return new Response(JSON.stringify({ payment_methods: [] }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

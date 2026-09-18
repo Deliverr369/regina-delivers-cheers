@@ -81,9 +81,12 @@ Deno.serve(async (req) => {
         });
         break;
       } catch (err) {
-        const code = (err as { code?: string })?.code;
+        const e = err as any;
+        const missing = e?.code === "resource_missing" || e?.raw?.code === "resource_missing" ||
+          e?.statusCode === 404 || e?.raw?.statusCode === 404 ||
+          /No such payment_intent/i.test(String(e?.message || ""));
         lastErr = err;
-        if (code !== "resource_missing") throw err;
+        if (!missing) throw err;
       }
     }
     if (!captured) {

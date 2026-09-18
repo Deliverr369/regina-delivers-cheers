@@ -91,7 +91,9 @@ const Checkout = () => {
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
-  const [authorizedAmount, setAuthorizedAmount] = useState<number>(0);
+  // Server-validated total WITHOUT the tip. The displayed hold is derived from
+  // this plus the current tip so raising the tip always raises the hold.
+  const [authorizedBase, setAuthorizedBase] = useState<number>(0);
   const [initLoading, setInitLoading] = useState(true);
 
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
@@ -120,6 +122,10 @@ const Checkout = () => {
 
   const baseTotal = subtotal + deliveryFee + convenienceFee + tax;
   const estimatedTotal = baseTotal + tip;
+  const authorizedAmount = useMemo(
+    () => (authorizedBase > 0 ? Math.round((authorizedBase + tip) * (1 + BUFFER_PCT) * 100) / 100 : 0),
+    [authorizedBase, tip],
+  );
 
   // Delivery scheduling
   const [deliveryType, setDeliveryType] = useState<"asap" | "scheduled">("asap");
@@ -314,7 +320,7 @@ const Checkout = () => {
     if (paymentMode === "cod") {
       setClientSecret(null);
       setPaymentIntentId("");
-      setAuthorizedAmount(0);
+      setAuthorizedBase(0);
       setInitLoading(false);
       return;
     }
@@ -334,7 +340,7 @@ const Checkout = () => {
     if (!timeReady) {
       setClientSecret(null);
       setPaymentIntentId("");
-      setAuthorizedAmount(0);
+      setAuthorizedBase(0);
       setInitLoading(false);
       return;
     }
@@ -375,7 +381,7 @@ const Checkout = () => {
         if (data?.error) throw new Error(data.error);
         setClientSecret(data.client_secret);
         setPaymentIntentId(data.payment_intent_id);
-        setAuthorizedAmount(data.authorized_amount);
+        setAuthorizedBase(Math.max(0, Number(data.estimated_total || 0) - Number(data.tip || 0)));
       } catch (err: any) {
         if (!cancelled) setError(err.message || "Could not initialize payment");
       } finally {
@@ -994,12 +1000,14 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     } else {
       const { stripe, elements } = stripeRef.current;
       if (!stripe || !elements) { props.setIsSubmitting(false); return; }
-      // Honour the "save this card" checkbox before confirming.
+      // Honour the "save this card" checkbox and sync the latest tip into the
+      // hold before confirming, so the authorization always covers the tip.
       try {
         await supabase.functions.invoke("set-save-card", {
           body: {
             payment_intent_id: props.paymentIntentId,
             save: saveCard,
+            tip: props.tip,
             environment: stripeEnv,
           },
         });
