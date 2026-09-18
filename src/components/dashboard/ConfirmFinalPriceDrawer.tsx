@@ -18,6 +18,7 @@ interface OrderRow {
   delivery_fee: number | null;
   convenience_fee: number | null;
   total: number;
+  discount_amount: number | null;
   estimated_subtotal: number | null;
   estimated_total: number | null;
   final_subtotal: number | null;
