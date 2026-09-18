@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const SEND_PUSH_SECRET = Deno.env.get("SEND_PUSH_SECRET");
+  const SEND_PUSH_SECRET = Deno.env.get("NOTIFY_TRIGGER_SECRET") ?? Deno.env.get("SEND_PUSH_SECRET");
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const internal = req.headers.get("x-internal-secret");
   const bearer = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
