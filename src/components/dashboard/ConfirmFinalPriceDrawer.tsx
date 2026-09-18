@@ -68,30 +68,38 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
     setLoading(false);
   };
 
-  const deliveryFee = Number(order?.delivery_fee || 0);
-  const convenienceFee = Number(order?.convenience_fee || 0);
+  // Every component is rounded to cents the same way the server receipt
+  // (get_order_amounts) rounds them, so the drawer and the customer's receipt
+  // always agree to the penny.
+  const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
+
+  const deliveryFee = round2(order?.delivery_fee ?? 0);
+  const convenienceFee = round2(order?.convenience_fee ?? 0);
+  const discount = round2(order?.discount_amount ?? 0);
   // Tip isn't stored separately — it's whatever the original total carried on
-  // top of items + tax + fees. It stays exactly as the customer chose.
-  const estimatedTotal = Number(order?.estimated_total || order?.total || 0);
-  const deliveryTax = Math.round(deliveryFee * 0.05 * 100) / 100;
+  // top of items + tax + fees (less any discount). It stays exactly as the
+  // customer chose.
+  const estimatedTotal = round2(order?.estimated_total || order?.total || 0);
+  const deliveryTax = round2(deliveryFee * 0.05);
+  const estimatedSubtotal = round2(order?.estimated_subtotal ?? order?.subtotal ?? 0);
   const tip = Math.max(
     0,
-    Math.round(
-      (estimatedTotal -
-        (Number(order?.estimated_subtotal ?? order?.subtotal ?? 0) +
-          Number(order?.tax || 0) +
-          deliveryFee +
-          convenienceFee)) *
-        100,
-    ) / 100,
+    round2(
+      estimatedTotal -
+        (estimatedSubtotal + deliveryTax + deliveryFee + convenienceFee - discount),
+    ),
   );
 
   const receiptAmount = (() => {
     const v = parseFloat(receipt);
-    return isNaN(v) ? 0 : v;
+    return isNaN(v) ? 0 : round2(v);
   })();
 
-  const newTotal = receiptAmount + deliveryFee + deliveryTax + convenienceFee + tip;
+  // Each line is added exactly once: receipt (items incl. their own tax),
+  // delivery, 5% tax on delivery only, service fee, tip, minus any discount.
+  const newTotal = round2(
+    receiptAmount + deliveryFee + deliveryTax + convenienceFee + tip - discount,
+  );
   const authorized = Number(order?.authorized_amount || 0);
   const exceedsAuth = authorized > 0 && newTotal > authorized;
   const variancePct = estimatedTotal > 0 ? ((newTotal - estimatedTotal) / estimatedTotal) * 100 : 0;
