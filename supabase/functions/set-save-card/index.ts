@@ -33,17 +33,35 @@ Deno.serve(async (req) => {
       return json(400, { error: "Invalid payment_intent_id" });
     }
 
+    const rawTip = Number(body?.tip);
+    const tip = Number.isFinite(rawTip) && rawTip > 0 ? Math.min(Math.round(rawTip * 100) / 100, 500) : 0;
+
     const stripe = createStripeClient(environment);
     const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
     if (intent.metadata?.user_id !== user.id) return json(403, { error: "Forbidden" });
 
-    await stripe.paymentIntents.update(paymentIntentId, {
+    const updates: any = {
       payment_method_options: {
         card: { setup_future_usage: save ? "off_session" : "" },
       },
-    } as any);
+    };
 
-    return json(200, { ok: true, save });
+    // Re-price the authorization from the server-recorded base total (no tip)
+    // plus the tip the customer has chosen right now. Without this, raising the
+    // tip after the card form loaded would leave the hold too small to capture.
+    const baseTotal = Number(intent.metadata?.base_total ?? NaN);
+    const bufferPct = Number(intent.metadata?.buffer_pct ?? 20) / 100;
+    if (Number.isFinite(baseTotal) && baseTotal > 0 && intent.status === "requires_payment_method") {
+      const newAmount = Math.round((baseTotal + tip) * (1 + bufferPct) * 100);
+      if (newAmount !== intent.amount) {
+        updates.amount = newAmount;
+        updates.metadata = { ...intent.metadata, estimated_total: String(Math.round((baseTotal + tip) * 100) / 100) };
+      }
+    }
+
+    await stripe.paymentIntents.update(paymentIntentId, updates as any);
+
+    return json(200, { ok: true, save, tip });
   } catch (e) {
     console.error("set-save-card error", e);
     return json(500, { error: e instanceof Error ? e.message : "Unexpected error" });
