@@ -320,7 +320,7 @@ const Checkout = () => {
     if (paymentMode === "cod") {
       setClientSecret(null);
       setPaymentIntentId("");
-      setAuthorizedAmount(0);
+      setAuthorizedBase(0);
       setInitLoading(false);
       return;
     }
@@ -340,7 +340,7 @@ const Checkout = () => {
     if (!timeReady) {
       setClientSecret(null);
       setPaymentIntentId("");
-      setAuthorizedAmount(0);
+      setAuthorizedBase(0);
       setInitLoading(false);
       return;
     }
@@ -381,7 +381,7 @@ const Checkout = () => {
         if (data?.error) throw new Error(data.error);
         setClientSecret(data.client_secret);
         setPaymentIntentId(data.payment_intent_id);
-        setAuthorizedAmount(data.authorized_amount);
+        setAuthorizedBase(Math.max(0, Number(data.estimated_total || 0) - Number(data.tip || 0)));
       } catch (err: any) {
         if (!cancelled) setError(err.message || "Could not initialize payment");
       } finally {
