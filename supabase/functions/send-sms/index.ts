@@ -54,8 +54,38 @@ Deno.serve(async (req) => {
     });
   }
 
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+  let logPayload: SmsPayload | null = null;
+  let resolvedTo: string | null = null;
+  let messageText = "";
+
+  const writeLog = async (fields: {
+    status: string;
+    twilio_sid?: string | null;
+    twilio_status?: string | null;
+    error_message?: string | null;
+  }) => {
+    try {
+      await admin.from("sms_logs").insert({
+        notification_id: logPayload?.notification_id ?? null,
+        user_id: logPayload?.user_id ?? null,
+        order_id: logPayload?.order_id ?? null,
+        recipient: resolvedTo ?? logPayload?.to ?? null,
+        title: logPayload?.title ?? null,
+        body: messageText || logPayload?.body || "",
+        kind: logPayload?.kind ?? (logPayload?.to ? "owner" : "customer"),
+        status: fields.status,
+        twilio_sid: fields.twilio_sid ?? null,
+        twilio_status: fields.twilio_status ?? null,
+        error_message: fields.error_message ?? null,
+      });
+    } catch (e) {
+      console.error("sms_logs insert failed:", e instanceof Error ? e.message : e);
+    }
+  };
+
   try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
     const FROM = Deno.env.get("TWILIO_FROM_NUMBER");
@@ -64,6 +94,7 @@ Deno.serve(async (req) => {
     if (!FROM) throw new Error("TWILIO_FROM_NUMBER is not configured");
 
     const payload = (await req.json()) as SmsPayload;
+    logPayload = payload;
     if ((!payload.user_id && !payload.to) || !payload.body) {
       return new Response(JSON.stringify({ error: "user_id or to, and body required" }), {
         status: 400,
@@ -75,8 +106,7 @@ Deno.serve(async (req) => {
     if (payload.to) {
       to = toE164(payload.to);
     } else {
-      const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
-      const { data: profile, error } = await supabase
+      const { data: profile, error } = await admin
         .from("profiles")
         .select("phone, sms_opt_in")
         .eq("id", payload.user_id!)
@@ -84,6 +114,7 @@ Deno.serve(async (req) => {
       if (error) throw error;
 
       if (!profile || profile.sms_opt_in === false) {
+        await writeLog({ status: "skipped", error_message: "Customer opted out of texts" });
         return new Response(
           JSON.stringify({ ok: true, sent: 0, reason: "opted out" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -92,7 +123,9 @@ Deno.serve(async (req) => {
 
       to = toE164(profile.phone);
     }
+    resolvedTo = to;
     if (!to) {
+      await writeLog({ status: "skipped", error_message: "No valid phone number on file" });
       return new Response(
         JSON.stringify({ ok: true, sent: 0, reason: "no valid phone" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -102,6 +135,7 @@ Deno.serve(async (req) => {
     const text = `Deliverr: ${payload.title ? payload.title + " — " : ""}${payload.body}`
       .replace(/\s+/g, " ")
       .slice(0, 300);
+    messageText = text;
 
     const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
       method: "POST",
@@ -116,6 +150,10 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const errorBody = await res.text();
       console.error(`Twilio send failed [${res.status}]: ${errorBody}`);
+      await writeLog({
+        status: "failed",
+        error_message: `Twilio ${res.status}: ${errorBody}`.slice(0, 500),
+      });
       return new Response(
         JSON.stringify({ ok: false, status: res.status, details: errorBody }),
         {
@@ -126,12 +164,19 @@ Deno.serve(async (req) => {
     }
 
     const data = await res.json();
+    await writeLog({
+      status: data.status === "failed" || data.status === "undelivered" ? "failed" : "sent",
+      twilio_sid: data.sid ?? null,
+      twilio_status: data.status ?? null,
+      error_message: data.error_message ?? null,
+    });
     return new Response(JSON.stringify({ ok: true, sent: 1, sid: data.sid }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";
     console.error("send-sms error:", msg);
+    await writeLog({ status: "failed", error_message: msg.slice(0, 500) });
     return new Response(JSON.stringify({ ok: false, error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
