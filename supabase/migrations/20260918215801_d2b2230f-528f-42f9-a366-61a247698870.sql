@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS trg_orders_notify_status_change ON public.orders;
