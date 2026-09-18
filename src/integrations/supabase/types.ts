@@ -766,6 +766,7 @@ export type Database = {
           id: string
           phone: string | null
           postal_code: string | null
+          sms_opt_in: boolean
           updated_at: string
         }
         Insert: {
@@ -778,6 +779,7 @@ export type Database = {
           id: string
           phone?: string | null
           postal_code?: string | null
+          sms_opt_in?: boolean
           updated_at?: string
         }
         Update: {
@@ -790,6 +792,7 @@ export type Database = {
           id?: string
           phone?: string | null
           postal_code?: string | null
+          sms_opt_in?: boolean
           updated_at?: string
         }
         Relationships: []
