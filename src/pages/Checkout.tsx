@@ -91,7 +91,9 @@ const Checkout = () => {
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
-  const [authorizedAmount, setAuthorizedAmount] = useState<number>(0);
+  // Server-validated total WITHOUT the tip. The displayed hold is derived from
+  // this plus the current tip so raising the tip always raises the hold.
+  const [authorizedBase, setAuthorizedBase] = useState<number>(0);
   const [initLoading, setInitLoading] = useState(true);
 
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
