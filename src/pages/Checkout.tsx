@@ -1000,12 +1000,14 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     } else {
       const { stripe, elements } = stripeRef.current;
       if (!stripe || !elements) { props.setIsSubmitting(false); return; }
-      // Honour the "save this card" checkbox before confirming.
+      // Honour the "save this card" checkbox and sync the latest tip into the
+      // hold before confirming, so the authorization always covers the tip.
       try {
         await supabase.functions.invoke("set-save-card", {
           body: {
             payment_intent_id: props.paymentIntentId,
             save: saveCard,
+            tip: props.tip,
             environment: stripeEnv,
           },
         });
