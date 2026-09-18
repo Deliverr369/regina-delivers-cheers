@@ -56,12 +56,13 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
     }
     const o = data as OrderRow;
     setOrder(o);
-    // Default to the estimated store receipt (items + tax), which is what the
-    // shopper will be replacing with the real till receipt amount.
+    // Default to the estimated store receipt (items only). The order's `tax`
+    // column holds delivery tax, which is added separately below — including it
+    // here would charge that tax twice.
     const estReceipt =
       o.final_subtotal != null
         ? Number(o.final_subtotal)
-        : Number(o.estimated_subtotal ?? o.subtotal) + Number(o.tax || 0);
+        : Number(o.estimated_subtotal ?? o.subtotal);
     setReceipt(estReceipt.toFixed(2));
     setLoading(false);
   };
