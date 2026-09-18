@@ -14,6 +14,8 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 interface SmsPayload {
   notification_id?: string;
   user_id?: string;
+  order_id?: string;
+  kind?: string; // "customer" | "owner"
   title: string;
   body: string;
   link?: string | null;
