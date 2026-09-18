@@ -1,4 +1,4 @@
-import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus, Boxes, Globe, Sparkles, Search, Bell, FileText, ShieldCheck } from "lucide-react";
+import { BarChart3, ShoppingCart, Users, Store, Package, Megaphone, Clock, LogOut, Home, ImagePlus, Boxes, Globe, Sparkles, Search, Bell, FileText, ShieldCheck, MessageSquare } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,6 +39,7 @@ const contentMenu = [
   { title: "SEO Generator", url: "/dashboard/seo", icon: Search },
   { title: "Blog Posts", url: "/dashboard/blog", icon: FileText },
   { title: "Push Test", url: "/dashboard/push-test", icon: Bell },
+  { title: "Text Message Log", url: "/dashboard/sms-log", icon: MessageSquare },
   { title: "Security", url: "/dashboard/security", icon: ShieldCheck },
 ];
 
