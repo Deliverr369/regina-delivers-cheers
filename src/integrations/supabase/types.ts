@@ -919,6 +919,57 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_logs: {
+        Row: {
+          body: string
+          created_at: string
+          error_message: string | null
+          id: string
+          kind: string
+          notification_id: string | null
+          order_id: string | null
+          recipient: string | null
+          status: string
+          title: string | null
+          twilio_sid: string | null
+          twilio_status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          kind?: string
+          notification_id?: string | null
+          order_id?: string | null
+          recipient?: string | null
+          status?: string
+          title?: string | null
+          twilio_sid?: string | null
+          twilio_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          kind?: string
+          notification_id?: string | null
+          order_id?: string | null
+          recipient?: string | null
+          status?: string
+          title?: string | null
+          twilio_sid?: string | null
+          twilio_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       store_hours: {
         Row: {
           close_time: string
