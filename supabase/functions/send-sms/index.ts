@@ -13,10 +13,11 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 
 interface SmsPayload {
   notification_id?: string;
-  user_id: string;
+  user_id?: string;
   title: string;
   body: string;
   link?: string | null;
+  to?: string; // direct recipient override (e.g. store-owner alerts)
 }
 
 // Normalize a user-entered phone number to E.164 (North America default).
@@ -61,29 +62,34 @@ Deno.serve(async (req) => {
     if (!FROM) throw new Error("TWILIO_FROM_NUMBER is not configured");
 
     const payload = (await req.json()) as SmsPayload;
-    if (!payload.user_id || !payload.body) {
-      return new Response(JSON.stringify({ error: "user_id and body required" }), {
+    if ((!payload.user_id && !payload.to) || !payload.body) {
+      return new Response(JSON.stringify({ error: "user_id or to, and body required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("phone, sms_opt_in")
-      .eq("id", payload.user_id)
-      .maybeSingle();
-    if (error) throw error;
+    let to: string | null = null;
+    if (payload.to) {
+      to = toE164(payload.to);
+    } else {
+      const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("phone, sms_opt_in")
+        .eq("id", payload.user_id!)
+        .maybeSingle();
+      if (error) throw error;
 
-    if (!profile || profile.sms_opt_in === false) {
-      return new Response(
-        JSON.stringify({ ok: true, sent: 0, reason: "opted out" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      if (!profile || profile.sms_opt_in === false) {
+        return new Response(
+          JSON.stringify({ ok: true, sent: 0, reason: "opted out" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      to = toE164(profile.phone);
     }
-
-    const to = toE164(profile.phone);
     if (!to) {
       return new Response(
         JSON.stringify({ ok: true, sent: 0, reason: "no valid phone" }),
