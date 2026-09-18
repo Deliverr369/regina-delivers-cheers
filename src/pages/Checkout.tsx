@@ -439,11 +439,14 @@ const Checkout = () => {
         tip: number;
         total: number;
       };
+      // Store every amount rounded to cents so the saved order, the server
+      // receipt and the admin final-price drawer always agree to the penny.
+      const round2 = (n: number) => Math.round(n * 100) / 100;
       const calcs: GroupCalc[] = Array.from(groups.values()).map((g) => {
-        const sub = g.items.reduce((s, i) => s + i.price * i.quantity, 0);
-        const fee = getDeliveryFee(g.storeName);
-        const conv = sub * 0.12;
-        const tx = fee * 0.05;
+        const sub = round2(g.items.reduce((s, i) => s + i.price * i.quantity, 0));
+        const fee = round2(getDeliveryFee(g.storeName));
+        const conv = round2(sub * 0.12);
+        const tx = round2(fee * 0.05);
         return {
           ...g,
           subtotal: sub,
@@ -451,14 +454,14 @@ const Checkout = () => {
           convenienceFee: conv,
           tax: tx,
           tip: 0, // assigned below
-          total: sub + fee + conv + tx,
+          total: round2(sub + fee + conv + tx),
         };
       });
       // Apply the tip to the largest order so totals reconcile to the single payment.
       if (tip > 0 && calcs.length > 0) {
         const idx = calcs.reduce((best, c, i, arr) => (c.subtotal > arr[best].subtotal ? i : best), 0);
-        calcs[idx].tip = tip;
-        calcs[idx].total += tip;
+        calcs[idx].tip = round2(tip);
+        calcs[idx].total = round2(calcs[idx].total + tip);
       }
 
       // Distribute the single Stripe authorization across the split orders proportionally.
