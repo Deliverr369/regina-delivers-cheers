@@ -122,6 +122,10 @@ const Checkout = () => {
 
   const baseTotal = subtotal + deliveryFee + convenienceFee + tax;
   const estimatedTotal = baseTotal + tip;
+  const authorizedAmount = useMemo(
+    () => (authorizedBase > 0 ? Math.round((authorizedBase + tip) * (1 + BUFFER_PCT) * 100) / 100 : 0),
+    [authorizedBase, tip],
+  );
 
   // Delivery scheduling
   const [deliveryType, setDeliveryType] = useState<"asap" | "scheduled">("asap");
