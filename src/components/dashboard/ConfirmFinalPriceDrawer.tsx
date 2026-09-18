@@ -256,6 +256,12 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
                   <span>${tip.toFixed(2)}</span>
                 </div>
               )}
+              {discount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Promo discount</span>
+                  <span>-${discount.toFixed(2)}</span>
+                </div>
+              )}
               <Separator className="my-2" />
               <div className="flex justify-between font-bold text-base">
                 <span>Total to charge</span>
