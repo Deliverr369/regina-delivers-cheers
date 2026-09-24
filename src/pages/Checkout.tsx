@@ -477,7 +477,12 @@ const Checkout = () => {
       const window = deliveryType === "scheduled" && scheduledSlot ? formatSlotLabel(scheduledSlot) : null;
 
       // Persist the 19+ attestation server-side; the database requires it before an order exists.
-      await recordAgeVerificationServerSide();
+      const ageSaved = await recordAgeVerificationServerSide();
+      if (!ageSaved) {
+        throw new Error(
+          "We couldn't confirm your 19+ age check because your sign-in expired. Please sign in again and retry — no order was placed and you have not been charged.",
+        );
+      }
 
       // Insert one order per store, then its items.
       const createdOrderIds: string[] = [];

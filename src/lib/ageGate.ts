@@ -15,13 +15,24 @@ export const hasVerifiedAge = () => {
  * The database rejects order creation for accounts with no recorded attestation,
  * so the localStorage flag alone can no longer be used to bypass the gate.
  */
-export const recordAgeVerificationServerSide = async () => {
+export const recordAgeVerificationServerSide = async (): Promise<boolean> => {
   try {
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth?.user) return false;
+    // Only call with a live signed-in session; the function is not callable anonymously.
+    let { data: { session } } = await supabase.auth.getSession();
+    const expiresSoon = session?.expires_at ? session.expires_at * 1000 - Date.now() < 60_000 : false;
+    if (!session || expiresSoon) {
+      const { data } = await supabase.auth.refreshSession();
+      session = data.session;
+    }
+    if (!session?.access_token) return false;
     const { error } = await supabase.rpc("confirm_age_19_plus");
-    return !error;
-  } catch {
+    if (error) {
+      console.warn("[ageGate] Could not save 19+ confirmation:", error.message);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn("[ageGate] Could not save 19+ confirmation:", e);
     return false;
   }
 };
