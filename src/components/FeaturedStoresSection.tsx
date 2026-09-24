@@ -54,11 +54,18 @@ const FeaturedStoresSection = () => {
               </div>
             ))
           ) : stores && stores.length > 0 ? (
-            stores.map((store) => (
+            stores.map((store) => {
+              const isComingSoon = store.name.toLowerCase().includes("costco liquor");
+              return (
               <Link
                 key={store.id}
-                to={`/stores/${store.id}`}
-                className="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border card-hover h-full"
+                to={isComingSoon ? "#" : `/stores/${store.id}`}
+                onClick={(event) => {
+                  if (isComingSoon) event.preventDefault();
+                }}
+                aria-disabled={isComingSoon}
+                tabIndex={isComingSoon ? -1 : undefined}
+                className={`group flex flex-col bg-card rounded-2xl overflow-hidden border border-border h-full ${isComingSoon ? "grayscale opacity-55 cursor-not-allowed" : "card-hover"}`}
               >
                 {/* Image/Logo — compact */}
                 <div className="relative h-28 md:h-32 overflow-hidden bg-[hsl(var(--primary-soft))] flex items-center justify-center p-4">
@@ -72,7 +79,9 @@ const FeaturedStoresSection = () => {
                     }`}
                   />
                   <div className="absolute top-2.5 left-2.5 flex gap-2">
-                    {store.is_open ? (
+                    {isComingSoon ? (
+                      <Badge variant="secondary" className="text-[10px] font-bold px-2 py-0.5 bg-background text-foreground border border-border shadow-sm">Coming soon</Badge>
+                    ) : store.is_open ? (
                       <Badge className="bg-[hsl(var(--success))] text-white text-[10px] font-medium shadow-sm px-2 py-0.5">Open</Badge>
                     ) : (
                       <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5">Closed</Badge>
@@ -94,6 +103,12 @@ const FeaturedStoresSection = () => {
                     {store.name}
                   </h3>
 
+                  {isComingSoon && (
+                    <span className="mb-3 inline-flex min-h-8 items-center justify-center rounded-md border border-border bg-muted px-3 text-xs font-semibold text-muted-foreground">
+                      Coming soon
+                    </span>
+                  )}
+
                   <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span className="text-xs line-clamp-1">{store.address}</span>
@@ -113,7 +128,8 @@ const FeaturedStoresSection = () => {
                   </div>
                 </div>
               </Link>
-            ))
+              );
+            })
           ) : (
             <p className="text-muted-foreground col-span-3 text-center py-8">
               No stores available at the moment.
