@@ -480,7 +480,7 @@ const Checkout = () => {
       const ageSaved = await recordAgeVerificationServerSide();
       if (!ageSaved) {
         throw new Error(
-          "We couldn't confirm your 19+ age check because your sign-in expired. Please sign in again and retry — your card was not charged.",
+          "We couldn't confirm your 19+ age check because your sign-in expired. Please sign in again and retry — no order was placed and you have not been charged.",
         );
       }
 
