@@ -413,6 +413,9 @@ const Stores = () => {
           {!isLoading && (
             <div className={`grid gap-3 ${isNative ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}`}>
               {filteredStores.map((store) => {
+                const isComingSoon =
+                  store.id === "194b9050-c0b3-4d8a-af11-bb74a480c431" ||
+                  store.name.toLowerCase().includes("costco liquor");
                 const heroPerStore: Record<string, string> = {
                   "194b9050-c0b3-4d8a-af11-bb74a480c431": "/images/stores/costco-storefront.png", // Costco
                   "25e9b4a8-850a-4d26-9aad-54c9eb2f183a": "/images/stores/superstore-storefront.png", // Superstore
@@ -426,11 +429,18 @@ const Stores = () => {
                 return (
                 <Link
                   key={store.id}
-                  to={`/stores/${store.id}`}
+                  to={isComingSoon ? "#" : `/stores/${store.id}`}
+                  onClick={(event) => {
+                    if (isComingSoon) event.preventDefault();
+                  }}
+                  aria-disabled={isComingSoon}
+                  tabIndex={isComingSoon ? -1 : undefined}
                   className={`group bg-card overflow-hidden flex flex-col h-full transition-all duration-200 ease-out ${
+                    isComingSoon ? "grayscale opacity-55 cursor-not-allowed" : ""
+                  } ${
                     isNative
                       ? "rounded-xl shadow-sm border border-border"
-                      : "rounded-2xl border border-border/60 shadow-[0_6px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.10)] hover:-translate-y-1 hover:border-border"
+                      : `rounded-2xl border border-border/60 shadow-[0_6px_16px_rgba(0,0,0,0.06)] ${isComingSoon ? "" : "hover:shadow-[0_14px_30px_rgba(0,0,0,0.10)] hover:-translate-y-1 hover:border-border"}`
                   }`}
                 >
                   {/* Hero - storefront photo (liquor) or brand logo (others) */}
@@ -458,7 +468,11 @@ const Stores = () => {
                       />
                     )}
                     <div className="absolute top-3 left-3 flex gap-2">
-                      {isStoreOpen(store.id, store.is_open) ? (
+                      {isComingSoon ? (
+                        <Badge variant="secondary" className="rounded-full px-3 py-1 text-[11px] font-bold border border-border bg-background text-foreground shadow-sm">
+                          Coming soon
+                        </Badge>
+                      ) : isStoreOpen(store.id, store.is_open) ? (
                         <Badge className="rounded-full bg-success/15 text-success border border-success/25 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide shadow-sm backdrop-blur-sm hover:bg-success/15">
                           <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-success" />
                           Open
@@ -489,6 +503,12 @@ const Stores = () => {
                     }`}>
                       {store.name}
                     </h3>
+
+                    {isComingSoon && (
+                      <span className="mb-3 inline-flex min-h-9 items-center justify-center rounded-md border border-border bg-muted px-4 text-sm font-semibold text-muted-foreground">
+                        Coming soon
+                      </span>
+                    )}
 
                     <div className={`flex items-center gap-2 mt-auto ${isNative ? "text-xs text-muted-foreground" : "justify-between pt-3 border-t border-border/60"}`}>
                       <div className="flex items-center gap-1">

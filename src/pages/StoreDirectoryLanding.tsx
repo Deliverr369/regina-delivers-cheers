@@ -306,14 +306,21 @@ const StoreDirectoryLanding = () => {
               </Card>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {stores.map((s) => (
+                {stores.map((s) => {
+                  const isComingSoon = s.slug === "costco-liquor" || s.name.toLowerCase().includes("costco liquor");
+                  return (
                   <Link
                     key={s.id}
-                    to={`/${cfg.slug}/${s.slug}`}
-                    className="group"
-                    aria-label={`${s.name} ${cfg.noun} delivery in Regina`}
+                    to={isComingSoon ? "#" : `/${cfg.slug}/${s.slug}`}
+                    onClick={(event) => {
+                      if (isComingSoon) event.preventDefault();
+                    }}
+                    tabIndex={isComingSoon ? -1 : undefined}
+                    aria-disabled={isComingSoon}
+                    aria-label={isComingSoon ? `${s.name} coming soon` : `${s.name} ${cfg.noun} delivery in Regina`}
+                    className={isComingSoon ? "group grayscale opacity-55 cursor-not-allowed" : "group"}
                   >
-                    <Card className="h-full transition-all group-hover:border-primary group-hover:shadow-lg">
+                    <Card className={`h-full transition-all ${isComingSoon ? "" : "group-hover:border-primary group-hover:shadow-lg"}`}>
                       <CardContent className="p-5">
                         <div className="flex items-start gap-4">
                           {s.image_url ? (
@@ -332,7 +339,9 @@ const StoreDirectoryLanding = () => {
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              {s.is_open ? (
+                              {isComingSoon ? (
+                                <Badge variant="secondary" className="text-xs font-bold">Coming soon</Badge>
+                              ) : s.is_open ? (
                                 <Badge className="bg-green-600 hover:bg-green-600 text-xs">
                                   <CheckCircle2 className="h-3 w-3 mr-1" /> Open
                                 </Badge>
@@ -360,13 +369,15 @@ const StoreDirectoryLanding = () => {
                             <dd className="font-medium text-sm">{s.hours || "Contact store"}</dd>
                           </div>
                         </dl>
-                        <div className="mt-4 text-sm font-semibold text-primary inline-flex items-center gap-1">
-                          <ShoppingBag className="h-4 w-4" /> View {cfg.noun}
+                        <div className={`mt-4 min-h-9 px-4 rounded-md text-sm font-semibold inline-flex items-center justify-center gap-1 ${isComingSoon ? "w-full border border-border bg-muted text-muted-foreground" : "text-primary"}`}>
+                          {!isComingSoon && <ShoppingBag className="h-4 w-4" />}
+                          {isComingSoon ? "Coming soon" : `View ${cfg.noun}`}
                         </div>
                       </CardContent>
                     </Card>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
