@@ -276,7 +276,7 @@ const Stores = () => {
               <div className="container mx-auto px-4">
                 <div
                   ref={tabsScrollRef}
-                  className="flex items-stretch overflow-x-auto justify-center gap-6 sm:gap-12 py-4"
+                  className="flex items-stretch overflow-x-auto no-scrollbar snap-x justify-start md:justify-center gap-2 sm:gap-8 md:gap-12 py-2 sm:py-4 -mx-4 px-4 sm:mx-0 sm:px-0"
                 >
                   {tabs.map((tab) => {
                     const isActive = activeTab === tab.id;
@@ -284,7 +284,7 @@ const Stores = () => {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className="group relative flex flex-col items-center gap-2 pt-2 pb-3 min-w-[110px] sm:min-w-[140px]"
+                        className="group relative flex flex-col items-center gap-1.5 sm:gap-2 pt-2 pb-3 min-w-[76px] sm:min-w-[140px] shrink-0 snap-start"
                       >
                         <img
                           src={tab.icon}
@@ -292,10 +292,10 @@ const Stores = () => {
                           loading="lazy"
                           width={512}
                           height={512}
-                          className={`object-contain transition-transform duration-300 h-20 w-20 sm:h-24 sm:w-24 ${isActive ? "scale-105" : "group-hover:scale-105 opacity-90"}`}
+                          className={`object-contain transition-transform duration-300 h-14 w-14 sm:h-24 sm:w-24 ${isActive ? "scale-105" : "group-hover:scale-105 opacity-90"}`}
                         />
                         <span
-                          className={`font-display whitespace-nowrap transition-colors text-base sm:text-lg ${
+                          className={`font-display whitespace-nowrap transition-colors text-sm sm:text-lg ${
                             isActive
                               ? "font-bold text-primary"
                               : "font-semibold text-foreground/80 group-hover:text-foreground"
