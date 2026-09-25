@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, Star, Clock, Search, Filter, ChevronDown, Truck, Store, Home, Tag } from "lucide-react";
+import { MapPin, Star, Clock, Search, Filter, ChevronDown, ChevronRight, Truck, Store, Home, Tag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +54,13 @@ const Stores = () => {
     if (isNative && tabsScrollRef.current) {
       tabsScrollRef.current.scrollLeft = 0;
     }
+  }, [isNative]);
+
+  // Keep the "more categories" scroll cue in sync with mount/resize
+  useEffect(() => {
+    updateTabsScrollCue();
+    window.addEventListener("resize", updateTabsScrollCue);
+    return () => window.removeEventListener("resize", updateTabsScrollCue);
   }, [isNative]);
 
   const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
