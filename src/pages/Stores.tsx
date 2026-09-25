@@ -251,11 +251,11 @@ const Stores = () => {
             {/* Delivery Address Banner (web) */}
             {deliveryAddress && (
               <div className="bg-primary/10 border-b border-primary/20">
-                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm">
+                <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-sm min-w-0 flex-1">
                     <MapPin className="h-4 w-4 text-primary shrink-0" />
-                    <span className="text-muted-foreground">Delivering to:</span>
-                    <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+                    <span className="text-muted-foreground shrink-0 whitespace-nowrap">Delivering to</span>
+                    <span className="font-medium text-foreground truncate">{deliveryAddress}</span>
                   </div>
                   <Button
                     variant="ghost"
