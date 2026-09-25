@@ -82,8 +82,6 @@ const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
                 <p className="text-sm font-medium text-foreground leading-snug">
                   {addr.address}
                   {addr.unit ? `, ${addr.unit}` : ""}
-                  {`, ${addr.city}`}
-                  {addr.postal_code ? `, ${addr.postal_code}` : ""}
                 </p>
               </div>
               {selected && (

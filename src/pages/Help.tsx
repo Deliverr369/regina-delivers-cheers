@@ -34,7 +34,7 @@ const sections: Section[] = [
     title: "Payment",
     emoji: "💳",
     items: [
-      { q: "What payment methods do you accept?", a: "We accept Visa, Mastercard and American Express credit and debit cards. We do not accept cash on delivery." },
+      { q: "What payment methods do you accept?", a: "We accept Visa, Mastercard and American Express credit and debit cards, or you can choose Pay at the door." },
       { q: "Why do I see a hold on my card?", a: "When you place an order we authorize an estimated amount on your card. Once your order is finalized we capture the actual total — the temporary hold is released by your bank." },
       { q: "Why is the card authorization higher than my estimated total?", a: "Your store confirms final pricing. We authorize up to 20% above the estimate to allow for small in-store price changes, but only the actual finalized amount is charged." },
       { q: "I think I have an unauthorized charge", a: "Please contact us right away at support@deliverr.ca or call 306-533-3333 and our team will investigate immediately." },
