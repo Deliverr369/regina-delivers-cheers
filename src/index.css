@@ -27,7 +27,7 @@
     --secondary-foreground: 240 8% 18%;
 
     --muted: 240 6% 97%;
-    --muted-foreground: 240 5% 46%;
+    --muted-foreground: 240 5% 38%;
 
     --accent: 358 84% 76%;
     --accent-foreground: 240 8% 18%;
@@ -132,7 +132,19 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display font-bold tracking-tight;
+    text-wrap: balance;
   }
+
+  /* Mobile readability */
+  @media (max-width: 640px) {
+    body { font-size: 15px; line-height: 1.55; }
+    h1 { line-height: 1.15; }
+    p { text-wrap: pretty; }
+    input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+    .container { padding-left: 1rem; padding-right: 1rem; }
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
 
   /* Tap targets — minimum 44px on touch devices */
   @media (pointer: coarse) {
