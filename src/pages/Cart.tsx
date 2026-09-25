@@ -166,7 +166,7 @@ const Cart = () => {
         </div>
 
         {/* Mobile sticky checkout bar */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border pb-safe-plus pt-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        <div style={{ bottom: (!import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN || String(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN).startsWith("pk_test_")) ? 44 : 0 }} className="lg:hidden fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border pb-safe-plus pt-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[11px] text-muted-foreground leading-none">Total</p>
