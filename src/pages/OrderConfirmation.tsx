@@ -22,6 +22,7 @@ interface ConfirmationOrder {
   delivery_window: string | null;
   created_at: string;
   store_id: string | null;
+  payment_method: string | null;
   stores: { id: string; name: string; delivery_time: string | null } | null;
 }
 
@@ -66,7 +67,7 @@ const OrderConfirmation = () => {
       setLoading(true);
       let q = supabase
         .from("orders")
-        .select("id, status, total, delivery_fee, delivery_type, delivery_scheduled_at, delivery_window, created_at, store_id, stores ( id, name, delivery_time )")
+        .select("id, status, total, delivery_fee, delivery_type, delivery_scheduled_at, delivery_window, created_at, store_id, payment_method, stores ( id, name, delivery_time )")
         .order("created_at", { ascending: false });
       if (orderIds.length > 0) {
         q = q.in("id", orderIds);
@@ -102,6 +103,7 @@ const OrderConfirmation = () => {
   }, [orders.map((o) => o.id).join(","), user?.id]);
 
   const isSplit = orders.length > 1;
+  const isPayAtDoor = orders.length > 0 && orders.every((order) => order.payment_method === "cod");
   const grandTotal = orders.reduce((s, o) => s + Number(o.total || 0), 0);
   const headerOrderId = orders[0]?.id?.slice(0, 8).toUpperCase() || "—";
 
@@ -258,7 +260,13 @@ const OrderConfirmation = () => {
                 </li>
                 <li className="flex gap-3">
                   <Receipt className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <span className="text-muted-foreground">Your card is on hold; the final amount is captured after delivery</span>
+                  <span className="text-muted-foreground">
+                    {isPayAtDoor
+                      ? isSplit
+                        ? "Pay each store order at the door when it arrives"
+                        : "Pay the final amount at the door when your order arrives"
+                      : "Your card is on hold; the final amount is captured after delivery"}
+                  </span>
                 </li>
               </ul>
             </div>

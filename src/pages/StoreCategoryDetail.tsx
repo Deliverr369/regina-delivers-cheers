@@ -126,7 +126,7 @@ const CATEGORY_META: Record<
       },
       {
         q: `What payment methods does ${name} accept on Deliverr?`,
-        a: `All major credit cards (Visa, Mastercard, Amex). We do not accept cash on delivery for spirits.`,
+        a: `All major credit cards (Visa, Mastercard, Amex), plus Pay at the door.`,
       },
     ],
   },
