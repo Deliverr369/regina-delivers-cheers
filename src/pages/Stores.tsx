@@ -41,6 +41,13 @@ const Stores = () => {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "pharmacy" | "takeout" | "pet" | "grocery">("liquor");
   const tabsScrollRef = useRef<HTMLDivElement>(null);
+  const [tabsCanScrollRight, setTabsCanScrollRight] = useState(false);
+
+  const updateTabsScrollCue = () => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+    setTabsCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
 
   // iOS-only: always reset category scroll to the very first tab on mount
   useEffect(() => {
