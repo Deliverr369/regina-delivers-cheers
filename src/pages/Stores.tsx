@@ -473,7 +473,7 @@ const Stores = () => {
                           Coming soon
                         </Badge>
                       ) : isStoreOpen(store.id, store.is_open) ? (
-                        <Badge className="rounded-full bg-success/15 text-success border border-success/25 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide shadow-sm backdrop-blur-sm hover:bg-success/15">
+                        <Badge className="rounded-full bg-background/95 text-success border border-success/30 px-2.5 py-0.5 text-[11px] font-bold tracking-wide shadow-md hover:bg-background/95">
                           <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-success" />
                           Open
                         </Badge>

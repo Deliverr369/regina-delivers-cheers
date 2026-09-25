@@ -3,7 +3,7 @@ export function PaymentTestModeBanner() {
 
   if (!clientToken) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-destructive/15 backdrop-blur border-t border-destructive/30 px-4 py-2 pr-24 text-center text-sm text-destructive">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-destructive/15 backdrop-blur border-t border-destructive/30 px-3 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-center text-[11px] sm:text-xs leading-tight text-destructive">
         Production checkout is not configured. Complete payments go-live in your Lovable project to accept real payments.
       </div>
     );
@@ -11,7 +11,7 @@ export function PaymentTestModeBanner() {
 
   if (clientToken.startsWith("pk_test_")) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-amber-100/95 dark:bg-amber-950/80 backdrop-blur border-t border-amber-200 dark:border-amber-800 px-4 py-2 pr-24 text-center text-sm text-amber-900 dark:text-amber-200">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-amber-100/95 dark:bg-amber-950/80 backdrop-blur border-t border-amber-200 dark:border-amber-800 px-3 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-center text-[11px] sm:text-xs leading-tight text-amber-900 dark:text-amber-200">
         All card payments made in the preview are in test mode.{" "}
         <a
           href="https://docs.lovable.dev/features/payments#test-and-live-environments"
