@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, Star, Clock, Search, Filter, ChevronDown, Truck, Store, Home, Tag } from "lucide-react";
+import { MapPin, Star, Clock, Search, Filter, ChevronDown, ChevronRight, Truck, Store, Home, Tag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,12 +41,26 @@ const Stores = () => {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [activeTab, setActiveTab] = useState<"liquor" | "smoke" | "pharmacy" | "takeout" | "pet" | "grocery">("liquor");
   const tabsScrollRef = useRef<HTMLDivElement>(null);
+  const [tabsCanScrollRight, setTabsCanScrollRight] = useState(false);
+
+  const updateTabsScrollCue = () => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+    setTabsCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
 
   // iOS-only: always reset category scroll to the very first tab on mount
   useEffect(() => {
     if (isNative && tabsScrollRef.current) {
       tabsScrollRef.current.scrollLeft = 0;
     }
+  }, [isNative]);
+
+  // Keep the "more categories" scroll cue in sync with mount/resize
+  useEffect(() => {
+    updateTabsScrollCue();
+    window.addEventListener("resize", updateTabsScrollCue);
+    return () => window.removeEventListener("resize", updateTabsScrollCue);
   }, [isNative]);
 
   const SEVEN_ELEVEN_ID = "7d8f97cc-0cf5-44dc-8569-26dbd7959372";
@@ -273,9 +287,10 @@ const Stores = () => {
             )}
             {/* Category Tabs (web) */}
             <div className="bg-background border-b border-border">
-              <div className="container mx-auto px-4">
+              <div className="container mx-auto px-4 relative">
                 <div
                   ref={tabsScrollRef}
+                  onScroll={updateTabsScrollCue}
                   className="flex items-stretch overflow-x-auto no-scrollbar snap-x justify-start md:justify-center gap-2 sm:gap-8 md:gap-12 py-2 sm:py-4 -mx-4 px-4 sm:mx-0 sm:px-0"
                 >
                   {tabs.map((tab) => {
@@ -312,6 +327,12 @@ const Stores = () => {
                     );
                   })}
                 </div>
+                {/* Scroll cue: right-edge fade + chevron when more categories exist */}
+                {tabsCanScrollRight && (
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-16 md:hidden bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end pr-1">
+                    <ChevronRight className="h-4 w-4 text-muted-foreground animate-pulse" />
+                  </div>
+                )}
               </div>
             </div>
 
