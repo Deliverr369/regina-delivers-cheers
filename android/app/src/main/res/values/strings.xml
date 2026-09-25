@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Deliverr - Beer, Wine &amp; Liquor Delivery</string>
-    <string name="title_activity_main">Deliverr - Beer, Wine &amp; Liquor Delivery</string>
+    <string name="app_name">Deliverr</string>
+    <string name="title_activity_main">Deliverr</string>
     <string name="package_name">deliverr.deliverrconsumer</string>
     <string name="custom_url_scheme">deliverr.deliverrconsumer</string>
 </resources>

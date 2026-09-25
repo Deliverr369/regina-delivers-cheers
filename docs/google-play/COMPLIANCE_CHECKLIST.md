@@ -48,6 +48,7 @@ Declare collection, sharing, encryption in transit, deletion handling and whethe
 
 ## Production verification
 
+- [ ] Add the Android `google-services.json` for package `deliverr.deliverrconsumer` before the final build if push notifications must work in version 1. The existing server notification credentials do not replace this Android app configuration file.
 - [ ] Test signup, login, address entry, catalogue, cart, card payment, Pay at the door, order creation and notifications on a physical Android device.
 - [ ] Test with production services and remove all sandbox/test notices from screenshots.
 - [ ] Verify `https://deliverr.ca/privacy`, support email and phone number are reachable.
