@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Send, Sparkles, Loader2, Phone, Mail, Package, ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CONTACT, telHref, mailHref } from "@/config/contact";
 
@@ -31,6 +32,10 @@ const ORDER_INTRO: ChatMsg = {
 };
 
 const SupportChatbot = () => {
+  const { pathname } = useLocation();
+  const hideOnMobile = /^\/(cart|checkout)/.test(pathname);
+  const payToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
+  const hasPayBanner = !payToken || payToken.startsWith("pk_test_");
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("general");
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -203,7 +208,10 @@ const SupportChatbot = () => {
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close support chat" : "Open support chat"}
         className={cn(
-          "fixed right-5 bottom-5 z-50 h-14 w-14 rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center transition-all hover:scale-110 active:scale-95",
+          "fixed right-4 sm:right-5 z-50 h-12 w-12 sm:h-14 sm:w-14",
+          hasPayBanner ? "bottom-16 sm:bottom-14" : "bottom-5",
+          hideOnMobile && !open && "hidden lg:flex",
+          " rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center transition-all hover:scale-110 active:scale-95",
           "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground",
         )}
       >
