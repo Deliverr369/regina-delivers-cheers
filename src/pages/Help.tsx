@@ -34,8 +34,9 @@ const sections: Section[] = [
     title: "Payment",
     emoji: "💳",
     items: [
-      { q: "What payment methods do you accept?", a: "We accept Visa, Mastercard and American Express credit and debit cards. We do not accept cash on delivery." },
+      { q: "What payment methods do you accept?", a: "We accept Visa, Mastercard and American Express credit and debit cards, or you can choose Pay at the door." },
       { q: "Why do I see a hold on my card?", a: "When you place an order we authorize an estimated amount on your card. Once your order is finalized we capture the actual total — the temporary hold is released by your bank." },
+      { q: "Why is the card authorization higher than my estimated total?", a: "Your store confirms final pricing. We authorize up to 20% above the estimate to allow for small in-store price changes, but only the actual finalized amount is charged." },
       { q: "I think I have an unauthorized charge", a: "Please contact us right away at support@deliverr.ca or call 306-533-3333 and our team will investigate immediately." },
       { q: "My refund or credit looks incorrect", a: "Reach out via email, live chat or phone and we'll review your order and make it right." },
     ],
@@ -68,6 +69,7 @@ const sections: Section[] = [
     emoji: "📦",
     items: [
       { q: "Where is my order?", a: "After checkout you'll receive a confirmation and live tracking link. You can also view current and past orders from the Orders page." },
+      { q: "What happens when I order from more than one store?", a: "Items from different stores are created as separate orders so each store can fulfill its part. Your card is authorized once for the combined checkout." },
       { q: "How do I make a change to my order?", a: "If shopping hasn't started yet, contact our support team via chat, email or phone and we'll do our best to update your order." },
       { q: "What is your cancellation policy?", a: "You can cancel for a full refund up until your shopper begins picking your order. After that a $10 cancellation fee may apply." },
       { q: "How do I report a problem?", a: "Call 306-533-3333, email support@deliverr.ca or use live chat. Our team responds quickly to make things right." },

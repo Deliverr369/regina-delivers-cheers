@@ -867,17 +867,6 @@ const OrderSummaryCard = (props: CheckoutBodyProps) => {
 
         <Separator className="mb-4" />
 
-        {props.storeBreakdown.length > 1 && (
-          <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-foreground/80">
-            <p className="font-semibold text-foreground mb-0.5">
-              {props.storeBreakdown.length} separate orders
-            </p>
-            <p className="leading-snug">
-              Items from different stores ship as their own orders. You'll be charged once, but each store fulfills its part separately.
-            </p>
-          </div>
-        )}
-
         <div className="flex items-end justify-between mb-5">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Estimated total</p>
@@ -952,6 +941,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     if (name === "city") {
       props.setCityError(value.trim().toLowerCase() !== "regina" ? "We only deliver within Regina." : null);
     }
+  };
+
+  const handleFullNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fullName = e.target.value;
+    const [firstName = "", ...rest] = fullName.trimStart().split(/\s+/);
+    props.setFormData((prev) => ({
+      ...prev,
+      firstName,
+      lastName: rest.join(" "),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1057,9 +1056,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       <div className="max-w-3xl mx-auto space-y-4 min-w-0">
           {/* 1. Contact */}
           <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information">
-            <div className="grid sm:grid-cols-2 gap-3">
-              <FieldInput label="First name" name="firstName" value={props.formData.firstName} onChange={handleChange} required />
-              <FieldInput label="Last name" name="lastName" value={props.formData.lastName} onChange={handleChange} required />
+            <div className="grid gap-3">
+              <FieldInput label="Full name" name="fullName" autoComplete="name" value={`${props.formData.firstName} ${props.formData.lastName}`.trim()} onChange={handleFullNameChange} required />
               <FieldInput label="Email" name="email" type="email" value={props.formData.email} onChange={handleChange} required />
               <FieldInput label="Phone" name="phone" type="tel" value={props.formData.phone} onChange={handleChange} required />
             </div>
@@ -1074,44 +1072,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
             {props.cityError && (
               <p className="text-xs text-destructive mt-2">{props.cityError}</p>
             )}
-            {props.selectedAddressId && (
-              <div className="mt-3">
-                <FieldInput
-                  label="Postal code"
-                  name="postalCode"
-                  value={props.formData.postalCode}
-                  onChange={(e) =>
-                    props.setFormData((prev) => ({ ...prev, postalCode: e.target.value.toUpperCase() }))
-                  }
-                  placeholder="S4R 6V6"
-                  required
-                />
-                {!CA_POSTAL_RE.test((props.formData.postalCode || "").trim()) && (
-                  <p className="text-xs mt-1" style={{ color: "#F78B8E" }}>
-                    Add the postal code for this address so we can confirm delivery (Regina starts with S4).
-                  </p>
-                )}
-              </div>
-            )}
-            <div className="mt-3">
-              <FieldInput
-                label="Delivery instructions (optional)"
-                name="deliveryInstructions"
-                value={props.formData.deliveryInstructions}
-                onChange={handleChange}
-                placeholder="Ring doorbell, leave at door, etc."
-              />
-            </div>
           </SectionCard>
 
           {/* 3. Delivery time */}
           <SectionCard step={3} icon={<CalendarClock className="h-4 w-4" />} title="Delivery time">
-            <div className="grid grid-cols-2 gap-2.5 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-4">
               <button
                 type="button"
                 disabled={!props.allStoresOpenNow && Object.keys(props.storeHours).length > 0}
                 onClick={() => { props.setDeliveryType("asap"); props.setScheduleError(null); }}
-                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                className={`min-w-0 flex items-center gap-2 rounded-xl border px-2.5 py-3 transition-all text-left ${
                   props.deliveryType === "asap"
                     ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
                     : !props.allStoresOpenNow && Object.keys(props.storeHours).length > 0
@@ -1119,14 +1089,14 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                       : "border-border bg-background hover:border-primary/40"
                 }`}
               >
-                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${props.deliveryType === "asap" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                <div className={`h-8 w-8 shrink-0 rounded-md flex items-center justify-center ${props.deliveryType === "asap" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
                   <Zap className="h-4 w-4" />
                 </div>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-foreground">ASAP</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="whitespace-nowrap text-[10px] text-muted-foreground">
                     {props.allStoresOpenNow || Object.keys(props.storeHours).length === 0
-                      ? "Arrives in 25–45 min"
+                      ? "25–45 min"
                       : "Closed right now"}
                   </p>
                 </div>
@@ -1134,16 +1104,16 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
               <button
                 type="button"
                 onClick={() => props.setDeliveryType("scheduled")}
-                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                className={`min-w-0 flex items-center gap-2 rounded-xl border px-2.5 py-3 transition-all text-left ${
                   props.deliveryType === "scheduled" ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
                 }`}
               >
-                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${props.deliveryType === "scheduled" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                <div className={`h-8 w-8 shrink-0 rounded-md flex items-center justify-center ${props.deliveryType === "scheduled" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
                   <CalendarClock className="h-4 w-4" />
                 </div>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-foreground">Schedule</p>
-                  <p className="text-[11px] text-muted-foreground">Pick a day &amp; time</p>
+                  <p className="whitespace-nowrap text-[10px] text-muted-foreground">Choose time</p>
                 </div>
               </button>
             </div>
@@ -1165,40 +1135,38 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           {/* 3. Payment */}
           <SectionCard step={4} icon={<CreditCard className="h-4 w-4" />} title="Payment method">
             {/* Card / COD toggle */}
-            <div className="grid grid-cols-2 gap-2.5 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-4">
               <button
                 type="button"
                 onClick={() => props.setPaymentMode("card")}
-                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                className={`min-w-0 flex items-center gap-2 rounded-xl border px-2.5 py-3 transition-all text-left ${
                   !isCod ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
                 }`}
               >
-                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${!isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                <div className={`h-8 w-8 shrink-0 rounded-md flex items-center justify-center ${!isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
                   <CreditCard className="h-4 w-4" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">Credit / Debit card</p>
-                  <p className="text-[11px] text-muted-foreground">Pre-authorized, charged on delivery</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground leading-tight">Credit / Debit</p>
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => props.setPaymentMode("cod")}
-                className={`flex items-center gap-2.5 rounded-xl border p-3.5 transition-all text-left ${
+                className={`min-w-0 flex items-center gap-2 rounded-xl border px-2.5 py-3 transition-all text-left ${
                   isCod ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10" : "border-border bg-background hover:border-primary/40"
                 }`}
               >
-                <div className={`h-9 w-9 rounded-md flex items-center justify-center ${isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                <div className={`h-8 w-8 shrink-0 rounded-md flex items-center justify-center ${isCod ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
                   <Banknote className="h-4 w-4" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">Pay at the door</p>
-                  <p className="text-[11px] text-muted-foreground">Pay the driver when they arrive</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground leading-tight">Pay at door</p>
                 </div>
               </button>
             </div>
 
-            {isCod ? (
+            {isCod && (
               <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 flex gap-3">
                 <Banknote className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-foreground/80 leading-relaxed">
@@ -1206,16 +1174,8 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
                   <span className="font-semibold text-foreground">${props.estimatedTotal.toFixed(2)}</span> ready. Final amount may vary based on in-store prices.
                 </p>
               </div>
-            ) : (
-              <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-3.5 flex gap-3">
-                <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-foreground/80 leading-relaxed">
-                  <span className="font-semibold text-foreground">Final pricing confirmed by your store.</span> We'll authorize up to{" "}
-                  <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimate +20% buffer). Only the actual amount is charged.
-                </p>
-              </div>
             )}
-            {!isCod && <div className="h-4" />}
+            {!isCod && <div className="h-1" />}
 
             {!isCod && props.savedCardsStatus === "loading" && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
