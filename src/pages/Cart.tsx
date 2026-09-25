@@ -59,7 +59,7 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-header pb-32 lg:pb-16">
+      <main className="pt-header pb-16">
         <div className="bg-secondary/50 border-b border-border">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3 min-w-0">
