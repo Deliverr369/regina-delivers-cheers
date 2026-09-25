@@ -280,9 +280,10 @@ const Stores = () => {
             )}
             {/* Category Tabs (web) */}
             <div className="bg-background border-b border-border">
-              <div className="container mx-auto px-4">
+              <div className="container mx-auto px-4 relative">
                 <div
                   ref={tabsScrollRef}
+                  onScroll={updateTabsScrollCue}
                   className="flex items-stretch overflow-x-auto no-scrollbar snap-x justify-start md:justify-center gap-2 sm:gap-8 md:gap-12 py-2 sm:py-4 -mx-4 px-4 sm:mx-0 sm:px-0"
                 >
                   {tabs.map((tab) => {
