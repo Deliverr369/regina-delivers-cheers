@@ -39,8 +39,8 @@ BEGIN
       notif_message := 'Order #' || short_id || ' status: ' || NEW.status;
   END CASE;
 
-  INSERT INTO public.notifications (user_id, order_id, type, title, message)
-  VALUES (NEW.user_id, NEW.id, 'order_update', notif_title, notif_message);
+  INSERT INTO public.notifications (user_id, order_id, type, title, body)
+  VALUES (NEW.user_id, NEW.id, 'order_update', notif_title, notif_message) -- Fixed column name in audit;
 
   RETURN NEW;
 END;
