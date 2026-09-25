@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, Check, Loader2 } from "lucide-react";
+import { MapPin, Plus, Check, Loader2, Pencil } from "lucide-react";
 import { useAddresses, type SavedAddress, type AddressInput } from "@/hooks/useAddresses";
 import AddressFormDialog from "./AddressFormDialog";
 import { toast } from "@/hooks/use-toast";
@@ -11,8 +11,9 @@ interface Props {
 }
 
 const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
-  const { addresses, loading, create } = useAddresses();
+  const { addresses, loading, create, update } = useAddresses();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null);
   const [autoSelected, setAutoSelected] = useState(false);
 
   // Auto-select default (or first) address once loaded
@@ -33,6 +34,27 @@ const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
     } catch (err: any) {
       toast({
         title: "Could not save address",
+        description: err.message,
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const handleSave = async (data: AddressInput) => {
+    if (!editingAddress) {
+      await handleCreate(data);
+      return;
+    }
+
+    try {
+      await update(editingAddress.id, data);
+      const updated = { ...editingAddress, ...data };
+      if (selectedId === editingAddress.id) onSelect(updated);
+      toast({ title: "Address updated" });
+    } catch (err: any) {
+      toast({
+        title: "Could not update address",
         description: err.message,
         variant: "destructive",
       });
@@ -61,33 +83,49 @@ const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
         addresses.map((addr) => {
           const selected = selectedId === addr.id;
           return (
-            <button
+            <div
               key={addr.id}
-              type="button"
-              onClick={() => onSelect(addr)}
               className={`w-full flex items-start gap-3 rounded-xl border p-3.5 transition-all text-left ${
                 selected
                   ? "border-primary bg-primary/[0.04] shadow-sm shadow-primary/10"
                   : "border-border bg-background hover:border-primary/40"
               }`}
             >
-              <div
+              <button
+                type="button"
+                onClick={() => onSelect(addr)}
+                className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                aria-label={`Use ${addr.address}`}
+              >
+                <div
                 className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${
                   selected ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
                 }`}
+                >
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0 self-center">
+                  <p className="text-sm font-medium text-foreground leading-snug">
+                    {addr.address}
+                    {addr.unit ? `, ${addr.unit}` : ""}
+                  </p>
+                </div>
+                {selected && <Check className="h-4 w-4 text-primary mt-1 shrink-0" />}
+              </button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                aria-label={`Edit ${addr.address}`}
+                onClick={() => {
+                  setEditingAddress(addr);
+                  setDialogOpen(true);
+                }}
               >
-                <MapPin className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0 self-center">
-                <p className="text-sm font-medium text-foreground leading-snug">
-                  {addr.address}
-                  {addr.unit ? `, ${addr.unit}` : ""}
-                </p>
-              </div>
-              {selected && (
-                <Check className="h-4 w-4 text-primary mt-1 shrink-0" />
-              )}
-            </button>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
           );
         })
       )}
@@ -96,7 +134,10 @@ const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
         type="button"
         variant="outline"
         className="w-full rounded-full"
-        onClick={() => setDialogOpen(true)}
+        onClick={() => {
+          setEditingAddress(null);
+          setDialogOpen(true);
+        }}
       >
         <Plus className="h-4 w-4 mr-2" /> Add a new address
       </Button>
@@ -104,8 +145,8 @@ const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
       <AddressFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        initial={null}
-        onSubmit={handleCreate}
+        initial={editingAddress}
+        onSubmit={handleSave}
       />
     </div>
   );
