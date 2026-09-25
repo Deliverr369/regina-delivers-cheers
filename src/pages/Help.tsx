@@ -37,7 +37,7 @@ const sections: Section[] = [
       { q: "What payment methods do you accept?", a: "We accept Visa, Mastercard and American Express credit and debit cards, or you can choose Pay at the door." },
       { q: "Why do I see a hold on my card?", a: "When you place an order we authorize an estimated amount on your card. Once your order is finalized we capture the actual total — the temporary hold is released by your bank." },
       { q: "Why is the card authorization higher than my estimated total?", a: "Your store confirms final pricing. We authorize up to 20% above the estimate to allow for small in-store price changes, but only the actual finalized amount is charged." },
-      { q: "I think I have an unauthorized charge", a: "Please contact us right away at support@deliverr.ca or call 306-533-3333 and our team will investigate immediately." },
+      { q: "I think I have an unauthorized charge", a: "Please contact us right away at support@deliverr.ca or call 306-539-4569 and our team will investigate immediately." },
       { q: "My refund or credit looks incorrect", a: "Reach out via email, live chat or phone and we'll review your order and make it right." },
     ],
   },
@@ -72,7 +72,7 @@ const sections: Section[] = [
       { q: "What happens when I order from more than one store?", a: "Items from different stores are created as separate orders so each store can fulfill its part. Your card is authorized once for the combined checkout." },
       { q: "How do I make a change to my order?", a: "If shopping hasn't started yet, contact our support team via chat, email or phone and we'll do our best to update your order." },
       { q: "What is your cancellation policy?", a: "You can cancel for a full refund up until your shopper begins picking your order. After that a $10 cancellation fee may apply." },
-      { q: "How do I report a problem?", a: "Call 306-533-3333, email support@deliverr.ca or use live chat. Our team responds quickly to make things right." },
+      { q: "How do I report a problem?", a: "Call 306-539-4569, email support@deliverr.ca or use live chat. Our team responds quickly to make things right." },
       { q: "When will I receive my refund?", a: "Refunds typically post within 3–5 business days. Some banks adjust the original authorization instead of showing a separate credit." },
       { q: "Do I need to show ID?", a: "Yes. All Regina alcohol and smokes deliveries require valid government-issued photo ID proving you are 19 or older. No exceptions." },
     ],
@@ -182,10 +182,10 @@ const Help = () => {
               <p className="text-muted-foreground">We're here 7 days a week to help with your Regina order.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <a href="tel:+13065333333" className="bg-card rounded-2xl border border-border p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all">
+              <a href="tel:+13065394569" className="bg-card rounded-2xl border border-border p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all">
                 <Phone className="h-6 w-6 text-primary mx-auto mb-3" />
                 <h3 className="font-display font-bold text-foreground mb-1">Call us</h3>
-                <p className="text-sm text-muted-foreground">306-533-3333</p>
+                <p className="text-sm text-muted-foreground">306-539-4569</p>
               </a>
               <a href="mailto:support@deliverr.ca" className="bg-card rounded-2xl border border-border p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all">
                 <Mail className="h-6 w-6 text-primary mx-auto mb-3" />

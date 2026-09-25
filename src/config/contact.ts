@@ -17,9 +17,9 @@ export const CONTACT = {
   logoUrl: "https://deliverr.store/og-image.jpg",
 
   // Phone — keep the E.164 form for tel: + JSON-LD; display form for UI
-  phoneE164: "+13065333333",
-  phoneDisplay: "+1 (306) 533-3333",
-  phoneShort: "306-533-3333",
+  phoneE164: "+13065394569",
+  phoneDisplay: "+1 (306) 539-4569",
+  phoneShort: "306-539-4569",
 
   // Email
   email: "support@deliverr.ca",

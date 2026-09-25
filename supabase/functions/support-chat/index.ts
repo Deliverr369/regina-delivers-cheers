@@ -22,13 +22,13 @@ Key facts you must always use when relevant:
 - Categories: Beer, Wine, Spirits, Smokes, Ciders & Seltzers.
 - Cancellation: full refund before shopping starts; $10 fee after that.
 - Refunds: 3–5 business days.
-- Support: phone 306-533-3333, email support@deliverr.ca.
+- Support: phone 306-539-4569, email support@deliverr.ca.
 - Privacy questions: privacy@deliverr.app.
 
 Helpful behaviour:
 - Answer general FAQs (orders, payments, delivery, account, ID rules) directly.
 - Walk users through tasks step-by-step (placing an order, resetting password, updating address).
-- For order-specific issues (lost order, refund disputes, missing items), collect the order # and politely direct them to call 306-533-3333 or email support@deliverr.ca.
+- For order-specific issues (lost order, refund disputes, missing items), collect the order # and politely direct them to call 306-539-4569 or email support@deliverr.ca.
 - If asked about anything outside Deliverr (random trivia, coding help, news), kindly redirect to Deliverr-related help.
 - Never promise alcohol delivery to minors. Never bypass the 19+ rule.
 - Keep responses under ~6 short sentences unless the user asks for detail.`;
@@ -45,7 +45,7 @@ You are now in ORDER STATUS MODE. The user has provided an order reference and y
    - out_for_delivery → driver on the way; have ID + payment card holder ready; track via Orders page.
    - delivered → confirm receipt; how to report missing/damaged items within 24h.
    - cancelled → refund timing (3–5 business days) and how to reorder.
-4. If anything seems wrong (very old, payment failed, missing items), tell them to call 306-533-3333 or email support@deliverr.ca and quote the short ID.
+4. If anything seems wrong (very old, payment failed, missing items), tell them to call 306-539-4569 or email support@deliverr.ca and quote the short ID.
 5. Keep it under 6 short sentences plus a tight bullet list. Use markdown.
 6. NEVER invent items, totals, or addresses that aren't in the order data provided.`;
 
@@ -165,8 +165,8 @@ Deno.serve(async (req: Request) => {
       if (!result.found) {
         const reason =
           result.reason === "not_authorized"
-            ? "The order exists but does not belong to the signed-in account. Politely ask the user to sign in with the account that placed the order, or call 306-533-3333."
-            : `We could not find an order matching "${orderId}". Politely ask the user to double-check the order # (8-character code from their confirmation email) or to contact 306-533-3333.`;
+            ? "The order exists but does not belong to the signed-in account. Politely ask the user to sign in with the account that placed the order, or call 306-539-4569."
+            : `We could not find an order matching "${orderId}". Politely ask the user to double-check the order # (8-character code from their confirmation email) or to contact 306-539-4569.`;
         systemPrompt = `${BASE_PROMPT}\n\n${ORDER_STATUS_GUIDANCE}\n\nORDER LOOKUP RESULT: NOT FOUND.\n${reason}`;
       } else {
         systemPrompt = `${BASE_PROMPT}\n\n${ORDER_STATUS_GUIDANCE}\n\nORDER DATA (JSON):\n${JSON.stringify(result.order, null, 2)}`;

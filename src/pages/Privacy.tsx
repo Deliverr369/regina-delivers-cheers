@@ -189,7 +189,7 @@ const Privacy = () => {
                 <a href="mailto:privacy@deliverr.app" className="text-primary hover:underline">
                   privacy@deliverr.app
                 </a>{" "}
-                or call <a href="tel:+13065333333" className="text-primary hover:underline">306-533-3333</a>. See also our{" "}
+                or call <a href="tel:+13065394569" className="text-primary hover:underline">306-539-4569</a>. See also our{" "}
                 <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>.
               </p>
             </section>
