@@ -10,24 +10,24 @@
     <meta name="keywords" content="liquor delivery Regina, beer delivery Regina, wine delivery Saskatchewan, alcohol delivery Regina, cigarette delivery Regina" />
     <!-- Default to noindex; src/components/seo/DomainCanonical.tsx flips this to indexable on deliverr.store only. -->
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="canonical" href="https://deliverr.store/" />
-    <link rel="sitemap" type="application/xml" title="Sitemap" href="https://deliverr.store/sitemap.xml" />
+    <link rel="canonical" href="https://www.deliverr.ca/" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="https://www.deliverr.ca/sitemap.xml" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="any" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Deliverr" />
-    <meta property="og:url" content="https://deliverr.store/" />
+    <meta property="og:url" content="https://www.deliverr.ca/" />
     <meta property="og:title" content="Deliverr — Liquor & Smoke Delivery in Regina">
     <meta property="og:description" content="Order liquor, beer, wine, spirits and smoke from Regina's top stores. Fast delivery, secure checkout.">
-    <meta property="og:image" content="https://deliverr.store/og-image.jpg" />
+    <meta property="og:image" content="https://www.deliverr.ca/og-image.jpg" />
     <meta property="og:locale" content="en_CA" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Deliverr — Liquor & Smoke Delivery in Regina">
     <meta name="twitter:description" content="Order liquor, beer, wine, spirits and smoke from Regina's top stores. Fast delivery, secure checkout.">
-    <meta name="twitter:image" content="https://deliverr.store/og-image.jpg" />
+    <meta name="twitter:image" content="https://www.deliverr.ca/og-image.jpg" />
 
     <meta name="rating" content="adult" />
     <meta name="age-restriction" content="19+" />
@@ -39,12 +39,13 @@
     {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
-      "@id": "https://deliverr.store/#business",
+      "@id": "https://www.deliverr.ca/#business",
       "name": "Deliverr",
-      "image": "https://deliverr.store/og-image.jpg",
-      "logo": "https://deliverr.store/og-image.jpg",
-      "url": "https://deliverr.store/",
+      "image": "https://www.deliverr.ca/og-image.jpg",
+      "logo": "https://www.deliverr.ca/og-image.jpg",
+      "url": "https://www.deliverr.ca/",
       "telephone": "+1-306-539-4569",
+      "email": "support@deliverr.ca",
       "priceRange": "$$",
       "description": "Fast liquor, beer, wine, spirits and tobacco delivery across Regina, Saskatchewan. 19+ only. ID required on delivery.",
       "address": {
@@ -53,8 +54,23 @@
         "addressRegion": "SK",
         "addressCountry": "CA"
       },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 50.4452,
+        "longitude": -104.6189
+      },
       "areaServed": [
-        { "@type": "City", "name": "Regina" }
+        {
+          "@type": "City",
+          "name": "Regina",
+          "sameAs": "https://en.wikipedia.org/wiki/Regina,_Saskatchewan",
+          "containedInPlace": { "@type": "AdministrativeArea", "name": "Saskatchewan" }
+        },
+        {
+          "@type": "GeoCircle",
+          "geoMidpoint": { "@type": "GeoCoordinates", "latitude": 50.4452, "longitude": -104.6189 },
+          "geoRadius": 15000
+        }
       ],
       "openingHoursSpecification": [{
         "@type": "OpeningHoursSpecification",
@@ -62,8 +78,10 @@
         "opens": "10:00",
         "closes": "22:00"
       }],
+      "parentOrganization": { "@id": "https://www.deliverr.ca/#organization" },
       "sameAs": [
-        "https://deliverr.store/"
+        "https://www.instagram.com/deliverr.ca",
+        "https://www.facebook.com/deliverr.ca"
       ]
     }
     </script>
@@ -71,9 +89,47 @@
     {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": "https://www.deliverr.ca/#organization",
       "name": "Deliverr",
-      "url": "https://deliverr.store/",
-      "logo": "https://deliverr.store/og-image.jpg"
+      "legalName": "Deliverr Delivery Services Inc.",
+      "url": "https://www.deliverr.ca/",
+      "logo": "https://www.deliverr.ca/og-image.jpg",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1-306-539-4569",
+        "email": "support@deliverr.ca",
+        "contactType": "customer support",
+        "areaServed": "CA-SK",
+        "availableLanguage": ["English"]
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "@id": "https://www.deliverr.ca/#delivery-service",
+      "name": "Deliverr Liquor & Smoke Delivery",
+      "serviceType": "Alcohol and convenience delivery",
+      "provider": { "@id": "https://www.deliverr.ca/#business" },
+      "areaServed": {
+        "@type": "City",
+        "name": "Regina",
+        "containedInPlace": { "@type": "AdministrativeArea", "name": "Saskatchewan" }
+      },
+      "description": "On-demand delivery of liquor, beer, wine, spirits, ciders, seltzers and smokes from Regina's top stores to your door, usually in under 60 minutes. 19+ only, ID verified on delivery.",
+      "hoursAvailable": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+        "opens": "10:00",
+        "closes": "22:00"
+      },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "CAD",
+        "price": "7.00",
+        "description": "Delivery fee from $7.00 depending on the store. Free delivery on orders over $50."
+      }
     }
     </script>
   <script>
