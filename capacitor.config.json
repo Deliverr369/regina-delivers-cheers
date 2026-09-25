@@ -1,11 +1,7 @@
 {
   "appId": "deliverr.deliverrconsumer",
-  "appName": "Deliverr - Beer, Wine & Liquor Delivery",
+  "appName": "Deliverr",
   "webDir": "dist",
-  "server": {
-    "url": "https://regina-delivers-cheers.lovable.app",
-    "cleartext": true
-  },
   "ios": {
     "contentInset": "never",
     "limitsNavigationsToAppBoundDomains": false

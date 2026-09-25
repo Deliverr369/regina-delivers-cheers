@@ -1,7 +1,7 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,8 @@
     "mobile:assets": "capacitor-assets generate --iconBackgroundColor \"#E63946\" --iconBackgroundColorDark \"#E63946\" --splashBackgroundColor \"#E63946\" --splashBackgroundColorDark \"#E63946\"",
     "mobile:brand": "node scripts/patch-native-branding.mjs",
     "mobile:sync": "npm run mobile:assets && cap sync && npm run mobile:brand",
+    "android:prepare": "npm run build && npm run mobile:sync",
+    "android:bundle": "npm run android:prepare && cd android && ./gradlew bundleRelease",
     "capacitor:copy:before": "node scripts/patch-capacitor-ios.mjs",
     "capacitor:copy:after": "node scripts/patch-capacitor-ios.mjs && node scripts/patch-native-branding.mjs",
     "capacitor:sync:before": "node scripts/patch-capacitor-ios.mjs",
