@@ -169,7 +169,7 @@ const StorePage = () => {
       },
       {
         q: `What payment methods does Deliverr accept?`,
-        a: `We accept all major credit cards (Visa, Mastercard, Amex). We do not accept cash on delivery.`,
+        a: `We accept all major credit cards (Visa, Mastercard, Amex), plus Pay at the door.`,
       },
       {
         q: `Which Regina neighborhoods does ${store.name} deliver to?`,

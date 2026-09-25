@@ -25,6 +25,7 @@ interface OrderRow {
   final_total: number | null;
   authorized_amount: number | null;
   stripe_payment_intent_id: string | null;
+  payment_method: string | null;
   payment_status: string | null;
 }
 
@@ -103,7 +104,7 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
   const authorized = Number(order?.authorized_amount || 0);
   const exceedsAuth = authorized > 0 && newTotal > authorized;
   const variancePct = estimatedTotal > 0 ? ((newTotal - estimatedTotal) / estimatedTotal) * 100 : 0;
-  const isCod = !order?.stripe_payment_intent_id;
+  const isCod = order?.payment_method === "cod";
 
   const handleCapture = async () => {
     if (!order) return;
