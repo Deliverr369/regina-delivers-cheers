@@ -509,7 +509,7 @@ const Stores = () => {
                   {/* Content - overlapping logo only for liquor storefront layout (web) */}
                   <div className={`relative flex-1 flex flex-col min-w-0 py-0.5 pr-1 sm:p-5 ${useStorefrontLayout && heroSrc && !isNative ? "sm:pt-7" : ""}`}>
                     {useStorefrontLayout && heroSrc && store.image_url && !isNative && (
-                      <div className="absolute -top-8 left-5 h-16 w-16 rounded-2xl bg-card border border-border/70 shadow-md flex items-center justify-center overflow-hidden">
+                      <div className="absolute -top-8 left-5 h-16 w-16 rounded-2xl bg-card border border-border/70 shadow-md hidden sm:flex items-center justify-center overflow-hidden">
                         <img
                           src={store.image_url}
                           alt={`${store.name} logo`}
