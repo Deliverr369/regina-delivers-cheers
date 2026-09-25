@@ -448,6 +448,8 @@ const StoreDetail = () => {
           <img
             src={safeImageUrl(product.image_url) || "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&auto=format&fm=jpg"}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />
         </div>
@@ -561,6 +563,8 @@ const StoreDetail = () => {
           <img
             src={safeImageUrl(store.image_url) || "https://images.unsplash.com/photo-1597290282695-edc43d0e7129?w=800&auto=format&fm=jpg"}
             alt={store.name}
+            fetchPriority="high"
+            decoding="async"
             className={`w-full h-full ${store.image_url?.includes('.png') ? 'object-contain bg-gradient-to-br from-muted to-muted/50 p-8' : 'object-cover'}`}
           />
           {/* Stronger gradient on iOS for guaranteed text contrast */}
