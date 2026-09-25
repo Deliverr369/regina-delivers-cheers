@@ -55,15 +55,11 @@ Deno.serve(async (req) => {
 
   const SEND_PUSH_SECRET = Deno.env.get("NOTIFY_TRIGGER_SECRET") ?? Deno.env.get("SEND_PUSH_SECRET");
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? PROJECT_ANON_KEY;
   const internal = req.headers.get("x-internal-secret");
   const bearer = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   const authorizedInternal =
     (SEND_PUSH_SECRET && internal === SEND_PUSH_SECRET) ||
     (bearer && bearer === SERVICE_ROLE);
-  const authorizedTrigger = Boolean(
-    ANON_KEY && (bearer === ANON_KEY || req.headers.get("apikey") === ANON_KEY)
-  );
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   if (!SUPABASE_URL || !SERVICE_ROLE) {
