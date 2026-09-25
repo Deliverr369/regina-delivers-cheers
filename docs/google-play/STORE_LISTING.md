@@ -43,7 +43,7 @@ Welcome to Deliverr. Browse Regina stores, place an order, choose your delivery 
 ## Required graphics
 
 - App icon: generated from `resources/icon.png`
-- Phone screenshots: capture at least two; recommended 1080 × 1920 or 1440 × 2560
-- Feature graphic: 1024 × 500, JPEG or PNG without transparency
+- Phone screenshots: `docs/google-play/assets/01-home.png`, `02-stores.png`, and `03-products.png`
+- Feature graphic: `docs/google-play/assets/feature-graphic.png` (1024 × 500, no transparency)
 
 Recommended screenshots: Stores, product catalogue, cart, checkout, and order tracking. Do not show test-mode banners, personal addresses, card details or customer information.
