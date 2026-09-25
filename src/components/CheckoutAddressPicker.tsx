@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, Star, Check, Loader2 } from "lucide-react";
+import { MapPin, Plus, Check, Loader2 } from "lucide-react";
 import { useAddresses, type SavedAddress, type AddressInput } from "@/hooks/useAddresses";
 import AddressFormDialog from "./AddressFormDialog";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
@@ -79,28 +78,13 @@ const CheckoutAddressPicker = ({ selectedId, onSelect }: Props) => {
               >
                 <MapPin className="h-4 w-4" />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-foreground">{addr.label}</p>
-                  {addr.is_default && (
-                    <Badge variant="secondary" className="text-[10px] h-5">
-                      <Star className="h-2.5 w-2.5 mr-1 fill-current" /> Default
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
+              <div className="flex-1 min-w-0 self-center">
+                <p className="text-sm font-medium text-foreground leading-snug">
                   {addr.address}
                   {addr.unit ? `, ${addr.unit}` : ""}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {addr.city}
+                  {`, ${addr.city}`}
                   {addr.postal_code ? `, ${addr.postal_code}` : ""}
                 </p>
-                {addr.delivery_instructions && (
-                  <p className="text-[11px] text-muted-foreground/80 mt-1 italic truncate">
-                    “{addr.delivery_instructions}”
-                  </p>
-                )}
               </div>
               {selected && (
                 <Check className="h-4 w-4 text-primary mt-1 shrink-0" />
