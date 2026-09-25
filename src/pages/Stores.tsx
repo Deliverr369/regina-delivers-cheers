@@ -320,6 +320,12 @@ const Stores = () => {
                     );
                   })}
                 </div>
+                {/* Scroll cue: right-edge fade + chevron when more categories exist */}
+                {tabsCanScrollRight && (
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-16 md:hidden bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end pr-1">
+                    <ChevronRight className="h-4 w-4 text-muted-foreground animate-pulse" />
+                  </div>
+                )}
               </div>
             </div>
 
