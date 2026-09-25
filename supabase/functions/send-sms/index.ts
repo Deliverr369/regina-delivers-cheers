@@ -61,13 +61,9 @@ Deno.serve(async (req) => {
   const authorizedInternal =
     (SEND_PUSH_SECRET && internal === SEND_PUSH_SECRET) ||
     (bearer && bearer === SERVICE_ROLE);
-  const authorizedTrigger = Boolean(ANON_KEY && bearer === ANON_KEY);
-  if (!authorizedInternal && !authorizedTrigger) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  const authorizedTrigger = Boolean(
+    ANON_KEY && (bearer === ANON_KEY || req.headers.get("apikey") === ANON_KEY)
+  );
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   if (!SUPABASE_URL || !SERVICE_ROLE) {
@@ -125,7 +121,7 @@ Deno.serve(async (req) => {
 
     // Database triggers use the public project token. Never trust their message
     // contents: resolve them from the database and restrict direct texts to the owner.
-    if (authorizedTrigger && !authorizedInternal) {
+    if (!authorizedInternal) {
       if (payload.kind === "owner" && payload.to === "+13065394569" && payload.order_id) {
         const { data: order, error } = await admin
           .from("orders")
