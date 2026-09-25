@@ -251,11 +251,11 @@ const Stores = () => {
             {/* Delivery Address Banner (web) */}
             {deliveryAddress && (
               <div className="bg-primary/10 border-b border-primary/20">
-                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm">
+                <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-sm min-w-0 flex-1">
                     <MapPin className="h-4 w-4 text-primary shrink-0" />
-                    <span className="text-muted-foreground">Delivering to:</span>
-                    <span className="font-medium text-foreground truncate max-w-[300px] md:max-w-none">{deliveryAddress}</span>
+                    <span className="text-muted-foreground shrink-0 whitespace-nowrap">Delivering to</span>
+                    <span className="font-medium text-foreground truncate">{deliveryAddress}</span>
                   </div>
                   <Button
                     variant="ghost"
@@ -284,7 +284,7 @@ const Stores = () => {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className="group relative flex flex-col items-center gap-1.5 sm:gap-2 pt-2 pb-3 min-w-[76px] sm:min-w-[140px] shrink-0 snap-start"
+                        className="group relative flex flex-col items-center gap-1 sm:gap-2 pt-1.5 pb-3 min-w-[68px] sm:min-w-[140px] shrink-0 snap-start"
                       >
                         <img
                           src={tab.icon}
@@ -292,10 +292,10 @@ const Stores = () => {
                           loading="lazy"
                           width={512}
                           height={512}
-                          className={`object-contain transition-transform duration-300 h-14 w-14 sm:h-24 sm:w-24 ${isActive ? "scale-105" : "group-hover:scale-105 opacity-90"}`}
+                          className={`object-contain transition-transform duration-300 h-11 w-11 sm:h-24 sm:w-24 ${isActive ? "scale-105" : "group-hover:scale-105 opacity-90"}`}
                         />
                         <span
-                          className={`font-display whitespace-nowrap transition-colors text-sm sm:text-lg ${
+                          className={`font-display whitespace-nowrap transition-colors text-xs sm:text-lg ${
                             isActive
                               ? "font-bold text-primary"
                               : "font-semibold text-foreground/80 group-hover:text-foreground"
