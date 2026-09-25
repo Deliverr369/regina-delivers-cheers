@@ -59,7 +59,7 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-header pb-32 lg:pb-16">
+      <main className="pt-header pb-16">
         <div className="bg-secondary/50 border-b border-border">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3 min-w-0">
@@ -154,7 +154,7 @@ const Cart = () => {
                   <PromoCodeInput />
                 </div>
                 <PriceDisclaimer variant="subtle" className="mb-4" />
-                <Link to="/checkout" className="hidden lg:block">
+                <Link to="/checkout" className="block">
                   <Button className="w-full gap-2 rounded-full font-semibold" size="lg">
                     Checkout <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -162,21 +162,6 @@ const Cart = () => {
                 <p className="text-[10px] text-muted-foreground text-center mt-3">Must be 19+. ID required on delivery.</p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Mobile sticky checkout bar */}
-        <div style={{ bottom: (!import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN || String(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN).startsWith("pk_test_")) ? 44 : 0 }} className="lg:hidden fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border pb-safe-plus pt-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] text-muted-foreground leading-none">Total</p>
-              <p className="font-bold text-foreground text-lg tabular-nums leading-tight">${total.toFixed(2)}</p>
-            </div>
-            <Link to="/checkout" className="shrink-0">
-              <Button className="gap-2 rounded-full font-semibold px-6" size="lg">
-                Checkout <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
           </div>
         </div>
       </main>
