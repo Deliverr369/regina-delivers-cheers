@@ -26,6 +26,8 @@ In Android Studio, open the `android` folder and choose **Build → Generate Sig
 
 Google Play App Signing should manage the distribution key. Your upload key is still required for future updates, so retain at least two protected backups.
 
+Never add `*.jks`, `*.keystore`, `android/key.properties`, passwords or private signing values to the project repository.
+
 ## Build and upload
 
 Generate a signed release bundle from Android Studio. The resulting file is normally:

@@ -29,6 +29,32 @@ function patchAndroidStrings() {
   return writeIfChanged(path, source);
 }
 
+function patchAndroidBuild() {
+  const path = join(root, 'android', 'app', 'build.gradle');
+  if (!existsSync(path)) return false;
+
+  const source = readFileSync(path, 'utf8');
+  const patched = source
+    .replace(/versionCode\s+\d+/, 'versionCode 1')
+    .replace(/versionName\s+"[^"]+"/, 'versionName "1.0.0"');
+  return writeIfChanged(path, patched);
+}
+
+function patchAndroidManifest() {
+  const path = join(root, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
+  if (!existsSync(path)) return false;
+
+  const source = readFileSync(path, 'utf8');
+  let patched = source.replace('android:allowBackup="true"', 'android:allowBackup="false"');
+  if (!patched.includes('android.permission.POST_NOTIFICATIONS')) {
+    patched = patched.replace(
+      '<uses-permission android:name="android.permission.INTERNET" />',
+      '<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />',
+    );
+  }
+  return writeIfChanged(path, patched);
+}
+
 function patchIosInfoPlist() {
   const path = join(root, 'ios', 'App', 'App', 'Info.plist');
   if (!existsSync(path)) return false;
@@ -56,6 +82,8 @@ function patchIosProjectName() {
 
 const changes = {
   androidStrings: patchAndroidStrings(),
+  androidBuild: patchAndroidBuild(),
+  androidManifest: patchAndroidManifest(),
   iosInfoPlist: patchIosInfoPlist(),
   iosProjectName: patchIosProjectName(),
 };

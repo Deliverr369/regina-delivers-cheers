@@ -1,6 +1,6 @@
 {
   "appId": "deliverr.deliverrconsumer",
-  "appName": "Deliverr - Beer, Wine & Liquor Delivery",
+  "appName": "Deliverr",
   "webDir": "dist",
   "ios": {
     "contentInset": "never",
