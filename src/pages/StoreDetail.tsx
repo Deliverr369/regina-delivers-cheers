@@ -442,7 +442,7 @@ const StoreDetail = () => {
       <div className="group bg-card rounded-xl border border-border overflow-hidden card-hover flex flex-col">
         {/* Image - clickable */}
         <div
-          className="aspect-square overflow-hidden bg-muted/30 relative cursor-pointer"
+          className="aspect-[4/3] sm:aspect-square overflow-hidden bg-muted/30 relative cursor-pointer"
           onClick={() => setOpenProductId(product.id)}
         >
           <img
@@ -453,9 +453,9 @@ const StoreDetail = () => {
         </div>
 
         {/* Content */}
-        <div className="p-3.5 flex flex-col flex-1 gap-2">
+        <div className="p-2.5 sm:p-3.5 flex flex-col flex-1 gap-1.5 sm:gap-2">
           <h4
-            className="font-medium text-foreground text-sm line-clamp-2 leading-snug cursor-pointer hover:text-primary transition-colors"
+            className="font-medium text-foreground text-[13px] sm:text-sm line-clamp-1 sm:line-clamp-2 leading-snug cursor-pointer hover:text-primary transition-colors"
             onClick={() => setOpenProductId(product.id)}
           >
             {product.name}
@@ -492,23 +492,23 @@ const StoreDetail = () => {
           )}
 
           {/* Price */}
-          <p className="text-lg font-bold text-primary mt-auto">${getDisplayPrice(product).toFixed(2)}</p>
+          <p className="text-base sm:text-lg font-bold text-primary mt-auto">${getDisplayPrice(product).toFixed(2)}</p>
 
           {/* Cart Controls */}
           <div className="flex items-center gap-2">
             {getQuantity(product.id) > 0 ? (
               <div className="flex items-center gap-1.5 flex-1">
-                <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg active:scale-95 transition-transform" onClick={() => updateQuantity(product.id, -1)}>
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg active:scale-95 transition-transform" onClick={() => updateQuantity(product.id, -1)}>
                   <Minus className="h-3.5 w-3.5" />
                 </Button>
-                <span className="font-semibold w-7 text-center text-sm tabular-nums">{getQuantity(product.id)}</span>
-                <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg active:scale-95 transition-transform" onClick={() => updateQuantity(product.id, 1)}>
+                <span className="font-semibold w-6 sm:w-7 text-center text-sm tabular-nums">{getQuantity(product.id)}</span>
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg active:scale-95 transition-transform" onClick={() => updateQuantity(product.id, 1)}>
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
               </div>
             ) : (
               <Button
-                className={`flex-1 h-10 text-sm rounded-lg font-medium transition-all duration-300 active:scale-[0.97] ${
+                className={`flex-1 h-9 sm:h-10 text-[13px] sm:text-sm rounded-lg font-medium transition-all duration-300 active:scale-[0.97] ${
                   recentlyAdded[product.id]
                     ? "bg-success hover:bg-success text-white"
                     : ""
