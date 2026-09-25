@@ -11,6 +11,7 @@ const corsHeaders = {
 };
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+const PROJECT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5dGJma25oZWJ1dHlzaGp6ZHh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4ODQ0OTMsImV4cCI6MjA4MjQ2MDQ5M30.w7WBYorCNp3uOF1ATjXey0EHz-ng8IP7J66bol6vZXg";
 
 interface SmsPayload {
   notification_id?: string;
@@ -54,7 +55,7 @@ Deno.serve(async (req) => {
 
   const SEND_PUSH_SECRET = Deno.env.get("NOTIFY_TRIGGER_SECRET") ?? Deno.env.get("SEND_PUSH_SECRET");
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? PROJECT_ANON_KEY;
   const internal = req.headers.get("x-internal-secret");
   const bearer = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   const authorizedInternal =
@@ -137,6 +138,19 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+        const { data: existingLog } = await admin
+          .from("sms_logs")
+          .select("id")
+          .eq("order_id", order.id)
+          .eq("kind", "owner")
+          .in("status", ["sent", "delivered"])
+          .limit(1)
+          .maybeSingle();
+        if (existingLog) {
+          return new Response(JSON.stringify({ ok: true, sent: 0, reason: "already sent" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         const shortId = order.id.slice(0, 8).toUpperCase();
         payload = {
           ...payload,
@@ -153,6 +167,18 @@ Deno.serve(async (req) => {
         if (error || !notification) {
           return new Response(JSON.stringify({ error: "Notification not found" }), {
             status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const { data: existingLog } = await admin
+          .from("sms_logs")
+          .select("id")
+          .eq("notification_id", notification.id)
+          .in("status", ["sent", "delivered"])
+          .limit(1)
+          .maybeSingle();
+        if (existingLog) {
+          return new Response(JSON.stringify({ ok: true, sent: 0, reason: "already sent" }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
