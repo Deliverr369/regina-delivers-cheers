@@ -405,8 +405,9 @@ const Checkout = () => {
     // not need a new intent.
   }, [user, cartItems.length, baseTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, allStoresOpenNow, storeHours, cartStoreIds]);
 
-  const handleSuccess = async () => {
+  const handleSuccess = async (confirmPayment?: () => Promise<string | null>) => {
     if (!user) return;
+    const createdOrderIds: string[] = [];
     try {
       // SERVER-SIDE re-validation: cart prices, store membership, address, hours.
       const { data: validation, error: vErr } = await supabase.functions.invoke(
