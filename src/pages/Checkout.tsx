@@ -557,7 +557,31 @@ const Checkout = () => {
       });
       navigate("/order-confirmation", { state: { orderIds: createdOrderIds } });
     } catch (err: any) {
-      setError(err.message);
+      // The card is authorized BEFORE the order rows are written, so a failure
+      // here would otherwise leave the customer holding a charge with no order.
+      // Release the hold immediately and say so plainly.
+      let released = false;
+      if (paymentMode !== "cod" && paymentIntentId) {
+        try {
+          const { data: rel } = await supabase.functions.invoke("payment-recovery", {
+            body: {
+              action: "release",
+              payment_intent_id: paymentIntentId,
+              environment: stripeEnv,
+            },
+          });
+          released = Boolean(rel?.released);
+        } catch (releaseErr) {
+          console.error("Could not release payment hold", releaseErr);
+        }
+      }
+      setError(
+        paymentMode !== "cod" && paymentIntentId
+          ? released
+            ? `${err.message} Your card hold has been released — you have not been charged. Please try again.`
+            : `${err.message} We could not place the order. If a hold shows on your card, call us at 306-539-4569 (ref ${paymentIntentId}) and we will release it right away.`
+          : err.message,
+      );
       setIsSubmitting(false);
     }
   };
