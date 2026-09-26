@@ -372,19 +372,9 @@ const Checkout = () => {
         // supabase.functions.invoke returns a generic error on non-2xx; the
         // real message lives in the response body. Try to extract it.
         if (error) {
-          let detail = "";
-          try {
-            const ctx: any = (error as any).context;
-            if (ctx && typeof ctx.json === "function") {
-              const body = await ctx.json();
-              detail = body?.error || "";
-            } else if (ctx && typeof ctx.text === "function") {
-              const txt = await ctx.text();
-              try { detail = JSON.parse(txt)?.error || txt; } catch { detail = txt; }
-            }
-          } catch {}
-          throw new Error(detail || error.message || "Could not initialize payment");
+          throw new Error(await readInvokeError(error, "Could not initialize payment"));
         }
+
         if (data?.error) throw new Error(data.error);
         setClientSecret(data.client_secret);
         setPaymentIntentId(data.payment_intent_id);
