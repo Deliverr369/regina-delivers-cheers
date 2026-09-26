@@ -927,6 +927,9 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
     elements: ReturnType<typeof useElements>;
   }>({ stripe: null, elements: null });
   const [saveCard, setSaveCard] = useState(true);
+  // Keeps the Full name input showing exactly what the user typed (including
+  // the trailing space mid-name) until an external autofill changes it.
+  const [fullNameDraft, setFullNameDraft] = useState<string | null>(null);
   const handleCardReady = useCallback(
     (v: { stripe: ReturnType<typeof useStripe>; elements: ReturnType<typeof useElements> }) => {
       stripeRef.current = v;
