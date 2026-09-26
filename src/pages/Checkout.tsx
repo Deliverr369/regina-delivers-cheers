@@ -538,7 +538,7 @@ const Checkout = () => {
       }
 
       await supabase.from("profiles").update({
-        full_name: `${formData.firstName} ${formData.lastName}`,
+        full_name: `${formData.firstName} ${formData.lastName}`.trim(),
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
@@ -944,12 +944,18 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
   };
 
   const handleFullNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Split only on the first space and preserve trailing spaces so the
+    // controlled input round-trips exactly what the user typed (e.g. the
+    // space while typing "John Smith" mid-word).
     const fullName = e.target.value;
-    const [firstName = "", ...rest] = fullName.trimStart().split(/\s+/);
+    const trimmed = fullName.trimStart();
+    const spaceIdx = trimmed.indexOf(" ");
+    const firstName = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx);
+    const lastName = spaceIdx === -1 ? "" : trimmed.slice(spaceIdx + 1);
     props.setFormData((prev) => ({
       ...prev,
       firstName,
-      lastName: rest.join(" "),
+      lastName,
     }));
   };
 
@@ -1057,7 +1063,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           {/* 1. Contact */}
           <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information">
             <div className="grid gap-3">
-              <FieldInput label="Full name" name="fullName" autoComplete="name" value={`${props.formData.firstName} ${props.formData.lastName}`.trim()} onChange={handleFullNameChange} required />
+              <FieldInput label="Full name" name="fullName" autoComplete="name" value={props.formData.firstName || props.formData.lastName ? `${props.formData.firstName} ${props.formData.lastName}` : ""} onChange={handleFullNameChange} required />
               <FieldInput label="Email" name="email" type="email" value={props.formData.email} onChange={handleChange} required />
               <FieldInput label="Phone" name="phone" type="tel" value={props.formData.phone} onChange={handleChange} required />
             </div>
