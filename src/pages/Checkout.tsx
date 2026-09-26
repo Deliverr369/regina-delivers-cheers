@@ -60,6 +60,26 @@ interface FormData {
 // Canadian postal code (space optional). Must be a Regina S4 code to deliver.
 const CA_POSTAL_RE = /^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ][ -]?\d[ABCEGHJKLMNPRSTVWXYZ]\d$/i;
 
+// Server calls report failures as a generic "non-2xx status code" message; the
+// customer-friendly reason lives in the response body. Pull it out so people
+// see what actually went wrong.
+const readInvokeError = async (error: any, fallback: string): Promise<string> => {
+  try {
+    const ctx: any = error?.context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.clone?.().json?.() ?? await ctx.json();
+      if (body?.error) return String(body.error);
+    } else if (ctx && typeof ctx.text === "function") {
+      const txt = await ctx.text();
+      try { return JSON.parse(txt)?.error || txt || fallback; } catch { return txt || fallback; }
+    }
+  } catch {}
+  const msg = error?.message || "";
+  if (!msg || /non-2xx/i.test(msg)) return fallback;
+  return msg;
+};
+
+
 interface PaymentFormProps {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
