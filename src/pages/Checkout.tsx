@@ -71,7 +71,11 @@ interface PaymentFormProps {
   setIsSubmitting: (v: boolean) => void;
   setError: (v: string | null) => void;
   paymentIntentId: string;
-  onSuccess: () => Promise<void>;
+  // Places the order first, then runs `confirmPayment` (card flow only).
+  // Returning a message from confirmPayment means the card was declined and
+  // the just-created order is discarded, so the customer is never charged
+  // without an order and never gets an order without a charge.
+  onSuccess: (confirmPayment?: () => Promise<string | null>) => Promise<void>;
 }
 
 interface SavedCard {
