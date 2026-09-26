@@ -414,7 +414,10 @@ const Checkout = () => {
         "validate-checkout",
         { body: buildValidationPayload() },
       );
-      if (vErr) throw new Error(vErr.message || "Validation failed");
+      // Show the real reason (e.g. "the store is closed — pick a scheduled
+      // slot") instead of the generic network-level wording.
+      if (vErr) throw new Error(await readInvokeError(vErr, "We couldn't confirm your order details."));
+
       if (!validation?.ok) throw new Error(validation?.error || "Cart validation failed");
 
       // Group cart items by storeId so we can split the cart into one order per store.
