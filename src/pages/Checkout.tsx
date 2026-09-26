@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { stripeEnv } from "@/lib/stripeEnv";
-import { recordAgeVerificationServerSide } from "@/lib/ageGate";
+import { recordAgeVerificationServerSide, hasVerifiedAge } from "@/lib/ageGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
@@ -60,6 +60,26 @@ interface FormData {
 // Canadian postal code (space optional). Must be a Regina S4 code to deliver.
 const CA_POSTAL_RE = /^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ][ -]?\d[ABCEGHJKLMNPRSTVWXYZ]\d$/i;
 
+// Server calls report failures as a generic "non-2xx status code" message; the
+// customer-friendly reason lives in the response body. Pull it out so people
+// see what actually went wrong.
+const readInvokeError = async (error: any, fallback: string): Promise<string> => {
+  try {
+    const ctx: any = error?.context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.clone?.().json?.() ?? await ctx.json();
+      if (body?.error) return String(body.error);
+    } else if (ctx && typeof ctx.text === "function") {
+      const txt = await ctx.text();
+      try { return JSON.parse(txt)?.error || txt || fallback; } catch { return txt || fallback; }
+    }
+  } catch {}
+  const msg = error?.message || "";
+  if (!msg || /non-2xx/i.test(msg)) return fallback;
+  return msg;
+};
+
+
 interface PaymentFormProps {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
@@ -71,7 +91,11 @@ interface PaymentFormProps {
   setIsSubmitting: (v: boolean) => void;
   setError: (v: string | null) => void;
   paymentIntentId: string;
-  onSuccess: () => Promise<void>;
+  // Places the order first, then runs `confirmPayment` (card flow only).
+  // Returning a message from confirmPayment means the card was declined and
+  // the just-created order is discarded, so the customer is never charged
+  // without an order and never gets an order without a charge.
+  onSuccess: (confirmPayment?: () => Promise<string | null>) => Promise<void>;
 }
 
 interface SavedCard {
@@ -359,25 +383,18 @@ const Checkout = () => {
             ...buildValidationPayload(),
             payment_method_id: selectedCardId !== "new" ? selectedCardId : undefined,
             environment: stripeEnv,
+            // Recorded server-side BEFORE the hold, so a failed attestation can
+            // never leave the customer charged without an order.
+            age_confirmed: hasVerifiedAge(),
           },
         });
         if (cancelled) return;
         // supabase.functions.invoke returns a generic error on non-2xx; the
         // real message lives in the response body. Try to extract it.
         if (error) {
-          let detail = "";
-          try {
-            const ctx: any = (error as any).context;
-            if (ctx && typeof ctx.json === "function") {
-              const body = await ctx.json();
-              detail = body?.error || "";
-            } else if (ctx && typeof ctx.text === "function") {
-              const txt = await ctx.text();
-              try { detail = JSON.parse(txt)?.error || txt; } catch { detail = txt; }
-            }
-          } catch {}
-          throw new Error(detail || error.message || "Could not initialize payment");
+          throw new Error(await readInvokeError(error, "Could not initialize payment"));
         }
+
         if (data?.error) throw new Error(data.error);
         setClientSecret(data.client_secret);
         setPaymentIntentId(data.payment_intent_id);
@@ -398,15 +415,19 @@ const Checkout = () => {
     // not need a new intent.
   }, [user, cartItems.length, baseTotal, selectedCardId, paymentMode, formData.address, formData.city, deliveryType, scheduledDate, scheduledSlot, allStoresOpenNow, storeHours, cartStoreIds]);
 
-  const handleSuccess = async () => {
+  const handleSuccess = async (confirmPayment?: () => Promise<string | null>) => {
     if (!user) return;
+    const createdOrderIds: string[] = [];
     try {
       // SERVER-SIDE re-validation: cart prices, store membership, address, hours.
       const { data: validation, error: vErr } = await supabase.functions.invoke(
         "validate-checkout",
         { body: buildValidationPayload() },
       );
-      if (vErr) throw new Error(vErr.message || "Validation failed");
+      // Show the real reason (e.g. "the store is closed — pick a scheduled
+      // slot") instead of the generic network-level wording.
+      if (vErr) throw new Error(await readInvokeError(vErr, "We couldn't confirm your order details."));
+
       if (!validation?.ok) throw new Error(validation?.error || "Cart validation failed");
 
       // Group cart items by storeId so we can split the cart into one order per store.
@@ -476,16 +497,18 @@ const Checkout = () => {
           : null;
       const window = deliveryType === "scheduled" && scheduledSlot ? formatSlotLabel(scheduledSlot) : null;
 
-      // Persist the 19+ attestation server-side; the database requires it before an order exists.
+      // For card orders the 19+ attestation was already stored server-side by
+      // create-payment-intent (before the hold), so this is only a safety net.
+      // For Pay at the door there is no earlier server call, so it must succeed.
       const ageSaved = await recordAgeVerificationServerSide();
-      if (!ageSaved) {
+      if (!ageSaved && isCod) {
         throw new Error(
           "We couldn't confirm your 19+ age check because your sign-in expired. Please sign in again and retry — no order was placed and you have not been charged.",
         );
       }
 
-      // Insert one order per store, then its items.
-      const createdOrderIds: string[] = [];
+      // Insert one order per store, then its items. Card orders start as
+      // "awaiting_payment": nobody is notified and nothing is charged yet.
       for (let i = 0; i < calcs.length; i++) {
         const c = calcs[i];
         const { data: order, error: orderError } = await supabase
@@ -504,7 +527,7 @@ const Checkout = () => {
             // The same payment intent backs every split order so admins can
             // reconcile the single authorization across the group.
             stripe_payment_intent_id: isCod ? null : paymentIntentId,
-            payment_status: isCod ? "pending" : "authorized",
+            payment_status: isCod ? "pending" : "awaiting_payment",
             delivery_address: selectedAddressUnit
               ? `${selectedAddressUnit} – ${formData.address}`
               : formData.address,
@@ -537,6 +560,30 @@ const Checkout = () => {
         if (itemsError) throw itemsError;
       }
 
+      // The order now exists. Only now do we touch the card. If it is
+      // declined, the order is discarded and nothing is charged.
+      if (confirmPayment) {
+        const paymentError = await confirmPayment();
+        if (paymentError) {
+          await discardOrders(createdOrderIds);
+          throw new Error(
+            `${paymentError} Your card was not charged and no order was placed — please try again.`,
+          );
+        }
+        // Payment went through: activate the order. Notifications to the
+        // customer and the store owner fire off this step, not the insert.
+        try {
+          await supabase.rpc("finalize_order_payment", {
+            _order_ids: createdOrderIds,
+            _payment_intent_id: paymentIntentId || null,
+          });
+        } catch (finalizeErr) {
+          // The money is held and the order exists; staff can see it in the
+          // dashboard. Never fail the customer at this point.
+          console.error("Could not finalize order payment status", finalizeErr);
+        }
+      }
+
       await supabase.from("profiles").update({
         full_name: `${formData.firstName} ${formData.lastName}`.trim(),
         phone: formData.phone,
@@ -557,34 +604,26 @@ const Checkout = () => {
       });
       navigate("/order-confirmation", { state: { orderIds: createdOrderIds } });
     } catch (err: any) {
-      // The card is authorized BEFORE the order rows are written, so a failure
-      // here would otherwise leave the customer holding a charge with no order.
-      // Release the hold immediately and say so plainly.
-      let released = false;
-      if (paymentMode !== "cod" && paymentIntentId) {
-        try {
-          const { data: rel } = await supabase.functions.invoke("payment-recovery", {
-            body: {
-              action: "release",
-              payment_intent_id: paymentIntentId,
-              environment: stripeEnv,
-            },
-          });
-          released = Boolean(rel?.released);
-        } catch (releaseErr) {
-          console.error("Could not release payment hold", releaseErr);
-        }
-      }
-      setError(
-        paymentMode !== "cod" && paymentIntentId
-          ? released
-            ? `${err.message} Your card hold has been released — you have not been charged. Please try again.`
-            : `${err.message} We could not place the order. If a hold shows on your card, call us at 306-539-4569 (ref ${paymentIntentId}) and we will release it right away.`
-          : err.message,
-      );
+      // Anything that fails here happens BEFORE the card is charged, so the
+      // only clean-up needed is removing the not-yet-paid order rows.
+      await discardOrders(createdOrderIds);
+      setError(err.message);
       setIsSubmitting(false);
     }
   };
+
+  // Removes order rows that never got paid for (card declined or checkout
+  // failed). Safe by design: the database only deletes the signed-in
+  // customer's own orders that are still awaiting payment.
+  const discardOrders = async (orderIds: string[]) => {
+    if (orderIds.length === 0) return;
+    try {
+      await supabase.rpc("discard_unpaid_orders", { _order_ids: orderIds });
+    } catch (discardErr) {
+      console.error("Could not discard unpaid orders", discardErr);
+    }
+  };
+
 
   const elementsOptions = useMemo(
     () => clientSecret ? { clientSecret, appearance: { theme: "stripe" as const } } : undefined,
@@ -1028,19 +1067,20 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       return;
     }
     const usingSavedCard = props.selectedCardId !== "new";
+    const clientSecret = props.clientSecret;
 
-    if (usingSavedCard) {
-      const stripe = stripeRef.current.stripe ?? (await stripePromise);
-      if (!stripe) { props.setIsSubmitting(false); return; }
-      const result = await stripe.confirmCardPayment(props.clientSecret);
-      if (result.error) {
-        props.setError(result.error.message || "Payment authorization failed");
-        props.setIsSubmitting(false);
-        return;
+    // Hand the card step to the parent, which saves the order first and only
+    // then runs this. Returns an error message if the card was declined.
+    const confirmPayment = async (): Promise<string | null> => {
+      if (usingSavedCard) {
+        const stripe = stripeRef.current.stripe ?? (await stripePromise);
+        if (!stripe) return "Payment could not start. Please refresh and try again.";
+        const result = await stripe.confirmCardPayment(clientSecret);
+        return result.error ? (result.error.message || "Payment authorization failed") : null;
       }
-    } else {
+
       const { stripe, elements } = stripeRef.current;
-      if (!stripe || !elements) { props.setIsSubmitting(false); return; }
+      if (!stripe || !elements) return "Payment could not start. Please refresh and try again.";
       // Honour the "save this card" checkbox and sync the latest tip into the
       // hold before confirming, so the authorization always covers the tip.
       try {
@@ -1076,14 +1116,12 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
         },
         redirect: "if_required",
       });
-      if (stripeError) {
-        props.setError(stripeError.message || "Payment authorization failed");
-        props.setIsSubmitting(false);
-        return;
-      }
-    }
-    await props.onSuccess();
+      return stripeError ? (stripeError.message || "Payment authorization failed") : null;
+    };
+
+    await props.onSuccess(confirmPayment);
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="pb-10">
