@@ -1067,7 +1067,7 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
           {/* 1. Contact */}
           <SectionCard step={1} icon={<User className="h-4 w-4" />} title="Contact information">
             <div className="grid gap-3">
-              <FieldInput label="Full name" name="fullName" autoComplete="name" value={props.formData.firstName || props.formData.lastName ? `${props.formData.firstName} ${props.formData.lastName}` : ""} onChange={handleFullNameChange} required />
+              <FieldInput label="Full name" name="fullName" autoComplete="name" value={fullNameDraft ?? (props.formData.firstName || props.formData.lastName ? `${props.formData.firstName} ${props.formData.lastName}` : "")} onChange={handleFullNameChange} required />
               <FieldInput label="Email" name="email" type="email" value={props.formData.email} onChange={handleChange} required />
               <FieldInput label="Phone" name="phone" type="tel" value={props.formData.phone} onChange={handleChange} required />
             </div>
