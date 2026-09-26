@@ -947,10 +947,11 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
   };
 
   const handleFullNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Split only on the first space and preserve trailing spaces so the
-    // controlled input round-trips exactly what the user typed (e.g. the
+    // Split only on the first space; the draft keeps the raw typed value so
+    // the controlled input round-trips exactly what the user typed (e.g. the
     // space while typing "John Smith" mid-word).
     const fullName = e.target.value;
+    setFullNameDraft(fullName);
     const trimmed = fullName.trimStart();
     const spaceIdx = trimmed.indexOf(" ");
     const firstName = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx);
