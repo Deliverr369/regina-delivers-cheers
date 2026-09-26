@@ -547,6 +547,30 @@ const Checkout = () => {
         if (itemsError) throw itemsError;
       }
 
+      // The order now exists. Only now do we touch the card. If it is
+      // declined, the order is discarded and nothing is charged.
+      if (confirmPayment) {
+        const paymentError = await confirmPayment();
+        if (paymentError) {
+          await discardOrders(createdOrderIds);
+          throw new Error(
+            `${paymentError} Your card was not charged and no order was placed — please try again.`,
+          );
+        }
+        // Payment went through: activate the order. Notifications to the
+        // customer and the store owner fire off this step, not the insert.
+        try {
+          await supabase.rpc("finalize_order_payment", {
+            _order_ids: createdOrderIds,
+            _payment_intent_id: paymentIntentId || null,
+          });
+        } catch (finalizeErr) {
+          // The money is held and the order exists; staff can see it in the
+          // dashboard. Never fail the customer at this point.
+          console.error("Could not finalize order payment status", finalizeErr);
+        }
+      }
+
       await supabase.from("profiles").update({
         full_name: `${formData.firstName} ${formData.lastName}`.trim(),
         phone: formData.phone,
@@ -567,34 +591,26 @@ const Checkout = () => {
       });
       navigate("/order-confirmation", { state: { orderIds: createdOrderIds } });
     } catch (err: any) {
-      // The card is authorized BEFORE the order rows are written, so a failure
-      // here would otherwise leave the customer holding a charge with no order.
-      // Release the hold immediately and say so plainly.
-      let released = false;
-      if (paymentMode !== "cod" && paymentIntentId) {
-        try {
-          const { data: rel } = await supabase.functions.invoke("payment-recovery", {
-            body: {
-              action: "release",
-              payment_intent_id: paymentIntentId,
-              environment: stripeEnv,
-            },
-          });
-          released = Boolean(rel?.released);
-        } catch (releaseErr) {
-          console.error("Could not release payment hold", releaseErr);
-        }
-      }
-      setError(
-        paymentMode !== "cod" && paymentIntentId
-          ? released
-            ? `${err.message} Your card hold has been released — you have not been charged. Please try again.`
-            : `${err.message} We could not place the order. If a hold shows on your card, call us at 306-539-4569 (ref ${paymentIntentId}) and we will release it right away.`
-          : err.message,
-      );
+      // Anything that fails here happens BEFORE the card is charged, so the
+      // only clean-up needed is removing the not-yet-paid order rows.
+      await discardOrders(createdOrderIds);
+      setError(err.message);
       setIsSubmitting(false);
     }
   };
+
+  // Removes order rows that never got paid for (card declined or checkout
+  // failed). Safe by design: the database only deletes the signed-in
+  // customer's own orders that are still awaiting payment.
+  const discardOrders = async (orderIds: string[]) => {
+    if (orderIds.length === 0) return;
+    try {
+      await supabase.rpc("discard_unpaid_orders", { _order_ids: orderIds });
+    } catch (discardErr) {
+      console.error("Could not discard unpaid orders", discardErr);
+    }
+  };
+
 
   const elementsOptions = useMemo(
     () => clientSecret ? { clientSecret, appearance: { theme: "stripe" as const } } : undefined,
