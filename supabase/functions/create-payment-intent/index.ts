@@ -83,6 +83,7 @@ interface BodyIn {
   tip?: number;
   payment_method_id?: string;
   environment?: StripeEnv;
+  age_confirmed?: boolean;
   // Legacy field, intentionally ignored by the server now:
   estimated_total?: number;
 }
