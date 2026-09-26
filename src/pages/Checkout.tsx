@@ -359,6 +359,9 @@ const Checkout = () => {
             ...buildValidationPayload(),
             payment_method_id: selectedCardId !== "new" ? selectedCardId : undefined,
             environment: stripeEnv,
+            // Recorded server-side BEFORE the hold, so a failed attestation can
+            // never leave the customer charged without an order.
+            age_confirmed: hasVerifiedAge(),
           },
         });
         if (cancelled) return;
