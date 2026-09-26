@@ -514,7 +514,7 @@ const Checkout = () => {
             // The same payment intent backs every split order so admins can
             // reconcile the single authorization across the group.
             stripe_payment_intent_id: isCod ? null : paymentIntentId,
-            payment_status: isCod ? "pending" : "authorized",
+            payment_status: isCod ? "pending" : "awaiting_payment",
             delivery_address: selectedAddressUnit
               ? `${selectedAddressUnit} – ${formData.address}`
               : formData.address,
