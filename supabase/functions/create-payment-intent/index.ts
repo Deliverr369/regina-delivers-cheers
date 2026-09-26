@@ -270,6 +270,29 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Persist the 19+ attestation HERE, before any money is held. The database
+    // rejects orders without it, and doing it client-side after the card was
+    // authorized left customers holding a charge with no order behind it.
+    {
+      const { data: prof } = await adminSupabase
+        .from("profiles")
+        .select("age_verified_at")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!prof?.age_verified_at) {
+        if (body.age_confirmed !== true) {
+          return json(400, { error: "Please confirm you are 19 or older before paying." });
+        }
+        const { error: ageErr } = await adminSupabase
+          .from("profiles")
+          .update({ age_verified_at: new Date().toISOString() })
+          .eq("id", user.id);
+        if (ageErr) return json(500, { error: "Could not record your 19+ confirmation. Please try again." });
+      }
+    }
+
+
+
     const { data: profile } = await adminSupabase
       .from("profiles")
       .select("full_name, email")
