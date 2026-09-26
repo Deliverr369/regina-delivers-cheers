@@ -1054,19 +1054,20 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       return;
     }
     const usingSavedCard = props.selectedCardId !== "new";
+    const clientSecret = props.clientSecret;
 
-    if (usingSavedCard) {
-      const stripe = stripeRef.current.stripe ?? (await stripePromise);
-      if (!stripe) { props.setIsSubmitting(false); return; }
-      const result = await stripe.confirmCardPayment(props.clientSecret);
-      if (result.error) {
-        props.setError(result.error.message || "Payment authorization failed");
-        props.setIsSubmitting(false);
-        return;
+    // Hand the card step to the parent, which saves the order first and only
+    // then runs this. Returns an error message if the card was declined.
+    const confirmPayment = async (): Promise<string | null> => {
+      if (usingSavedCard) {
+        const stripe = stripeRef.current.stripe ?? (await stripePromise);
+        if (!stripe) return "Payment could not start. Please refresh and try again.";
+        const result = await stripe.confirmCardPayment(clientSecret);
+        return result.error ? (result.error.message || "Payment authorization failed") : null;
       }
-    } else {
+
       const { stripe, elements } = stripeRef.current;
-      if (!stripe || !elements) { props.setIsSubmitting(false); return; }
+      if (!stripe || !elements) return "Payment could not start. Please refresh and try again.";
       // Honour the "save this card" checkbox and sync the latest tip into the
       // hold before confirming, so the authorization always covers the tip.
       try {
@@ -1102,14 +1103,12 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
         },
         redirect: "if_required",
       });
-      if (stripeError) {
-        props.setError(stripeError.message || "Payment authorization failed");
-        props.setIsSubmitting(false);
-        return;
-      }
-    }
-    await props.onSuccess();
+      return stripeError ? (stripeError.message || "Payment authorization failed") : null;
+    };
+
+    await props.onSuccess(confirmPayment);
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="pb-10">
