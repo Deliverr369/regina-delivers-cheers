@@ -479,9 +479,11 @@ const Checkout = () => {
           : null;
       const window = deliveryType === "scheduled" && scheduledSlot ? formatSlotLabel(scheduledSlot) : null;
 
-      // Persist the 19+ attestation server-side; the database requires it before an order exists.
+      // For card orders the 19+ attestation was already stored server-side by
+      // create-payment-intent (before the hold), so this is only a safety net.
+      // For Pay at the door there is no earlier server call, so it must succeed.
       const ageSaved = await recordAgeVerificationServerSide();
-      if (!ageSaved) {
+      if (!ageSaved && isCod) {
         throw new Error(
           "We couldn't confirm your 19+ age check because your sign-in expired. Please sign in again and retry — no order was placed and you have not been charged.",
         );
