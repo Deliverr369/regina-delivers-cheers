@@ -1134,6 +1134,11 @@ export type Database = {
     }
     Functions: {
       confirm_age_19_plus: { Args: never; Returns: string }
+      discard_unpaid_orders: { Args: { _order_ids: string[] }; Returns: number }
+      finalize_order_payment: {
+        Args: { _order_ids: string[]; _payment_intent_id: string }
+        Returns: number
+      }
       get_dashboard_overview: { Args: { _days?: number }; Returns: Json }
       get_inventory_overview: {
         Args: never
