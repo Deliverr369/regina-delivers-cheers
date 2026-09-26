@@ -494,8 +494,8 @@ const Checkout = () => {
         );
       }
 
-      // Insert one order per store, then its items.
-      const createdOrderIds: string[] = [];
+      // Insert one order per store, then its items. Card orders start as
+      // "awaiting_payment": nobody is notified and nothing is charged yet.
       for (let i = 0; i < calcs.length; i++) {
         const c = calcs[i];
         const { data: order, error: orderError } = await supabase
