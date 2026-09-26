@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { stripeEnv } from "@/lib/stripeEnv";
-import { recordAgeVerificationServerSide } from "@/lib/ageGate";
+import { recordAgeVerificationServerSide, hasVerifiedAge } from "@/lib/ageGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
