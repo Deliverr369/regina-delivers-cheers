@@ -54,13 +54,13 @@ const localParts = (d: Date) => {
     weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    hourCycle: "h23",
   });
   const parts = Object.fromEntries(fmt.formatToParts(d).map((p) => [p.type, p.value]));
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return {
     weekday: days.indexOf(parts.weekday as string),
-    minutes: Number(parts.hour) * 60 + Number(parts.minute),
+    minutes: (Number(parts.hour) % 24) * 60 + Number(parts.minute),
   };
 };
 
