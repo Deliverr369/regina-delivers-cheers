@@ -231,10 +231,19 @@ Deno.serve(async (req) => {
         lineErrors.push(`"${p.name}" does not belong to the selected store.`);
         continue;
       }
-      const expectedUnit = it.pack_size
-        ? packPriceByKey.get(`${it.product_id}::${it.pack_size}`) ?? Number(p.price)
-        : Number(p.price);
-      if (!approxEq(expectedUnit, Number(it.price), 0.01)) {
+      const keyed = it.pack_size ? packPriceByKey.get(`${it.product_id}::${it.pack_size}`) : undefined;
+      // Accept the chosen size's price, the base price, or any live size price
+      // (older carts didn't record which size was picked).
+      const candidates = [
+        ...(keyed !== undefined ? [keyed] : []),
+        Number(p.price),
+        ...Array.from(packPriceByKey.entries())
+          .filter(([k]) => k.startsWith(`${it.product_id}::`))
+          .map(([, v]) => v),
+      ];
+      const matched = candidates.find((c) => approxEq(c, Number(it.price), 0.01));
+      const expectedUnit = matched ?? keyed ?? Number(p.price);
+      if (matched === undefined) {
         lineErrors.push(
           `Price for "${p.name}" changed (was $${Number(it.price).toFixed(2)}, now $${expectedUnit.toFixed(2)}). Please refresh your cart.`,
         );

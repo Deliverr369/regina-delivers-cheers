@@ -109,7 +109,7 @@ const ProductDetailModal = ({ productId, open, onOpenChange, hideFullPageLink }:
     const noteSuffix = trimmedNote ? ` — Note: ${trimmedNote}` : "";
     for (let i = 0; i < quantity; i++) {
       addToCart({
-        id: product.id,
+        id: `${product.id}-${sizeLabel || "single"}`,
         name: `${sizeLabel ? `${product.name} (${sizeLabel})` : product.name}${noteSuffix}`,
         price: currentPrice,
         image: product.image_url || "",
