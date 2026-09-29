@@ -42,8 +42,6 @@ const Index = () => {
               "query-input": "required name=search_term_string",
             },
           },
-          localBusinessJsonLd,
-          reginaServiceJsonLd,
         ]}
       />
       <Header />

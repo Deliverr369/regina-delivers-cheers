@@ -150,8 +150,8 @@ const Stores = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Liquor Stores in Regina | Order for Delivery | Deliverr"
-        description="Browse Regina's top liquor, smoke, pharmacy, pet and grocery stores. Order online for fast same-day delivery across Regina, SK."
+        title="Liquor & Smoke Stores in Regina — Delivery | Deliverr"
+        description="Order from Regina liquor stores, smoke shops and vape stores online. Beer, wine, spirits, cigarettes and vapes delivered in under 60 minutes. 19+."
         canonical="https://regina-delivers-cheers.lovable.app/stores"
       />
       <Header />
