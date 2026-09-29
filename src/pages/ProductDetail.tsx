@@ -88,7 +88,7 @@ const ProductDetail = () => {
     const sizeLabel = selectedPackSize || packPrices[0]?.pack_size;
     for (let i = 0; i < quantity; i++) {
       addToCart({
-        id: product.id,
+        id: `${product.id}-${sizeLabel || "single"}`,
         name: sizeLabel ? `${product.name} (${sizeLabel})` : product.name,
         price: currentPrice,
         image: product.image_url || "",

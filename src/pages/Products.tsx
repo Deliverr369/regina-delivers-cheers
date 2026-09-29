@@ -152,7 +152,7 @@ const Products = () => {
     const price = getSelectedPrice(product);
     const sizeLabel = getSelectedSizeLabel(product);
     addToCart({
-      id: product.id,
+      id: `${product.id}-${sizeLabel || "single"}`,
       name: sizeLabel ? `${product.name} (${sizeLabel})` : product.name,
       price,
       image: product.image_url || "",
