@@ -28,6 +28,11 @@ const NEIGHBORHOODS: Record<string, Hood> = {
   "west-end": { name: "West End", blurb: "Quick delivery to Regina's west end neighborhoods.", nearby: ["Normanview", "North Central"], quadrant: "west Regina" },
   uplands: { name: "Uplands", blurb: "Same-day service to the Uplands community.", nearby: ["Normanview", "North Central", "East End"], quadrant: "north Regina" },
   normanview: { name: "Normanview", blurb: "Friendly delivery across Normanview and Normanview West.", nearby: ["Uplands", "North Central", "West End"], quadrant: "north-west Regina" },
+  glencairn: { name: "Glencairn", blurb: "Liquor and smoke delivery across Glencairn and Glencairn Village.", nearby: ["Eastview", "East End", "Wood Meadows"], quadrant: "east Regina" },
+  "walsh-acres": { name: "Walsh Acres", blurb: "Fast delivery to Walsh Acres homes in north Regina.", nearby: ["Normanview", "Argyle Park", "Uplands"], quadrant: "north-west Regina" },
+  "argyle-park": { name: "Argyle Park", blurb: "Same-day service throughout Argyle Park.", nearby: ["Walsh Acres", "Normanview", "North Central"], quadrant: "north-west Regina" },
+  "wood-meadows": { name: "Wood Meadows", blurb: "Doorstep delivery across Wood Meadows.", nearby: ["Glencairn", "East End", "Eastview"], quadrant: "east Regina" },
+  "greens-on-gardiner": { name: "Greens on Gardiner", blurb: "Quick delivery to Greens on Gardiner and The Towns.", nearby: ["East End", "Wood Meadows", "Glencairn"], quadrant: "south-east Regina" },
 };
 
 const ReginaLanding = () => {
@@ -37,10 +42,10 @@ const ReginaLanding = () => {
   const areaName = hood ? `${hood.name}, Regina` : "Regina";
   const path = hood ? `/delivery/regina/${neighborhood}` : "/delivery/regina";
   const title = hood
-    ? `${hood.name} Delivery | Alcohol & Groceries in Regina | Deliverr`
-    : "Delivery Service in Regina, SK | Alcohol, Groceries & Smokes | Deliverr";
+    ? `Liquor & Smoke Delivery ${hood.name}, Regina | Deliverr`
+    : "Liquor & Smoke Delivery in Regina, SK | Deliverr";
   const description = hood
-    ? `Same-day alcohol, grocery and smokes delivery to ${hood.name}, Regina. Order in 60 seconds, delivered in under an hour. 19+ only.`
+    ? `Beer, wine, spirits, cigarettes and vapes delivered to ${hood.name}, Regina. Order in 60 seconds, delivered in under an hour. 19+ only.`
     : "Regina's #1 same-day delivery service. Alcohol, groceries, smokes from Costco, Superstore, Sobeys and local liquor stores. Delivered in under 60 minutes.";
 
   // Single source of truth: same array drives both the visible accordion and
@@ -55,7 +60,7 @@ const ReginaLanding = () => {
       <SEO
         title={title}
         description={description}
-        canonical={`https://regina-delivers-cheers.lovable.app${path}`}
+        canonical={`https://deliverr.ca${path}`}
         jsonLd={[
           organizationJsonLd,
           localBusinessJsonLd,
@@ -65,9 +70,9 @@ const ReginaLanding = () => {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://regina-delivers-cheers.lovable.app/" },
-              { "@type": "ListItem", position: 2, name: "Regina Delivery", item: "https://regina-delivers-cheers.lovable.app/delivery/regina" },
-              ...(hood ? [{ "@type": "ListItem", position: 3, name: hood.name, item: `https://regina-delivers-cheers.lovable.app${path}` }] : []),
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://deliverr.ca/" },
+              { "@type": "ListItem", position: 2, name: "Regina Delivery", item: "https://deliverr.ca/delivery/regina" },
+              ...(hood ? [{ "@type": "ListItem", position: 3, name: hood.name, item: `https://deliverr.ca${path}` }] : []),
             ],
           },
         ]}
