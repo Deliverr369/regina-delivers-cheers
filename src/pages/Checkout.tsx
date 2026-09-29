@@ -1061,13 +1061,14 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       return;
     }
 
-    if (!props.clientSecret) {
+    if (!props.clientSecret || props.initLoading) {
       props.setError("Payment is still getting ready — one moment, then try again.");
       props.setIsSubmitting(false);
       return;
     }
     const usingSavedCard = props.selectedCardId !== "new";
     const clientSecret = props.clientSecret;
+    const savedCardId = props.selectedCardId;
 
     // Hand the card step to the parent, which saves the order first and only
     // then runs this. Returns an error message if the card was declined.
@@ -1075,7 +1076,11 @@ const CheckoutBody = (props: CheckoutBodyProps) => {
       if (usingSavedCard) {
         const stripe = stripeRef.current.stripe ?? (await stripePromise);
         if (!stripe) return "Payment could not start. Please refresh and try again.";
-        const result = await stripe.confirmCardPayment(clientSecret);
+        // Always pass the chosen saved card explicitly so the hold works even
+        // if the payment was prepared before the card was selected.
+        const result = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: savedCardId,
+        });
         return result.error ? (result.error.message || "Payment authorization failed") : null;
       }
 
