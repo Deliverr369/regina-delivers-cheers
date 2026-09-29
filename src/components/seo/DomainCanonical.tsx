@@ -29,7 +29,7 @@ import { useEffect } from "react";
  *   - Capacitor / native shells (file://, capacitor://, ionic://)
  */
 const PROD_HOSTS = new Set(["deliverr.ca", "www.deliverr.ca"]);
-const PROD_ORIGIN = "https://www.deliverr.ca";
+const PROD_ORIGIN = "https://deliverr.ca";
 
 // Hosts that look like "old" public domains we want to redirect to .ca.
 // deliverr.store is staging — do NOT add it here until cutover.
