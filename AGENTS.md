@@ -1,0 +1,1 @@
+- Checkout rules (prices incl. all size prices, Regina-time store hours, fees) must be identical in validate-checkout and create-payment-intent — drift between them blocked real customers.
