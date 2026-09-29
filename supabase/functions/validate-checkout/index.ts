@@ -62,6 +62,25 @@ const timeToMin = (t: string) => {
   return (h || 0) * 60 + (m || 0);
 };
 
+// Store hours are saved in Regina local time; the server runs in UTC.
+// KEEP IN SYNC with create-payment-intent so both checks always agree.
+const STORE_TZ = "America/Regina";
+const localParts = (d: Date) => {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: STORE_TZ,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map((p) => [p.type, p.value]));
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return {
+    weekday: days.indexOf(parts.weekday as string),
+    minutes: (Number(parts.hour) % 24) * 60 + Number(parts.minute),
+  };
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -185,12 +204,10 @@ Deno.serve(async (req) => {
 
     const prodById = new Map((products || []).map((p) => [p.id, p]));
 
-    // Pack-price lookup (only when a pack_size is supplied for that line)
-    const packKeys = body.items
-      .filter((i) => i.pack_size)
-      .map((i) => `${i.product_id}::${i.pack_size}`);
+    // Always load size prices: older carts don't record which size was picked,
+    // so any live size price for the product must be accepted.
     const packPriceByKey = new Map<string, number>();
-    if (packKeys.length > 0) {
+    {
       const { data: packs } = await supabase
         .from("product_pack_prices")
         .select("product_id, pack_size, price, is_hidden")
@@ -254,6 +271,7 @@ Deno.serve(async (req) => {
     }
 
     if (lineErrors.length > 0) {
+      console.warn(JSON.stringify({ scope: "validate-checkout.items", user_id: userId, errors: lineErrors }));
       return json(409, { error: lineErrors[0], details: lineErrors });
     }
 
@@ -273,8 +291,9 @@ Deno.serve(async (req) => {
     if (body.delivery_type === "asap") {
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
-        const day = list.find((d) => d.weekday === now.getDay());
-        const minsNow = now.getHours() * 60 + now.getMinutes();
+        const nowLocal = localParts(now);
+        const day = list.find((d) => d.weekday === nowLocal.weekday);
+        const minsNow = nowLocal.minutes;
         const open = day && !day.is_closed
           && minsNow >= timeToMin(day.open_time)
           && minsNow < timeToMin(day.close_time);
@@ -299,7 +318,7 @@ Deno.serve(async (req) => {
       const [s, e] = body.scheduled_slot.split("-");
       const startMin = timeToMin(s);
       const endMin = timeToMin(e);
-      const weekday = slotStart.getDay();
+      const weekday = localParts(slotStart).weekday;
       for (const sid of storeIds) {
         const list = hoursByStore.get(sid) || [];
         const day = list.find((d) => d.weekday === weekday);
