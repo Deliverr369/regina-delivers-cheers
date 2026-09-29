@@ -121,6 +121,31 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "recent_attempts") {
+      if (!admin_user) return json({ error: "Forbidden — admin only" }, 403);
+      const days = Math.min(Math.max(Number(body?.days) || 7, 1), 60);
+      const found = await recentIntents(days);
+      return json({
+        ok: true,
+        attempts: found.map(({ env, intent }) => ({
+          id: intent.id,
+          env,
+          status: intent.status,
+          amount: intent.amount / 100,
+          created: new Date(intent.created * 1000).toISOString(),
+          user_id: intent.metadata?.user_id || null,
+          pm_types: intent.payment_method_types,
+          error: intent.last_payment_error
+            ? {
+                code: intent.last_payment_error.code,
+                decline_code: intent.last_payment_error.decline_code,
+                message: intent.last_payment_error.message,
+              }
+            : null,
+        })),
+      });
+    }
+
     if (action === "release") {
       const intentId = String(body?.payment_intent_id || "");
       if (!intentId) return json({ error: "payment_intent_id required" }, 400);
