@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Deliverr — Sitemap Index
-  Canonical host: https://www.deliverr.ca
+  Canonical host: https://deliverr.ca
   Each child sitemap may contain up to 50,000 URLs / 50 MB. Add new
   child sitemaps below as the catalog grows (e.g. sitemap-products-2.xml).
 -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://www.deliverr.ca/sitemaps/sitemap-pages.xml</loc>
+    <loc>https://deliverr.ca/sitemaps/sitemap-pages.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://www.deliverr.ca/sitemaps/sitemap-locations.xml</loc>
+    <loc>https://deliverr.ca/sitemaps/sitemap-locations.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://www.deliverr.ca/sitemaps/sitemap-stores.xml</loc>
+    <loc>https://deliverr.ca/sitemaps/sitemap-stores.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://www.deliverr.ca/sitemaps/sitemap-blog.xml</loc>
+    <loc>https://deliverr.ca/sitemaps/sitemap-blog.xml</loc>
   </sitemap>
 </sitemapindex>

@@ -107,7 +107,7 @@ const Help = () => {
       <SEO
         title="Help Center — Deliverr Liquor Delivery Regina"
         description="Get answers about Regina liquor delivery: orders, payments, ID checks, refunds, accounts and more. Contact Deliverr support 7 days a week."
-        canonical="https://www.deliverr.ca/help"
+        canonical="https://deliverr.ca/help"
         jsonLd={faqJsonLd}
       />
       <Header />
