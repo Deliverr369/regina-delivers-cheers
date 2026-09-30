@@ -759,7 +759,7 @@ const SplitGroupDrawer = ({ intentId, orders, onOpenChange }: SplitGroupDrawerPr
   );
 };
 
-const OrderItemsList = ({ orderId }: { orderId: string }) => {
+function OrderItemsList({ orderId }: { orderId: string }) {
   const [items, setItems] = useState<OrderItem[] | null>(null);
 
   useEffect(() => {
