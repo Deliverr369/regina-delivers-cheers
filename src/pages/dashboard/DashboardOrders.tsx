@@ -819,6 +819,6 @@ function OrderItemsList({ orderId }: { orderId: string }) {
       })}
     </div>
   );
-};
+}
 
 export default DashboardOrders;
