@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, Search, Filter, DollarSign, ArrowRight, CalendarClock, Clock, CheckCircle2, ShoppingBasket, Truck, PackageCheck, XCircle, Radio, Store as StoreIcon } from "lucide-react";
+import { ShoppingCart, Search, Filter, DollarSign, ArrowRight, CalendarClock, Clock, CheckCircle2, ShoppingBasket, Truck, PackageCheck, XCircle, Radio, Store as StoreIcon, ChevronDown, ChevronUp, Package } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmFinalPriceDrawer } from "@/components/dashboard/ConfirmFinalPriceDrawer";
@@ -42,6 +42,17 @@ interface Order {
 interface StoreOption {
   id: string;
   name: string;
+}
+
+interface OrderItem {
+  id: string;
+  product_name: string;
+  quantity: number;
+  price: number;
+  estimated_price: number | null;
+  final_price: number | null;
+  substituted_name: string | null;
+  store_note: string | null;
 }
 
 const STATUS_FLOW: OrderStatus[] = [
