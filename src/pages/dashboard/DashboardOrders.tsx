@@ -120,6 +120,7 @@ const DashboardOrders = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [advancingId, setAdvancingId] = useState<string | null>(null);
   const [groupIntentId, setGroupIntentId] = useState<string | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchOrders();
@@ -465,8 +466,28 @@ const DashboardOrders = () => {
                       <OrderTimeline status={status} />
                     </div>
 
+                    {/* Items */}
+                    {expandedItems[order.id] && <OrderItemsList orderId={order.id} />}
+
                     {/* Action row */}
                     <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 gap-1.5 text-xs"
+                        onClick={() =>
+                          setExpandedItems((prev) => ({ ...prev, [order.id]: !prev[order.id] }))
+                        }
+                      >
+                        <Package className="h-3.5 w-3.5" />
+                        {expandedItems[order.id] ? "Hide items" : "View items"}
+                        {expandedItems[order.id] ? (
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+
                       {next && status !== "cancelled" && (
                         <Button
                           size="sm"
