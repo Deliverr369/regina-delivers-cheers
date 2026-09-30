@@ -759,4 +759,66 @@ const SplitGroupDrawer = ({ intentId, orders, onOpenChange }: SplitGroupDrawerPr
   );
 };
 
+const OrderItemsList = ({ orderId }: { orderId: string }) => {
+  const [items, setItems] = useState<OrderItem[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("order_items")
+        .select("id, product_name, quantity, price, estimated_price, final_price, substituted_name, store_note")
+        .eq("order_id", orderId)
+        .order("created_at", { ascending: true });
+      if (!cancelled) setItems((data as OrderItem[]) || []);
+    })();
+    return () => { cancelled = true; };
+  }, [orderId]);
+
+  if (items === null) {
+    return (
+      <div className="mb-3 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+        Loading items…
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mb-3 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+        No items recorded for this order.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-3 rounded-lg border border-border/60 bg-muted/30 divide-y divide-border/50">
+      {items.map((item) => {
+        const unitPrice = Number(item.final_price ?? item.price ?? 0);
+        return (
+          <div key={item.id} className="flex items-start justify-between gap-3 px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground leading-snug">
+                <span className="text-muted-foreground font-semibold mr-1.5">{item.quantity}×</span>
+                {item.product_name}
+              </p>
+              {item.substituted_name && (
+                <p className="text-[11px] text-amber-700 mt-0.5">
+                  Substituted with: {item.substituted_name}
+                </p>
+              )}
+              {item.store_note && (
+                <p className="text-[11px] text-muted-foreground mt-0.5">Note: {item.store_note}</p>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-foreground shrink-0 tabular-nums">
+              ${(unitPrice * item.quantity).toFixed(2)}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 export default DashboardOrders;
