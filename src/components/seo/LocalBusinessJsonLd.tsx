@@ -153,3 +153,55 @@ export function reginaFaqJsonLd(
 export default function LocalBusinessSEO() {
   return null;
 }
+
+/**
+ * Page-specific Service JSON-LD. References the sitewide LocalBusiness
+ * (emitted once in index.html) by @id instead of duplicating it.
+ */
+export function buildDeliveryServiceJsonLd(opts: {
+  name: string;
+  serviceType: string;
+  url: string;
+  description: string;
+  areaName?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${opts.url}#service`,
+    name: opts.name,
+    serviceType: opts.serviceType,
+    description: opts.description,
+    url: opts.url,
+    provider: { "@id": `${CONTACT.siteUrl}/#business` },
+    areaServed: [
+      {
+        "@type": "City",
+        name: opts.areaName ? `${opts.areaName}, Regina` : "Regina",
+        sameAs: "https://en.wikipedia.org/wiki/Regina,_Saskatchewan",
+      },
+      {
+        "@type": "GeoCircle",
+        geoMidpoint: { "@type": "GeoCoordinates", latitude: CONTACT.latitude, longitude: CONTACT.longitude },
+        geoRadius: 15000,
+      },
+    ],
+    availableChannel: {
+      "@type": "ServiceChannel",
+      serviceUrl: opts.url,
+      servicePhone: { "@type": "ContactPoint", telephone: CONTACT.phoneE164, contactType: "customer support" },
+    },
+    hoursAvailable: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      opens: CONTACT.opens,
+      closes: CONTACT.closes,
+    },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "CAD",
+      price: "7.00",
+      description: "Delivery from $7. Free over $50 at most stores.",
+    },
+  };
+}

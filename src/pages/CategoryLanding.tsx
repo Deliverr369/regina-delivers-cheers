@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck } from "lucide-react";
-import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import { buildDeliveryServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
@@ -462,9 +462,12 @@ const CategoryLanding = () => {
         description={cfg.description}
         canonical={url}
         jsonLd={[
-          organizationJsonLd,
-          localBusinessJsonLd,
-          reginaServiceJsonLd,
+          buildDeliveryServiceJsonLd({
+            name: `${cfg.name} delivery in Regina`,
+            serviceType: `${cfg.name} delivery`,
+            url,
+            description: cfg.description,
+          }),
           faqJsonLd,
           {
             "@context": "https://schema.org",
