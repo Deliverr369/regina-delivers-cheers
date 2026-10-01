@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, ShieldCheck, Truck, Wine, Beer, ShoppingBag, Cigarette } from "lucide-react";
-import { localBusinessJsonLd, reginaServiceJsonLd, organizationJsonLd, reginaFaqItems } from "@/components/seo/LocalBusinessJsonLd";
+import { buildDeliveryServiceJsonLd, reginaFaqItems } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
@@ -62,9 +62,13 @@ const ReginaLanding = () => {
         description={description}
         canonical={`https://deliverr.ca${path}`}
         jsonLd={[
-          organizationJsonLd,
-          localBusinessJsonLd,
-          reginaServiceJsonLd,
+          buildDeliveryServiceJsonLd({
+            name: hood ? `Liquor & smoke delivery in ${hood.name}, Regina` : "Liquor & smoke delivery in Regina",
+            serviceType: "Alcohol, smokes and convenience delivery",
+            url: `https://deliverr.ca${path}`,
+            description,
+            areaName: hood?.name,
+          }),
           faqJsonLd,
           {
             "@context": "https://schema.org",

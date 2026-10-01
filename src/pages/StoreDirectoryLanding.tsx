@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Clock, MapPin, ShieldCheck, Truck, Store as StoreIcon, ShoppingBag, CheckCircle2 } from "lucide-react";
-import { organizationJsonLd, localBusinessJsonLd, reginaServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
+import { buildDeliveryServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
@@ -224,9 +224,12 @@ const StoreDirectoryLanding = () => {
         description={cfg.description}
         canonical={url}
         jsonLd={[
-          organizationJsonLd,
-          localBusinessJsonLd,
-          reginaServiceJsonLd,
+          buildDeliveryServiceJsonLd({
+            name: cfg.title,
+            serviceType: "Store delivery",
+            url,
+            description: cfg.description,
+          }),
           faqJsonLd,
           itemListJsonLd,
           {
