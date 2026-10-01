@@ -190,7 +190,7 @@ function buildFaqs(cfg: { slug: string; name: string; ageGated: boolean }) {
     },
     {
       q: `Which Regina neighborhoods do you deliver ${item} to?`,
-      a: `We deliver to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Albert Park, Hillsdale, Eastview, Whitmore Park, The Crescents, North Central, South End, East End, West End, Uplands and Normanview.`,
+      a: `We deliver to every Regina neighborhood — Downtown, Cathedral, Harbour Landing, Lakeview, Albert Park, Hillsdale, Eastview, Whitmore Park, The Crescents, North Central, South End, East End, West End, Uplands, Normanview, Glencairn, Walsh Acres, Argyle Park, Wood Meadows and Greens on Gardiner.`,
     },
   ];
 
