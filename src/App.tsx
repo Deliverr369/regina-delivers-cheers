@@ -67,6 +67,7 @@ const StorePage = lazyWithReload(() => import("./pages/StorePage"), "StorePage")
 const CategoryLanding = lazyWithReload(() => import("./pages/CategoryLanding"), "CategoryLanding");
 const StoreDirectoryLanding = lazyWithReload(() => import("./pages/StoreDirectoryLanding"), "StoreDirectoryLanding");
 const StoreCategoryDetail = lazyWithReload(() => import("./pages/StoreCategoryDetail"), "StoreCategoryDetail");
+const OffersWeeklyDeals = lazyWithReload(() => import("./pages/OffersWeeklyDeals"), "OffersWeeklyDeals");
 
 // Admin dashboard — heavy, lazy-loaded as a group
 const DashboardLayout = lazyWithReload(() => import("./components/dashboard/DashboardLayout"), "DashboardLayout");
@@ -165,6 +166,7 @@ const App = () => (
                 <Route path="/vape-stores-regina/:slug" element={<StoreCategoryDetail category="vape" />} />
                 <Route path="/spirits-stores-regina" element={<StoreDirectoryLanding />} />
                 <Route path="/spirits-stores-regina/:slug" element={<StoreCategoryDetail category="spirits" />} />
+                <Route path="/offers/weekly-deals" element={<OffersWeeklyDeals />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
