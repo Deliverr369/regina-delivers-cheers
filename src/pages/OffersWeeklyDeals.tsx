@@ -150,7 +150,7 @@ const OffersWeeklyDeals = () => {
             <h2 className="text-2xl md:text-3xl font-bold font-heading mb-6 text-center">
               Weekly Deals FAQ
             </h2>
-            <FaqAccordion faqs={faqs} />
+            <FaqAccordion items={faqs.map((f) => ({ q: f.question, a: f.answer }))} />
           </div>
         </section>
 
