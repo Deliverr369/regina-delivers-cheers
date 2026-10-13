@@ -168,6 +168,16 @@ const App = () => (
                 <Route path="/spirits-stores-regina/:slug" element={<StoreCategoryDetail category="spirits" />} />
                 <Route path="/offers/weekly-deals" element={<OffersWeeklyDeals />} />
 
+                {/* Legacy ranked URLs — redirect so Google rankings and old links keep working */}
+                <Route path="/city/regina/liquor" element={<Navigate to="/liquor-delivery-regina" replace />} />
+                <Route path="/city/regina/liquor/store/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/grocery" element={<Navigate to="/grocery-delivery-regina" replace />} />
+                <Route path="/city/regina/grocery/store/list" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/grocery/store/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/takeout" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/*/liquor" element={<Navigate to="/liquor-delivery-regina" replace />} />
+                <Route path="/city/*" element={<Navigate to="/stores" replace />} />
+
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
                   <Route index element={<DashboardOverview />} />
