@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -67,6 +67,7 @@ const StorePage = lazyWithReload(() => import("./pages/StorePage"), "StorePage")
 const CategoryLanding = lazyWithReload(() => import("./pages/CategoryLanding"), "CategoryLanding");
 const StoreDirectoryLanding = lazyWithReload(() => import("./pages/StoreDirectoryLanding"), "StoreDirectoryLanding");
 const StoreCategoryDetail = lazyWithReload(() => import("./pages/StoreCategoryDetail"), "StoreCategoryDetail");
+const OffersWeeklyDeals = lazyWithReload(() => import("./pages/OffersWeeklyDeals"), "OffersWeeklyDeals");
 
 // Admin dashboard — heavy, lazy-loaded as a group
 const DashboardLayout = lazyWithReload(() => import("./components/dashboard/DashboardLayout"), "DashboardLayout");
@@ -165,6 +166,17 @@ const App = () => (
                 <Route path="/vape-stores-regina/:slug" element={<StoreCategoryDetail category="vape" />} />
                 <Route path="/spirits-stores-regina" element={<StoreDirectoryLanding />} />
                 <Route path="/spirits-stores-regina/:slug" element={<StoreCategoryDetail category="spirits" />} />
+                <Route path="/offers/weekly-deals" element={<OffersWeeklyDeals />} />
+
+                {/* Legacy ranked URLs — redirect so Google rankings and old links keep working */}
+                <Route path="/city/regina/liquor" element={<Navigate to="/liquor-delivery-regina" replace />} />
+                <Route path="/city/regina/liquor/store/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/grocery" element={<Navigate to="/grocery-delivery-regina" replace />} />
+                <Route path="/city/regina/grocery/store/list" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/grocery/store/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/takeout" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/*/liquor" element={<Navigate to="/liquor-delivery-regina" replace />} />
+                <Route path="/city/*" element={<Navigate to="/stores" replace />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
