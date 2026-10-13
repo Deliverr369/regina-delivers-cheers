@@ -7,4 +7,4 @@
 
 
 ## New tasks
-- [ ] Improve Google rankings toward #1 (user says ranking is worst)
+- [x] Improve Google rankings toward #1 — added weekly-deals page + redirects for old ranked URLs; user-side: Google Business Profile & reviews
