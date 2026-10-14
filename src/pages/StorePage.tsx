@@ -169,7 +169,11 @@ const StorePage = () => {
       },
       {
         q: `What payment methods does Deliverr accept?`,
-        a: `We accept all major credit cards (Visa, Mastercard, Amex), plus Pay at the door.`,
+        a: `We accept all major credit cards (Visa, Mastercard, Amex), plus Pay at the door. With a card, we place one temporary hold at checkout and charge only the final store receipt amount after your order is shopped.`,
+      },
+      {
+        q: `How do I order from ${store.name}?`,
+        a: `Add items from ${store.name} to your cart, enter your Regina address, choose delivery now or a scheduled time, and place your order. If an item is unavailable, your shopper will call you about a replacement. Questions? Call or text 306-539-4569.`,
       },
       {
         q: `Which Regina neighborhoods does ${store.name} deliver to?`,
