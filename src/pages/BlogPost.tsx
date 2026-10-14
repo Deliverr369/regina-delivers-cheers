@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/seo/SEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Loader2, ArrowLeft, Calendar } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DOMPurify from "dompurify";
 
@@ -75,6 +75,7 @@ const BlogPost = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [related, setRelated] = useState<{ slug: string; title: string; excerpt: string | null }[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -90,6 +91,24 @@ const BlogPost = () => {
         setLoading(false);
       });
   }, [slug]);
+
+  useEffect(() => {
+    if (!post) return;
+    supabase
+      .from("blog_posts")
+      .select("slug,title,excerpt,keywords")
+      .eq("published", true)
+      .neq("slug", post.slug)
+      .then(({ data }) => {
+        const mine = new Set((post.keywords || []).join(" ").toLowerCase().split(/\s+/));
+        const scored = (data || []).map((r) => ({
+          ...r,
+          score: (r.keywords || []).join(" ").toLowerCase().split(/\s+/).filter((w) => w.length > 3 && mine.has(w)).length,
+        }));
+        scored.sort((a, b) => b.score - a.score);
+        setRelated(scored.slice(0, 3));
+      });
+  }, [post]);
 
   if (notFound) return <Navigate to="/blog" replace />;
 
@@ -136,6 +155,28 @@ const BlogPost = () => {
               {post.author && <span>· {post.author}</span>}
             </div>
             <div className="prose prose-lg max-w-none">{renderMarkdown(post.content)}</div>
+
+            <section className="mt-10 rounded-xl border bg-primary/5 p-6 text-center">
+              <h2 className="text-xl font-bold mb-2">Ready to order in Regina?</h2>
+              <p className="text-muted-foreground mb-4">Delivered daily 8 AM – midnight. Free delivery on orders over $50.</p>
+              <Button asChild size="lg" className="w-full sm:w-auto">
+                <Link to="/stores"><ShoppingBag className="h-5 w-5 mr-2" /> Order now</Link>
+              </Button>
+            </section>
+
+            {related.length > 0 && (
+              <section className="mt-10">
+                <h2 className="text-xl font-bold mb-4">Related Regina delivery guides</h2>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {related.map((r) => (
+                    <Link key={r.slug} to={`/blog/${r.slug}`} className="block rounded-lg border p-4 hover:border-primary transition-colors">
+                      <p className="font-semibold leading-snug">{r.title}</p>
+                      {r.excerpt && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{r.excerpt}</p>}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </article>
         ) : null}
       </main>
