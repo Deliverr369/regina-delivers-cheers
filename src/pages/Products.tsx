@@ -170,7 +170,7 @@ const Products = () => {
       <SEO
         title="Beer, Wine, Spirits & Smokes — Shop All | Deliverr Regina"
         description="Shop beer, wine, spirits, coolers, cigarettes, vapes and pouches from Regina stores. Fast liquor and smoke delivery at store prices. 19+ only."
-        canonical="https://regina-delivers-cheers.lovable.app/products"
+        canonical="https://deliverr.ca/products"
       />
       <Header />
       

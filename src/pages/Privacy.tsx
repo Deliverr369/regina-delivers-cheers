@@ -10,7 +10,7 @@ const Privacy = () => {
       <SEO
         title="Privacy Policy — Deliverr Regina Liquor Delivery"
         description="How Deliverr collects, uses, shares and protects your personal information when ordering liquor and smokes delivery in Regina, Saskatchewan. PIPEDA compliant."
-        canonical="https://regina-delivers-cheers.lovable.app/privacy"
+        canonical="https://deliverr.ca/privacy"
       />
       <Header />
       <main className="pt-header pb-20">

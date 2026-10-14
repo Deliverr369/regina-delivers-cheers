@@ -9,7 +9,7 @@ const Terms = () => {
       <SEO
         title="Terms of Service | Deliverr Regina"
         description="Read the terms governing use of Deliverr's liquor and tobacco delivery service in Regina, Saskatchewan. 19+ only."
-        canonical="https://regina-delivers-cheers.lovable.app/terms"
+        canonical="https://deliverr.ca/terms"
       />
       <Header />
       <main className="pt-24 pb-16">

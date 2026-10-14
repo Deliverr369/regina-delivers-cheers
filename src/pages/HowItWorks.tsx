@@ -9,7 +9,7 @@ const HowItWorks = () => {
       <SEO
         title="How It Works — Liquor Delivery in Regina | Deliverr"
         description="Learn how Deliverr delivers liquor and smokes across Regina in under 60 minutes. Order, verify ID on delivery, enjoy at home."
-        canonical="https://regina-delivers-cheers.lovable.app/how-it-works"
+        canonical="https://deliverr.ca/how-it-works"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "FAQPage",

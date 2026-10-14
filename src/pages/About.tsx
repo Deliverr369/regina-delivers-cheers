@@ -10,13 +10,13 @@ const About = () => {
       <SEO
         title="About Deliverr — Regina's Liquor Delivery Service"
         description="Deliverr is Regina's trusted same-day liquor delivery service. Beer, wine, spirits & smokes from local stores at store prices, delivered in under 60 minutes."
-        canonical="https://regina-delivers-cheers.lovable.app/about"
+        canonical="https://deliverr.ca/about"
         jsonLd={[
           {
             "@context": "https://schema.org",
             "@type": "AboutPage",
             name: "About Deliverr",
-            url: "https://regina-delivers-cheers.lovable.app/about",
+            url: "https://deliverr.ca/about",
             description:
               "Learn about Deliverr, Regina's leading alcohol and smokes delivery service offering same-day delivery from local liquor stores at store prices.",
           },
@@ -24,8 +24,8 @@ const About = () => {
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "Deliverr",
-            url: "https://regina-delivers-cheers.lovable.app",
-            logo: "https://regina-delivers-cheers.lovable.app/og-image.jpg",
+            url: "https://deliverr.ca",
+            logo: "https://deliverr.ca/og-image.jpg",
             areaServed: { "@type": "City", name: "Regina", containedInPlace: { "@type": "AdministrativeArea", name: "Saskatchewan" } },
             description:
               "Same-day liquor, beer, wine, spirits and smokes delivery in Regina, Saskatchewan.",
