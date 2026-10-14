@@ -15,5 +15,5 @@
 - [x] Re-submit the sitemap to Google automatically whenever the flyer section changes — the daily sync re-submits it whenever new flyers land
 - [ ] Twilio: upgrade account so customer text messages can be delivered (trial blocks unverified numbers)
 - [ ] Investigate why returning customers stopped ordering after the deliverr.ca launch — order history, repeat rate, and what old customers actually experienced (domain switch, broken customer texts, site hidden from Google until 2026-10-14)
-- [ ] Make ranking data even more accurate — keep site hours, store pages and structured data matching the Google listing exactly
-- [ ] Add more Regina-specific delivery blog posts so customers find the site and trust it
+- [x] Make ranking data even more accurate — site hours, FAQs and the business data Google reads now all say 8 AM–midnight, matching the Google listing
+- [x] Add more Regina-specific delivery blog posts — 5 new posts (late-night, party, weekly flyers, delivery FAQ, Superstore), now 14 total, all in the sitemap
