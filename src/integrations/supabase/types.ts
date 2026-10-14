@@ -197,6 +197,51 @@ export type Database = {
         }
         Relationships: []
       }
+      flyers: {
+        Row: {
+          created_at: string
+          flyer_url: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          source: string
+          store_name: string
+          synced_at: string
+          title: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          flyer_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          source: string
+          store_name: string
+          synced_at?: string
+          title?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          flyer_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          source?: string
+          store_name?: string
+          synced_at?: string
+          title?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
       image_match_jobs: {
         Row: {
           batch_size: number
