@@ -12,6 +12,8 @@ import Footer from "@/components/Footer";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import { SEO } from "@/components/seo/SEO";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
+import FaqAccordion from "@/components/seo/FaqAccordion";
+import { validateFaqs } from "@/components/seo/validateFaqs";
 import { safeImageUrl } from "@/lib/image-url";
 
 const getPackSortValue = (packSize: string): number => {
@@ -125,6 +127,30 @@ const ProductDetail = () => {
     product.seo_meta_description ||
     `Order ${product.name}${product.size ? ` (${product.size})` : ""} for delivery in Regina. Free delivery over $50, 19+ ID checked at the door.`
   ).slice(0, 160);
+  const isAgeRestricted = ["beer", "wine", "spirits", "smokes", "ciders_seltzers"].includes(product.category);
+  const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
+    [
+      {
+        q: `Where do you deliver ${product.name}?`,
+        a: `We deliver across Regina, SK — including Downtown, Cathedral, Harbour Landing, Lakeview, Normanview, Glencairn, Walsh Acres and more. Delivery runs daily from 8:00 AM to midnight, subject to store hours.`,
+      },
+      {
+        q: isAgeRestricted ? `Do I need ID to receive ${product.name}?` : `Do I need ID for my order?`,
+        a: isAgeRestricted
+          ? `Yes. You must be 19 or older. The driver checks valid government-issued photo ID at the door, and orders can't be left unattended or handed to anyone under 19.`
+          : `Not for this item. If your order also includes alcohol, smokes or vapes, the driver will check valid 19+ photo ID at the door.`,
+      },
+      {
+        q: `How do I pay?`,
+        a: `Pay by credit card (Visa, Mastercard, Amex) or choose Pay at the door. With a card, we place one temporary hold at checkout and charge only the final store receipt amount after your order is shopped.`,
+      },
+      {
+        q: `How do I order ${product.name}?`,
+        a: `Choose a size, tap Add to cart, enter your Regina address and place your order — now or at a scheduled time. Delivery is free on orders over $50. If it's unavailable, your shopper will call about a replacement. Questions? Call or text 306-539-4569.`,
+      },
+    ],
+    `ProductDetail[${product.id}]`,
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,6 +159,7 @@ const ProductDetail = () => {
         description={seoDescription}
         canonical={`https://deliverr.ca/product/${id}`}
         image={safeImageUrl(product.image_url) || undefined}
+        jsonLd={faqJsonLd}
       />
       <Header />
 
@@ -288,6 +315,11 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        <section className="mt-12 max-w-3xl">
+          <h2 className="text-xl font-bold mb-4">Questions about ordering {product.name}</h2>
+          <FaqAccordion items={faqs} />
+        </section>
       </main>
 
       <Footer />
