@@ -60,7 +60,7 @@ export const ProductJsonLd = ({
             },
             seller: {
               "@type": "Organization",
-              name: "Regina Delivers Cheers",
+              name: "Deliverr", url: "https://deliverr.ca"
             },
           }
         : undefined,
