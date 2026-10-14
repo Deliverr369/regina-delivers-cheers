@@ -145,6 +145,7 @@ const ProductDetail = () => {
         size={selectedPackSize || product.size || undefined}
         sku={product.id}
         inStock={product.in_stock !== false}
+        url={`https://deliverr.ca/product/${id}`}
       />
 
       <main className="pt-24 pb-16">
