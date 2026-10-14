@@ -25,7 +25,7 @@ const sections: Section[] = [
     emoji: "🚀",
     items: [
       { q: "How fast do you deliver?", a: "Most Regina orders arrive in 25–60 minutes. You can also schedule a delivery for later in the day." },
-      { q: "What are your delivery hours?", a: "We deliver from 10:00 AM to 10:00 PM, 7 days a week, subject to each store's operating hours." },
+      { q: "What are your delivery hours?", a: "We deliver from 8:00 AM to 12:00 AM (midnight), 7 days a week, subject to each store's operating hours." },
       { q: "How is pricing calculated?", a: "You pay store prices on products plus a small delivery fee that depends on the store. Saskatchewan GST/PST and any applicable bottle deposits are calculated at checkout." },
     ],
   },

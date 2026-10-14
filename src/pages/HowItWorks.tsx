@@ -14,7 +14,7 @@ const HowItWorks = () => {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           mainEntity: [
-            { "@type": "Question", name: "What are your delivery hours?", acceptedAnswer: { "@type": "Answer", text: "We deliver from 10:00 AM to 10:00 PM, 7 days a week throughout Regina." } },
+            { "@type": "Question", name: "What are your delivery hours?", acceptedAnswer: { "@type": "Answer", text: "We deliver from 8:00 AM to 12:00 AM (midnight), 7 days a week throughout Regina." } },
             { "@type": "Question", name: "Do I need to show ID?", acceptedAnswer: { "@type": "Answer", text: "Yes. All customers must show valid government-issued photo ID proving they are 19+ at the time of delivery." } },
             { "@type": "Question", name: "What areas do you deliver to?", acceptedAnswer: { "@type": "Answer", text: "We deliver throughout Regina, Saskatchewan only." } },
           ],
@@ -35,7 +35,7 @@ const HowItWorks = () => {
               {[
                 {
                   q: "What are your delivery hours?",
-                  a: "We deliver from 10:00 AM to 10:00 PM, 7 days a week throughout Regina.",
+                  a: "We deliver from 8:00 AM to 12:00 AM (midnight), 7 days a week throughout Regina.",
                 },
                 {
                   q: "How much does delivery cost?",
