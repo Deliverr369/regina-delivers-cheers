@@ -16,3 +16,4 @@
 - [ ] Twilio: upgrade account so customer text messages can be delivered (trial blocks unverified numbers)
 - [ ] Investigate why returning customers stopped ordering after the deliverr.ca launch — order history, repeat rate, and what old customers actually experienced (domain switch, broken customer texts, site hidden from Google until 2026-10-14)
 - [ ] Make ranking data even more accurate — keep site hours, store pages and structured data matching the Google listing exactly
+- [ ] Add more Regina-specific delivery blog posts so customers find the site and trust it
