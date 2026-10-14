@@ -38,12 +38,12 @@ const Blog = () => {
       <SEO
         title="Blog | Regina Delivery News & Guides | Deliverr"
         description="Tips, guides, and news about same-day delivery in Regina. Best stores, store hours, deals and more."
-        canonical="https://regina-delivers-cheers.lovable.app/blog"
+        canonical="https://deliverr.ca/blog"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
           name: "Deliverr Blog",
-          url: "https://regina-delivers-cheers.lovable.app/blog",
+          url: "https://deliverr.ca/blog",
         }}
       />
       <Header />
