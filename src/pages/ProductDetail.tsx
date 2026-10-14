@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
+import { SEO } from "@/components/seo/SEO";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
 import { safeImageUrl } from "@/lib/image-url";
 
@@ -62,16 +63,6 @@ const ProductDetail = () => {
     }
   }, [packPrices, selectedPackSize]);
 
-  // Update document title for SEO
-  useEffect(() => {
-    if (product) {
-      const title = product.seo_meta_title || `${product.name} | Regina Delivers Cheers`;
-      document.title = title.slice(0, 60);
-    }
-    return () => {
-      document.title = "Regina Delivers Cheers";
-    };
-  }, [product]);
 
   const currentPrice = useMemo(() => {
     if (!product) return 0;
@@ -129,9 +120,20 @@ const ProductDetail = () => {
 
   const description = product.seo_description || product.description;
   const totalPrice = currentPrice * quantity;
+  const seoTitle = (product.seo_meta_title || `${product.name} Delivery in Regina | Deliverr`).slice(0, 60);
+  const seoDescription = (
+    product.seo_meta_description ||
+    `Order ${product.name}${product.size ? ` (${product.size})` : ""} for delivery in Regina. Free delivery over $50, 19+ ID checked at the door.`
+  ).slice(0, 160);
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={`https://deliverr.ca/product/${id}`}
+        image={safeImageUrl(product.image_url) || undefined}
+      />
       <Header />
 
       <ProductJsonLd
