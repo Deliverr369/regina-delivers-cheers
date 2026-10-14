@@ -6,6 +6,7 @@ import InternalLinksSection from "@/components/seo/InternalLinks";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { Button } from "@/components/ui/button";
 import { BadgePercent, Clock, Truck, ShieldCheck } from "lucide-react";
+import FlyerSection from "@/components/FlyerSection";
 
 const SITE_URL = "https://deliverr.ca";
 
@@ -116,6 +117,8 @@ const OffersWeeklyDeals = () => {
             ))}
           </div>
         </section>
+
+        <FlyerSection />
 
         {/* Deal categories */}
         <section className="py-14 bg-muted/30">
