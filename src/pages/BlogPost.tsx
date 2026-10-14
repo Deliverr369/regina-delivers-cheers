@@ -99,7 +99,7 @@ const BlogPost = () => {
         <SEO
           title={post.meta_title || post.title}
           description={post.meta_description || post.excerpt || undefined}
-          canonical={`https://regina-delivers-cheers.lovable.app/blog/${post.slug}`}
+          canonical={`https://deliverr.ca/blog/${post.slug}`}
           image={post.cover_image || undefined}
           jsonLd={{
             "@context": "https://schema.org",
@@ -111,7 +111,7 @@ const BlogPost = () => {
             publisher: { "@type": "Organization", name: "Deliverr" },
             datePublished: post.published_at,
             keywords: post.keywords?.join(", "),
-            mainEntityOfPage: `https://regina-delivers-cheers.lovable.app/blog/${post.slug}`,
+            mainEntityOfPage: `https://deliverr.ca/blog/${post.slug}`,
           }}
         />
       )}

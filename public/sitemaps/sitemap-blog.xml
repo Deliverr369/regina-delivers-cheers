@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Deliverr — Blog posts.
-  Add a <url> entry per post slug. Keep under 50,000 entries; if you ever
-  exceed that, split into sitemap-blog-1.xml, sitemap-blog-2.xml, etc.
-  and register each in /sitemap.xml.
--->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://deliverr.ca/blog</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <url><loc>https://deliverr.ca/blog</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/best-alcohol-delivery-regina-2026</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/same-day-liquor-delivery-regina</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/regina-store-hours-guide</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/beer-delivery-regina-guide</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/wine-delivery-regina</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/cigarette-vape-delivery-regina</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/grocery-delivery-regina</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/regina-neighbourhoods-we-deliver-to</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://deliverr.ca/blog/how-deliverr-payment-works</loc><changefreq>weekly</changefreq></url>
 </urlset>
