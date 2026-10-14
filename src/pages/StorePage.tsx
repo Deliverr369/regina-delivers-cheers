@@ -210,7 +210,7 @@ const StorePage = () => {
               crumbs={[
                 { name: "Home", path: "/" },
                 { name: "Stores", path: "/stores" },
-                { name: store.name, path: `/stores/${store.slug}` },
+                { name: store.name, path: `/liquor-stores/${store.slug}` },
               ]}
             />
 
