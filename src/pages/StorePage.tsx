@@ -13,6 +13,7 @@ import { CONTACT } from "@/config/contact";
 import FaqAccordion from "@/components/seo/FaqAccordion";
 import { validateFaqs } from "@/components/seo/validateFaqs";
 import { buildLocalBusinessJsonLd, buildBreadcrumbJsonLd } from "./storePageJsonLd";
+import { PageBreadcrumbs } from "@/components/seo/PageBreadcrumbs";
 import { useStoreOpenNow } from "@/hooks/useStoreOpenNow";
 
 interface Store {
@@ -204,11 +205,14 @@ const StorePage = () => {
         {/* Hero */}
         <section className="bg-gradient-to-b from-primary/10 to-background py-12 md:py-16">
           <div className="container max-w-5xl mx-auto px-4">
-            <nav className="text-sm text-muted-foreground mb-4">
-              <Link to="/" className="hover:text-primary">Home</Link> ›{" "}
-              <Link to="/stores" className="hover:text-primary">Stores</Link> ›{" "}
-              <span className="text-foreground">{store.name}</span>
-            </nav>
+            <PageBreadcrumbs
+              className="mb-4"
+              crumbs={[
+                { name: "Home", path: "/" },
+                { name: "Stores", path: "/stores" },
+                { name: store.name, path: `/stores/${store.slug}` },
+              ]}
+            />
 
             <div className="flex flex-col md:flex-row gap-6 items-start">
               {store.image_url && (
