@@ -1,14 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Star, Shield, Clock, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
   const [address, setAddress] = useState("");
   const [isRegina, setIsRegina] = useState<boolean | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Pre-fill the customer's last used address: first from this device,
+  // then from the default address saved on their account.
+  useEffect(() => {
+    const saved = localStorage.getItem("delivery_address");
+    if (saved) {
+      setAddress(saved);
+      setIsRegina(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data } = await supabase
+        .from("user_addresses")
+        .select("address, city, is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !data?.address) return;
+      const full = data.city ? `${data.address}, ${data.city}, SK` : data.address;
+      setAddress(full);
+      setIsRegina(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSelect = (selectedAddress: string, regina: boolean) => {
     setIsRegina(regina);
