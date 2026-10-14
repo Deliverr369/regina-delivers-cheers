@@ -80,7 +80,7 @@ const HeroSection = () => {
                   setAddressError(null);
                 }}
                 onSelect={handleSelect}
-                placeholder="Enter your delivery address"
+                placeholder="Your address"
                 className="flex-1"
                 inputClassName="border-0 bg-transparent focus-visible:ring-0 text-foreground placeholder:text-muted-foreground py-6 text-base rounded-full"
                 error={addressError}
