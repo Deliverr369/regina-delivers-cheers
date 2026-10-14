@@ -8,3 +8,4 @@
 
 ## New tasks
 - [x] Improve Google rankings toward #1 — added weekly-deals page + redirects for old ranked URLs; user-side: Google Business Profile & reviews
+- [ ] GBP verification: waiting on user's Regina street address + postal code, then fetch options, user picks method, complete with PIN
