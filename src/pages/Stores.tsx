@@ -152,7 +152,7 @@ const Stores = () => {
       <SEO
         title="Liquor & Smoke Stores in Regina — Delivery | Deliverr"
         description="Order from Regina liquor stores, smoke shops and vape stores online. Beer, wine, spirits, cigarettes and vapes delivered in under 60 minutes. 19+."
-        canonical="https://regina-delivers-cheers.lovable.app/stores"
+        canonical="https://deliverr.ca/stores"
       />
       <Header />
       

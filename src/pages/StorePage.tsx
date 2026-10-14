@@ -74,7 +74,7 @@ const StorePage = () => {
     );
   }
 
-  const url = `https://regina-delivers-cheers.lovable.app/liquor-stores/${store.slug}`;
+  const url = `https://deliverr.ca/liquor-stores/${store.slug}`;
   const title = `${store.name} Regina | Delivery, Hours & Address | Deliverr`;
   const description = `Order ${store.name} delivery in Regina, SK. Hours: ${store.hours}. Address: ${store.address}. Same-day delivery in ${store.delivery_time || "30-45 min"}.`;
 

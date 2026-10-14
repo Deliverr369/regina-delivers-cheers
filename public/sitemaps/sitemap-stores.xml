@@ -1,29 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Deliverr — Store landing pages -->
+<!-- Deliverr — Store landing pages.
+     Slugs must match public.stores.slug exactly; StorePage redirects any
+     unknown slug to /stores, which Google treats as a soft 404. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://deliverr.ca/liquor-stores/costco-liquor-regina</loc>
+    <loc>https://deliverr.ca/liquor-stores/sobeys-liquor</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://deliverr.ca/liquor-stores/superstore-liquor-regina</loc>
+    <loc>https://deliverr.ca/liquor-stores/superstore-liquor</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://deliverr.ca/liquor-stores/sobeys-liquor-regina</loc>
+    <loc>https://deliverr.ca/liquor-stores/costco-liquor</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://deliverr.ca/stores-regina/costco-liquor-regina</loc>
+    <loc>https://deliverr.ca/liquor-stores/co-op-liquor</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://deliverr.ca/stores-regina/superstore-liquor-regina</loc>
+    <loc>https://deliverr.ca/liquor-stores/empire-offsale</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://deliverr.ca/liquor-stores/willow-park-wine-spirits</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
