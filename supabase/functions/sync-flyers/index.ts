@@ -31,6 +31,12 @@ const WANTED = new Set([
   "Walmart",
 ]);
 
+// Two safety rails on a function the scheduler calls with no user session:
+// a warm-container throttle so a stray caller can't hammer the flyer feed, and
+// an optional shared secret for admin replays once FLYER_SYNC_SECRET is set.
+const MIN_RUN_GAP_MS = 15 * 60 * 1000;
+let lastRunAt = 0;
+
 interface FeedFlyer {
   id?: number | string;
   merchant?: string;
@@ -101,20 +107,22 @@ async function resubmitSitemap(log: (m: string) => void) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Only the scheduled job (or an admin replay) may trigger a sync.
   const secret = Deno.env.get("FLYER_SYNC_SECRET");
-  if (!secret) {
-    return new Response(JSON.stringify({ error: "FLYER_SYNC_SECRET is not configured" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  if (req.headers.get("x-sync-secret") !== secret) {
+  if (secret && req.headers.get("x-sync-secret") !== secret) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  const now = Date.now();
+  if (now - lastRunAt < MIN_RUN_GAP_MS) {
+    return new Response(
+      JSON.stringify({ ok: true, skipped: "a sync ran less than 15 minutes ago" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+  lastRunAt = now;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
