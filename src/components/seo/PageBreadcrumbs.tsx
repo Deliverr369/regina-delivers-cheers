@@ -33,7 +33,11 @@ export const PageBreadcrumbs = ({ crumbs, className = "" }: { crumbs: Crumb[]; c
                 {c.name}
               </Link>
             )}
-            {!last && <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+            {!last && (
+              <span role="presentation" aria-hidden="true" className="inline-flex">
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" focusable="false" />
+              </span>
+            )}
           </li>
         );
       })}
