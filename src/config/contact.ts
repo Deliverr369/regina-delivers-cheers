@@ -32,10 +32,12 @@ export const CONTACT = {
   latitude: 50.4452,
   longitude: -104.6189,
 
-  // Hours (display + JSON-LD)
-  hoursDisplay: "Daily 10:00 AM – 2:00 AM",
-  opens: "10:00",
-  closes: "02:00",
+  // Hours (display + JSON-LD). 8:00 AM to midnight daily — matches the Google
+  // Business Profile listing. JSON-LD uses 23:59 as the closing minute because
+  // a range that closes at 00:00 reads as closing before it opens.
+  hoursDisplay: "Daily 8:00 AM – 12:00 AM",
+  opens: "08:00",
+  closes: "23:59",
 
   // Social
   social: {

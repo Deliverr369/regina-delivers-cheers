@@ -14,3 +14,5 @@
 - [x] Submit the current sitemap to Google Search Console — https://deliverr.ca/sitemap.xml accepted, 54 pages, 0 errors; the two stale 2017/2020 entries were removed
 - [ ] Re-submit the sitemap to Google automatically whenever the Weekly Deals section changes
 - [ ] Twilio: upgrade account so customer text messages can be delivered (trial blocks unverified numbers)
+- [ ] Investigate why returning customers stopped ordering after the deliverr.ca launch — order history, repeat rate, and what old customers actually experienced (domain switch, broken customer texts, site hidden from Google until 2026-10-14)
+- [ ] Make ranking data even more accurate — keep site hours, store pages and structured data matching the Google listing exactly
