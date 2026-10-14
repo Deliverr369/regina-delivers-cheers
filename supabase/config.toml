@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.match-images-cron]
 verify_jwt = false
 
+[functions.sync-flyers]
+verify_jwt = false
+
 [functions.generate-seo-content]
 verify_jwt = false
 
