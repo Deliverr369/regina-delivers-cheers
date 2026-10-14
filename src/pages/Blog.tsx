@@ -1,3 +1,4 @@
+import { PageBreadcrumbs, breadcrumbJsonLd } from "@/components/seo/PageBreadcrumbs";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,15 +40,16 @@ const Blog = () => {
         title="Blog | Regina Delivery News & Guides | Deliverr"
         description="Tips, guides, and news about same-day delivery in Regina. Best stores, store hours, deals and more."
         canonical="https://deliverr.ca/blog"
-        jsonLd={{
+        jsonLd={[{
           "@context": "https://schema.org",
           "@type": "Blog",
           name: "Deliverr Blog",
           url: "https://deliverr.ca/blog",
-        }}
+        }, breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Blog", path: "/blog" }])]}
       />
       <Header />
       <main className="flex-1 container max-w-5xl mx-auto px-4 py-12">
+        <PageBreadcrumbs className="mb-6" crumbs={[{ name: "Home", path: "/" }, { name: "Blog", path: "/blog" }]} />
         <h1 className="text-4xl md:text-5xl font-bold mb-3 font-heading">Deliverr Blog</h1>
         <p className="text-muted-foreground mb-10 text-lg">
           Guides, news and tips for delivery in Regina, SK.

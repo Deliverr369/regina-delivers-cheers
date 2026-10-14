@@ -1,3 +1,4 @@
+import { PageBreadcrumbs, breadcrumbJsonLd } from "@/components/seo/PageBreadcrumbs";
 import { useEffect, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,7 +121,7 @@ const BlogPost = () => {
           description={post.meta_description || post.excerpt || undefined}
           canonical={`https://deliverr.ca/blog/${post.slug}`}
           image={post.cover_image || undefined}
-          jsonLd={{
+          jsonLd={[{
             "@context": "https://schema.org",
             "@type": "BlogPosting",
             headline: post.title,
@@ -131,14 +132,23 @@ const BlogPost = () => {
             datePublished: post.published_at,
             keywords: post.keywords?.join(", "),
             mainEntityOfPage: `https://deliverr.ca/blog/${post.slug}`,
-          }}
+          }, breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Blog", path: "/blog" },
+            { name: post.title, path: `/blog/${post.slug}` },
+          ])]}
         />
       )}
       <Header />
       <main className="flex-1 container max-w-3xl mx-auto px-4 py-10">
-        <Button asChild variant="ghost" size="sm" className="mb-6">
-          <Link to="/blog"><ArrowLeft className="h-4 w-4 mr-2" /> All posts</Link>
-        </Button>
+        <PageBreadcrumbs
+          className="mb-6"
+          crumbs={[
+            { name: "Home", path: "/" },
+            { name: "Blog", path: "/blog" },
+            ...(post ? [{ name: post.title, path: `/blog/${post.slug}` }] : []),
+          ]}
+        />
 
         {loading ? (
           <div className="flex justify-center py-20">
