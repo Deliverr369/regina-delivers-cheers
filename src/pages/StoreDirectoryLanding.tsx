@@ -29,8 +29,12 @@ type Store = {
 };
 
 type DirectoryConfig = {
-  slug: "vape-stores-regina" | "spirits-stores-regina";
-  category: "vape" | "spirits";
+  slug: "vape-stores-regina" | "spirits-stores-regina" | "liquor-stores-regina";
+  category: "vape" | "spirits" | "liquor";
+  /** Label for the hero shop button */
+  shopLabel?: string;
+  /** Optional local content paragraphs */
+  localContent?: { h: string; p: string }[];
   /** Display name singular */
   noun: string;
   /** Plural noun used in headings */
@@ -92,6 +96,34 @@ async function fetchVapeStores(): Promise<Store[]> {
 /* -------------------------------------------------------------------------- */
 
 const DIRECTORIES: Record<string, DirectoryConfig> = {
+  "liquor-stores-regina": {
+    slug: "liquor-stores-regina",
+    category: "liquor",
+    noun: "liquor store",
+    nounPlural: "Liquor Stores",
+    shopLabel: "Shop Liquor",
+    h1: "Liquor Delivery in Regina from Local Liquor Stores",
+    title: "Liquor Delivery Regina | Local Liquor Stores | Deliverr",
+    description:
+      "Liquor delivery in Regina from Co-op Liquor, Sobeys Liquor, Superstore, Willow Park and Empire Offsale. Same-day, store prices, free over $50. 19+.",
+    intro:
+      "Compare Regina's liquor stores and get beer, wine, spirits and coolers delivered to your door the same day. Pick a store, shop at store shelf prices, and show your 19+ ID at the door.",
+    shopTo: "/liquor-delivery-regina",
+    resolveStores: () => fetchStoresBySlug(SPIRITS_STORE_SLUGS),
+    localContent: [
+      { h: "How liquor delivery in Regina works", p: "Choose a liquor store below, add beer, wine, spirits or coolers to your cart and pick a delivery time while the store is open. A local shopper buys your items at the store and a driver brings them to your door — usually within an hour. Your card is held at checkout and charged only the final receipt amount once shopping is done." },
+      { h: "Which Regina liquor store should I pick?", p: "Co-op Liquor and Sobeys Liquor have a wide everyday range of beer, wine and spirits. Superstore Liquor is good for value packs, Willow Park Wine & Spirits for a bigger wine and specialty spirits selection, and Empire Offsale for cold beer. Each card shows the store's hours and delivery fee so you can compare." },
+      { h: "Delivery fees and areas", p: "Most Regina liquor stores deliver for $7, Superstore Liquor is $10, and every order over $50 delivers free. We cover all of Regina — Downtown, Cathedral, Harbour Landing, Lakeview, Normanview, the East End and more. We don't deliver outside city limits." },
+    ],
+    faqs: [
+      { q: "Which liquor stores deliver in Regina with Deliverr?", a: "Co-op Liquor, Sobeys Liquor, Superstore Liquor, Willow Park Wine & Spirits and Empire Offsale. Costco Liquor is coming soon. Tap any store to see its hours and full selection." },
+      { q: "How fast is liquor delivery in Regina?", a: "Most orders arrive within about an hour while the store is open. You can also schedule a later delivery time at checkout." },
+      { q: "How much does liquor delivery cost in Regina?", a: "Most stores are $7, Superstore Liquor is $10, and orders over $50 deliver free. Products are priced at the store's shelf price; 5% tax applies only to the delivery fee." },
+      { q: "Do I need to be 19+ for liquor delivery?", a: "Yes. Saskatchewan's drinking age is 19. You confirm your age at checkout and the driver checks valid government-issued photo ID at the door. Orders can't be left unattended." },
+      { q: "How do I pay for liquor delivery?", a: "Pay by card. We place one hold when you order and charge only the final receipt amount after your items are bought. Pay at the door is also available." },
+    ],
+  },
+
   "spirits-stores-regina": {
     slug: "spirits-stores-regina",
     category: "spirits",
@@ -257,7 +289,7 @@ const StoreDirectoryLanding = () => {
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Button asChild size="lg">
-                <Link to={cfg.shopTo}>Shop {cfg.noun === "spirits store" ? "Spirits" : "Vape"}</Link>
+                <Link to={cfg.shopTo}>{cfg.shopLabel ?? `Shop ${cfg.noun === "spirits store" ? "Spirits" : "Vape"}`}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/stores">Browse All Stores</Link>
@@ -387,6 +419,19 @@ const StoreDirectoryLanding = () => {
         </section>
 
         {/* FAQ — mirrors FAQPage JSON-LD */}
+        {cfg.localContent && (
+          <section className="py-12">
+            <div className="container max-w-3xl mx-auto px-4 space-y-8">
+              {cfg.localContent.map((c) => (
+                <div key={c.h}>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-3 font-heading">{c.h}</h2>
+                  <p className="text-muted-foreground leading-relaxed">{c.p}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="py-16 bg-muted/30">
           <div className="container max-w-3xl mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 font-heading">

@@ -12,6 +12,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import AsSeenOnSection from "@/components/AsSeenOnSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
+import ReginaLiquorIntro from "@/components/ReginaLiquorIntro";
 import { localBusinessJsonLd, reginaServiceJsonLd } from "@/components/seo/LocalBusinessJsonLd";
 import { CONTACT } from "@/config/contact";
 
@@ -27,8 +28,8 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <SEO
-        title="Liquor & Smoke Delivery in Regina | Deliverr"
-        description="Order beer, wine, spirits and smokes from Regina's top stores. Fast delivery in under 60 minutes at store prices. 19+ only."
+        title="Liquor Delivery Regina | Beer, Wine & Smokes | Deliverr"
+        description="Liquor delivery in Regina from Co-op, Sobeys, Superstore & Willow Park. Beer, wine, spirits and smokes at store prices, free over $50. 19+."
         canonical={`${CONTACT.siteUrl}/`}
         jsonLd={[
           {
@@ -48,6 +49,7 @@ const Index = () => {
       <main>
         <HeroSection />
         <FeaturedStoresSection />
+        <ReginaLiquorIntro />
         <PromoBanner />
         <CategoriesSection />
         <WhyChooseUsSection />

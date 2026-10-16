@@ -102,6 +102,25 @@ const FAQS_BY_CATEGORY: Record<string, FaqItem[]> = {
     },
   ],
 
+  "cigarette-delivery-regina": [
+    {
+      q: "How does cigarette delivery work in Regina?",
+      a: "Pick a licensed Regina retailer, add your brand and pack size (pack or carton) to the cart, choose a delivery time while the store is open and check out by card. A shopper buys your cigarettes at the store and a driver brings them to your door, usually within about an hour.",
+    },
+    {
+      q: "Can I order a carton of cigarettes?",
+      a: "Yes. Cartons and individual packs are listed when the store has them in stock. Prices match the store's shelf price.",
+    },
+    {
+      q: "How much does cigarette delivery cost?",
+      a: "Delivery starts at $7 from most stores and orders over $50 deliver free. The 5% tax on our side applies only to the delivery fee.",
+    },
+    {
+      q: "How do I pay?",
+      a: "We place one card hold when you order and charge only the final receipt amount once your items are bought. Pay at the door is also available. Questions? Call 306-539-4569.",
+    },
+  ],
+
   "smokes-delivery-regina": [
     {
       q: "What smokes products can I order in Regina?",
@@ -316,6 +335,20 @@ const AGE_FAQS_BY_CATEGORY: Record<string, AgeFaqSet> = {
     },
   },
 
+  "cigarette-delivery-regina": {
+    eligibility: {
+      q: "Do I need to be 19+ to order smokes in Regina?",
+      a: "Yes. Federal and Saskatchewan tobacco law requires you to be 19 or older to purchase cigarettes, cigars, rolling tobacco and nicotine pouches. Date of birth is confirmed at checkout and the driver re-checks valid government-issued photo ID at the door (SK driver's licence, SK Photo ID Card, Canadian passport or PR card).",
+    },
+    handoff: {
+      q: "Who can accept a smokes delivery in Regina?",
+      a: "Only the 19+ person named on the order, in person, with valid photo ID. Drivers will not hand smokes to a minor under any circumstances and cannot leave the order unattended at the door, with concierge or with a neighbour. Sealed cartons are kept in the bag until ID is verified.",
+    },
+    substitution: {
+      q: "Will the retailer substitute a different brand of smokes if mine is out?",
+      a: "No automatic substitutions — brand, format (king-size vs regular), pack size and flavour are not interchangeable. If your exact item is out of stock you'll be messaged for approval or refunded. We never substitute across nicotine categories (e.g. swapping cigarettes for vapes or pouches).",
+    },
+  },
   "smokes-delivery-regina": {
     eligibility: {
       q: "Do I need to be 19+ to order smokes in Regina?",
@@ -408,6 +441,16 @@ const CATEGORIES: Record<string, CategoryConfig> = {
     intro: "Shop Costco, Superstore, Sobeys and other Regina grocers from one app. Fresh and frozen, delivered same-day.",
     shopTo: "/stores",
     ageGated: false,
+  },
+  "cigarette-delivery-regina": {
+    slug: "cigarette-delivery-regina",
+    name: "Cigarette",
+    h1: "Cigarette Delivery in Regina",
+    title: "Cigarette Delivery Regina | Packs & Cartons | Deliverr",
+    description: "Cigarette delivery in Regina from licensed local retailers. Packs and cartons at store prices, delivered same-day. Free over $50. 19+ ID required.",
+    intro: "Order your usual brand by the pack or carton from licensed Regina retailers. Choose a store, check out by card, and show valid 19+ photo ID at the door.",
+    shopTo: "/products?category=smokes&subcategory=cigarettes",
+    ageGated: true,
   },
   "smokes-delivery-regina": {
     slug: "smokes-delivery-regina",
