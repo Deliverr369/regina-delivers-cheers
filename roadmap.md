@@ -26,4 +26,4 @@
 - [x] Create Regina cigarette delivery landing page
 - [x] Add delivery pages for uncovered Regina neighbourhoods
 - [x] Two blog posts targeting 'liquor delivery near me' (Regina)
-- [ ] Daily auto blog posts + sitemap submit (needs user decision: auto-publish vs review drafts)
+- [x] Daily auto blog posts — decision made 2026-10-16: NO auto-publish. Cron writes 2 drafts nightly (blog-drafts-daily, midnight Regina); owner approves in Dashboard Blog; approving publishes and re-submits the sitemap via submit-sitemap function

@@ -258,43 +258,45 @@ Deno.serve(async (req) => {
     const offset = posts.length % pool.length;
     const chosen = pool.slice(offset).concat(pool).slice(0, MAX_DRAFTS_PER_RUN);
 
-    const results: { title: string; slug: string; ok: boolean; error?: string }[] = [];
-    for (const topic of chosen) {
-      try {
-        const draft = await generateDraft(topic, posts.map((p) => p.title), Deno.env.get("LOVABLE_API_KEY")!);
+    // Both drafts run in parallel to stay well inside the function time limit.
+    const results = await Promise.all(
+      chosen.map(async (topic) => {
+        try {
+          const draft = await generateDraft(topic, posts.map((p) => p.title), Deno.env.get("LOVABLE_API_KEY")!);
 
-        let slug = slugify(draft.title);
-        const { data: slugTaken } = await supabase
-          .from("blog_posts")
-          .select("id")
-          .eq("slug", slug)
-          .maybeSingle();
-        if (slugTaken) slug = `${slug.slice(0, 74)}-${Date.now().toString(36).slice(-4)}`;
+          let slug = slugify(draft.title);
+          const { data: slugTaken } = await supabase
+            .from("blog_posts")
+            .select("id")
+            .eq("slug", slug)
+            .maybeSingle();
+          if (slugTaken) slug = `${slug.slice(0, 74)}-${Date.now().toString(36).slice(-4)}`;
 
-        const { error: insertErr } = await supabase.from("blog_posts").insert({
-          slug,
-          title: draft.title.trim(),
-          excerpt: draft.excerpt || null,
-          content: draft.content,
-          cover_image: null,
-          author: "Deliverr Team",
-          published: false,
-          published_at: null,
-          meta_title: (draft.meta_title || "").slice(0, 70) || null,
-          meta_description: (draft.meta_description || "").slice(0, 180) || null,
-          keywords: draft.keywords?.length ? draft.keywords : null,
-        });
-        if (insertErr) throw insertErr;
-        results.push({ title: draft.title.trim(), slug, ok: true });
-      } catch (e) {
-        results.push({
-          title: topic.title,
-          slug: "",
-          ok: false,
-          error: e instanceof Error ? e.message : String(e),
-        });
-      }
-    }
+          const { error: insertErr } = await supabase.from("blog_posts").insert({
+            slug,
+            title: draft.title.trim(),
+            excerpt: draft.excerpt || null,
+            content: draft.content,
+            cover_image: null,
+            author: "Deliverr Team",
+            published: false,
+            published_at: null,
+            meta_title: (draft.meta_title || "").slice(0, 70) || null,
+            meta_description: (draft.meta_description || "").slice(0, 180) || null,
+            keywords: draft.keywords?.length ? draft.keywords : null,
+          });
+          if (insertErr) throw insertErr;
+          return { title: draft.title.trim(), slug, ok: true as const };
+        } catch (e) {
+          return {
+            title: topic.title,
+            slug: "",
+            ok: false as const,
+            error: e instanceof Error ? e.message : String(e),
+          };
+        }
+      }),
+    );
 
     return new Response(
       JSON.stringify({
