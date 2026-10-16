@@ -203,10 +203,12 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Cron calls carry the shared cron secret; dashboard/admin calls carry a JWT.
+  // Cron calls carry the shared cron secret, which lives in the
+  // public.cron_secrets table (service-role readable). Dashboard/admin calls
+  // carry a JWT instead.
   const cronSecret = req.headers.get("x-cron-secret");
-  const CRON_SECRET = Deno.env.get("CRON_SECRET");
-  const isCron = !!CRON_SECRET && !!cronSecret && cronSecret === CRON_SECRET;
+  const isCron = !!cronSecret
+    && (await supabase.from("cron_secrets").select("secret").eq("name", "blog-drafts").maybeSingle()).data?.secret === cronSecret;
 
   if (!isCron) {
     const authHeader = req.headers.get("Authorization");
