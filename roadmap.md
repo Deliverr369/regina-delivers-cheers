@@ -22,3 +22,5 @@
 - [x] Product and LocalBusiness structured data on product and store pages
 - [x] Store blogs: 2 posts per store (42 new, 56 total) with how-to-order, fees, hours, age check, keywords
 - [x] Focus keywords from Search Console worked into blog posts (coop liquor, alcohol delivery service, etc.)
+- [ ] Rewrite homepage + /liquor-stores-regina for 'liquor delivery Regina'
+- [ ] Create Regina cigarette delivery landing page
