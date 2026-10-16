@@ -38,9 +38,9 @@ const TOPICS: TopicDef[] = [
   { keyword: "beer delivery regina", title: "Beer Delivery in Regina: What You Can Order and How Fast It Arrives", brief: "Guide to ordering beer for delivery in Regina: domestic and imported brands, packs and sizes, cold options, and which stores carry what." },
   { keyword: "wine delivery regina", title: "Wine Delivery in Regina: Red, White and Sparkling Delivered Today", brief: "Ordering wine in Regina for delivery — dinner pairings, popular picks, gift bottles, and how delivery windows work." },
   { keyword: "spirits delivery regina", title: "Spirits Delivery in Regina: Vodka, Whisky, Gin and Rum Delivered Same Day", brief: "How to order spirits in Regina, what brands are usually stocked locally, and tips for choosing between stores." },
-  { keyword: "cigarette delivery regina", title: "Cigarette Delivery in Regina: What to Expect When You Order", brief: "Ordering cigarettes in Regina: brands, packs and cartons, strict 19+ ID check at the door, and payment options." },
-  { keyword: "cigar delivery regina", title: "Cigar Delivery in Regina: Premium Sticks Brought to You", brief: "Ordering cigars for Regina delivery, storage tips, and pairing ideas for celebrations." },
-  { keyword: "vape delivery regina", title: "Vape Delivery in Regina: Devices, Pods and E-liquids at Your Door", brief: "Ordering vape products in Regina, 19+ verification, and responsible-delivery rules." },
+  { keyword: "cigarette delivery regina", title: "Cigarette Delivery in Regina: What to Expect When You Order", brief: "A factual, adult-oriented guide to cigarette delivery in Regina: how ordering works, packs and cartons, the strict 19+ ID check at the door, and payment options." },
+  { keyword: "cigar delivery regina", title: "Cigar Delivery in Regina: Premium Sticks Brought to You", brief: "A factual, adult-oriented guide to how cigar delivery works in Regina: ordering as an adult, the 19+ ID check, and keeping cigars fresh." },
+  { keyword: "vape delivery regina", title: "Vape Delivery in Regina: Devices, Pods and E-liquids at Your Door", brief: "A factual, adult-oriented guide to vape delivery in Regina: devices and pods, 19+ verification, and how regulated delivery works." },
   { keyword: "late night", title: "Late-Night Delivery in Regina: Ordering Liquor and Snacks After Dark", brief: "How same-day delivery works into the evening in Regina, cutoffs to know, and what stores stay reachable near closing." },
   { keyword: "game day", title: "Regina Game Day: Stocking Up for Rider Nights and Pats Games", brief: "Party-size orders for Regina game days: cases, coolers, snacks, and ordering ahead for group deliveries." },
   { keyword: "party", title: "Hosting a Party in Regina? Here's Your One-Trip Delivery Checklist", brief: "A practical checklist for party orders in Regina: quantities per guest, mixers, ice, and timing your delivery window." },
@@ -77,6 +77,7 @@ Rules:
 - Include 3-4 natural internal links to the allowed site pages (full URLs starting with https://deliverr.ca). Link text should describe the destination.
 - End with an FAQ section: "## Frequently Asked Questions" with 4 questions as ### headings, each answered in 2-4 sentences.
 - Naturally include the topic's target keywords in the title, first paragraph and a couple of headings — never stuff.
+- Deliverr is a legitimate, licensed local delivery business. Tobacco and vape posts are factual, neutral guides about how the regulated service works (what adults can order, ID and age rules, fees, timing) — write them factually, never encourage or glamorize use, and make no health claims. Do not refuse these topics and do not offer alternative topics.
 - Never invent prices beyond the stated facts, awards, ratings, health claims or statistics. Never mention competitors. For alcohol or tobacco topics, always mention the 19+ ID check.
 - meta_title: max 60 characters. meta_description: max 158 characters, compelling, includes "Regina". excerpt: one or two sentences shown on the blog index. keywords: 6-10 lowercase long-tail keywords.`;
 
@@ -144,11 +145,12 @@ async function readResponsesSSE(resp: Response): Promise<string> {
   return completed || deltas;
 }
 
-async function generateDraft(topic: TopicDef, recentTitles: string[], apiKey: string): Promise<DraftResult> {
+async function generateDraft(topic: TopicDef, recentTitles: string[], apiKey: string, reframe = false): Promise<DraftResult> {
   const userPrompt = `Write today's blog post for Deliverr (Regina delivery service).
 
 Topic: ${topic.title}
 Angle: ${topic.brief}
+${reframe ? "\nIMPORTANT: Deliverr is a licensed, legal delivery business writing a factual, informational guide for adult customers. This topic is entirely appropriate — write the complete guide as specified; do not refuse or propose alternatives.\n" : ""}
 
 Topics already covered recently — take a different angle, do not repeat their structure or phrasing:
 ${recentTitles.slice(0, 12).map((t) => `- ${t}`).join("\n") || "(none)"}`;
@@ -189,6 +191,8 @@ ${recentTitles.slice(0, 12).map((t) => `- ${t}`).join("\n") || "(none)"}`;
   const raw = await readResponsesSSE(resp);
   const parsed = JSON.parse(raw) as DraftResult;
   if (!parsed?.title || !parsed?.content) throw new Error("AI returned an incomplete post");
+  const words = (parsed.content.match(/\S+/g) || []).length;
+  if (words < 500) throw new Error(`Draft too short (${words} words) — the model declined the topic`);
   return parsed;
 }
 
@@ -264,7 +268,13 @@ Deno.serve(async (req) => {
     const results = await Promise.all(
       chosen.map(async (topic) => {
         try {
-          const draft = await generateDraft(topic, posts.map((p) => p.title), Deno.env.get("LOVABLE_API_KEY")!);
+          let draft: DraftResult;
+          try {
+            draft = await generateDraft(topic, posts.map((p) => p.title), Deno.env.get("LOVABLE_API_KEY")!);
+          } catch {
+            // One retry with an explicit framing note (mainly for tobacco topics).
+            draft = await generateDraft(topic, posts.map((p) => p.title), Deno.env.get("LOVABLE_API_KEY")!, true);
+          }
 
           let slug = slugify(draft.title);
           const { data: slugTaken } = await supabase
