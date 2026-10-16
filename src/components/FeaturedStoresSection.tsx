@@ -108,9 +108,25 @@ const FeaturedStoresSection = () => {
                     </span>
                   )}
 
-                  <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
+                  <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span className="text-xs line-clamp-1">{store.address}</span>
+                  </div>
+
+                  {store.hours && (
+                    <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
+                      <Clock className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-xs line-clamp-1">{store.hours}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
+                    <Truck className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-xs">
+                      {Number(store.delivery_fee) === 0
+                        ? "Free delivery"
+                        : `$${Number(store.delivery_fee).toFixed(2)} delivery · Free over $50`}
+                    </span>
                   </div>
 
                   <div className="mt-auto flex items-center justify-between pt-3 border-t border-border">
