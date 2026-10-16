@@ -26,3 +26,4 @@
 - [ ] Create Regina cigarette delivery landing page
 - [ ] Add delivery pages for uncovered Regina neighbourhoods
 - [ ] Two blog posts targeting 'liquor delivery near me' (Regina)
+- [ ] Daily auto blog posts + sitemap submit (needs user decision: auto-publish vs review drafts)
