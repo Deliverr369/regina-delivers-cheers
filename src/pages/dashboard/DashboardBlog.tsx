@@ -132,14 +132,31 @@ const DashboardBlog = () => {
         keywords: editing.keywords?.length ? editing.keywords : null,
       };
 
+      let outcome = "Draft saved";
       if (editing.id) {
         const { error } = await supabase.from("blog_posts").update(payload).eq("id", editing.id);
         if (error) throw error;
-        toast({ title: "Post updated" });
+        outcome = payload.published ? "Post published" : "Post updated";
       } else {
         const { error } = await supabase.from("blog_posts").insert(payload);
         if (error) throw error;
-        toast({ title: "Post created" });
+        outcome = payload.published ? "Post published" : "Draft saved";
+      }
+      toast({ title: outcome });
+      if (payload.published) {
+        // Tell Google about the new live page right away. The post itself is
+        // already saved, so a sitemap failure only needs a retry.
+        supabase.functions
+          .invoke("submit-sitemap")
+          .then(({ error: sitemapError }) => {
+            if (sitemapError) {
+              toast({
+                title: "Google wasn't notified",
+                description: "The post is live, but the sitemap couldn't be re-submitted. Try again later.",
+                variant: "destructive",
+              });
+            }
+          });
       }
       setEditing(null);
       load();
@@ -189,7 +206,8 @@ const DashboardBlog = () => {
             Blog Posts
           </h1>
           <p className="text-muted-foreground mt-1">
-            Write, edit and schedule SEO-optimized blog posts.
+            Two fresh drafts are written automatically every night. Review and approve them here —
+            publishing also re-submits the sitemap to Google.
           </p>
         </div>
         <Button onClick={openNew} size="lg">

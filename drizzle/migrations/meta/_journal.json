@@ -15,6 +15,20 @@
       "when": 1792012588948,
       "tag": "0001_schedule_daily_flyer_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792120712129,
+      "tag": "0002_blog_drafts_daily_cron",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792120780660,
+      "tag": "0003_blog_cron_secret_table",
+      "breakpoints": true
     }
   ]
 }
