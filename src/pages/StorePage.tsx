@@ -342,6 +342,40 @@ const StorePage = () => {
           </div>
         </section>
 
+        {/* Available products */}
+        {featured.length > 0 && (
+          <section className="py-12">
+            <div className="container max-w-5xl mx-auto px-4">
+              <h2 className="text-3xl font-bold font-heading mb-2">Products available from {store.name}</h2>
+              <p className="text-muted-foreground mb-4">
+                {productCount} products from {store.name} can be delivered in Regina today.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]).map(([c, n]) => (
+                  <Badge key={c} variant="secondary">{labelFor(c)} · {n}</Badge>
+                ))}
+              </div>
+              <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {featured.map((p) => (
+                  <li key={p.id}>
+                    <Link to={`/product/${p.id}`} className="block h-full border rounded-lg p-3 hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      {p.image_url && (
+                        <img src={p.image_url} alt={`${p.name}${p.size ? ` ${p.size}` : ""} from ${store.name} Regina`} loading="lazy" className="h-24 w-full object-contain mb-2 bg-card rounded" />
+                      )}
+                      <p className="text-sm font-semibold line-clamp-2">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.size || ""}</p>
+                      <p className="text-sm font-bold mt-1">${Number(p.price).toFixed(2)}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <div className="text-center mt-6">
+                <Button asChild variant="outline"><Link to={`/stores/${store.id}`}>See all {productCount} products</Link></Button>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Delivery Coverage */}
         <section className="py-12">
           <div className="container max-w-5xl mx-auto px-4">
