@@ -47,9 +47,9 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <FeaturedStoresSection />
         <PromoBanner />
         <CategoriesSection />
-        <FeaturedStoresSection />
         <WhyChooseUsSection />
         <HowItWorksSection />
         <TestimonialsSection />

@@ -13,8 +13,7 @@ const FeaturedStoresSection = () => {
       const { data, error } = await supabase
         .from('stores')
         .select('*')
-        .order('rating', { ascending: false })
-        .limit(3);
+        .order('rating', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -27,10 +26,10 @@ const FeaturedStoresSection = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Popular Stores
+              Browse All Stores
             </h2>
             <p className="text-muted-foreground text-sm md:text-base">
-              Order from Regina's top-rated liquor stores
+              Order from Regina's liquor, smoke and grocery stores — delivered to your door
             </p>
           </div>
           <Link to="/stores">
