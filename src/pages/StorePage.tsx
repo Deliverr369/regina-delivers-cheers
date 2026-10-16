@@ -113,14 +113,16 @@ const StorePage = () => {
     );
   }
 
+  // Never publish a non-Regina address (e.g. a stale saved address) on a Regina store page.
+  const address = /regina/i.test(store.address || "") ? store.address : "Regina, SK";
   const url = `https://deliverr.ca/liquor-stores/${store.slug}`;
   const title = `${store.name} Regina | Delivery, Hours & Address | Deliverr`;
-  const description = `Order ${store.name} delivery in Regina, SK. Hours: ${store.hours}. Address: ${store.address}. Same-day delivery in ${store.delivery_time || "30-45 min"}.`;
+  const description = `Order ${store.name} delivery in Regina, SK. Hours: ${store.hours}. Address: ${address}. Same-day delivery in ${store.delivery_time || "30-45 min"}.`;
 
   // ---- LocalBusiness + BreadcrumbList JSON-LD ------------------------------
   // Construction lives in ./storePageJsonLd so the structured-data shape can
   // be unit-tested (and snapshotted) without rendering the full React tree.
-  const localBusiness = buildLocalBusinessJsonLd(store);
+  const localBusiness = buildLocalBusinessJsonLd({ ...store, address });
   const breadcrumb = buildBreadcrumbJsonLd(store);
 
   // Neighborhoods with dedicated landing pages — used to deep-link FAQ answers
@@ -162,7 +164,7 @@ const StorePage = () => {
   // to neighborhood pages; the plain `a` string remains the canonical content
   // used in the FAQPage JSON-LD so structured data stays in sync.
   const neighborhoodAnswerText = `We deliver from ${store.name} to every Regina neighborhood — ${NEIGHBORHOOD_LINKS.map(n => n.label).slice(0, -1).join(", ")} and ${NEIGHBORHOOD_LINKS[NEIGHBORHOOD_LINKS.length - 1].label}. Visit any neighborhood page above for area-specific delivery details.`;
-  const locationAnswerText = `${store.name} is located at ${store.address}, Regina, SK. Deliverr drivers pick up here and deliver across Regina including Downtown, Cathedral, Harbour Landing and Lakeview.`;
+  const locationAnswerText = `${store.name} is located at ${address}, Regina, SK. Deliverr drivers pick up here and deliver across Regina including Downtown, Cathedral, Harbour Landing and Lakeview.`;
   const speedAnswerText = `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours, traffic and which Regina neighborhood (Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central or South End) you're in.`;
 
   const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
@@ -192,7 +194,7 @@ const StorePage = () => {
         a: locationAnswerText,
         aNode: (
           <>
-            {store.name} is located at {store.address}, Regina, SK. Deliverr drivers pick up here and
+            {store.name} is located at {address}, Regina, SK. Deliverr drivers pick up here and
             deliver across Regina including{" "}
             <Link to="/delivery/regina/downtown" className="text-primary underline-offset-2 hover:underline">Downtown</Link>,{" "}
             <Link to="/delivery/regina/cathedral" className="text-primary underline-offset-2 hover:underline">Cathedral</Link>,{" "}
@@ -305,7 +307,7 @@ const StorePage = () => {
                 <CardContent className="p-5">
                   <MapPin className="h-6 w-6 text-primary mb-2" />
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Address</p>
-                  <p className="font-semibold text-sm">{store.address}</p>
+                  <p className="font-semibold text-sm">{address}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -332,7 +334,7 @@ const StorePage = () => {
           <div className="container max-w-3xl mx-auto px-4">
             <h2 className="text-3xl font-bold font-heading mb-4">About {store.name} Regina</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              {store.name} at {store.address} is one of Regina's trusted retailers, available for same-day delivery through Deliverr.
+              {store.name} at {address} is one of Regina's trusted retailers, available for same-day delivery through Deliverr.
               Browse the full catalog, add items to your cart, and we'll have your order at your door in {store.delivery_time || "under an hour"}.
             </p>
             <p className="text-muted-foreground leading-relaxed">
