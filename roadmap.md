@@ -24,3 +24,4 @@
 - [x] Focus keywords from Search Console worked into blog posts (coop liquor, alcohol delivery service, etc.)
 - [ ] Rewrite homepage + /liquor-stores-regina for 'liquor delivery Regina'
 - [ ] Create Regina cigarette delivery landing page
+- [ ] Add delivery pages for uncovered Regina neighbourhoods
