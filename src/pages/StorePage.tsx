@@ -164,7 +164,7 @@ const StorePage = () => {
   // to neighborhood pages; the plain `a` string remains the canonical content
   // used in the FAQPage JSON-LD so structured data stays in sync.
   const neighborhoodAnswerText = `We deliver from ${store.name} to every Regina neighborhood — ${NEIGHBORHOOD_LINKS.map(n => n.label).slice(0, -1).join(", ")} and ${NEIGHBORHOOD_LINKS[NEIGHBORHOOD_LINKS.length - 1].label}. Visit any neighborhood page above for area-specific delivery details.`;
-  const locationAnswerText = `${store.name} is located at ${address}, Regina, SK. Deliverr drivers pick up here and deliver across Regina including Downtown, Cathedral, Harbour Landing and Lakeview.`;
+  const locationAnswerText = `${store.name} is located at ${address}. Deliverr drivers pick up here and deliver across Regina including Downtown, Cathedral, Harbour Landing and Lakeview.`;
   const speedAnswerText = `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours, traffic and which Regina neighborhood (Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central or South End) you're in.`;
 
   const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
@@ -194,7 +194,7 @@ const StorePage = () => {
         a: locationAnswerText,
         aNode: (
           <>
-            {store.name} is located at {address}, Regina, SK. Deliverr drivers pick up here and
+            {store.name} is located at {address}. Deliverr drivers pick up here and
             deliver across Regina including{" "}
             <Link to="/delivery/regina/downtown" className="text-primary underline-offset-2 hover:underline">Downtown</Link>,{" "}
             <Link to="/delivery/regina/cathedral" className="text-primary underline-offset-2 hover:underline">Cathedral</Link>,{" "}
