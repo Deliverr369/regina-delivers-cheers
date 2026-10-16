@@ -25,3 +25,4 @@
 - [ ] Rewrite homepage + /liquor-stores-regina for 'liquor delivery Regina'
 - [ ] Create Regina cigarette delivery landing page
 - [ ] Add delivery pages for uncovered Regina neighbourhoods
+- [ ] Two blog posts targeting 'liquor delivery near me' (Regina)
