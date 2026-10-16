@@ -73,7 +73,7 @@ const SYSTEM_PROMPT = `You are an experienced local writer for Deliverr, a deliv
 Rules:
 - Write in clear, friendly Canadian English. Sound like a knowledgeable local, not a marketing robot.
 - ${FACTS}
-- Length: 800-1,100 words of real substance. Use markdown: one # title, descriptive ## and ### headings, short paragraphs, bullet lists where they help, and a closing "Ordering from Deliverr" section with a call to action and the phone number 306-539-4569.
+- Length: 700-900 words of real substance. Use markdown: one # title, descriptive ## and ### headings, short paragraphs, bullet lists where they help, and a closing "Ordering from Deliverr" section with a call to action and the phone number 306-539-4569.
 - Include 3-4 natural internal links to the allowed site pages (full URLs starting with https://deliverr.ca). Link text should describe the destination.
 - End with an FAQ section: "## Frequently Asked Questions" with 4 questions as ### headings, each answered in 2-4 sentences.
 - Naturally include the topic's target keywords in the title, first paragraph and a couple of headings — never stuff.
@@ -88,8 +88,7 @@ const POST_SCHEMA = {
   properties: {
     title: { type: "string", description: "Post title, under 70 characters" },
     excerpt: { type: "string", description: "1-2 sentence summary for the blog index" },
-    content: { type: "string", description: "Full markdown post, 800-1100 words" },
-    meta_title: { type: "string", description: "SEO title, max 60 chars" },
+    content: { type: "string", description: "Full markdown post, 700-900 words" },
     meta_description: { type: "string", description: "SEO description, max 158 chars" },
     keywords: { type: "array", items: { type: "string" }, description: "6-10 lowercase long-tail keywords" },
   },
@@ -170,7 +169,7 @@ ${recentTitles.slice(0, 12).map((t) => `- ${t}`).join("\n") || "(none)"}`;
       ],
       stream: true,
       store: false,
-      reasoning: { effort: "medium", summary: "auto" },
+      reasoning: { effort: "low", summary: "auto" },
       include: ["reasoning.encrypted_content"],
       text: {
         format: {
