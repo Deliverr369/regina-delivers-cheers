@@ -89,6 +89,7 @@ const POST_SCHEMA = {
     title: { type: "string", description: "Post title, under 70 characters" },
     excerpt: { type: "string", description: "1-2 sentence summary for the blog index" },
     content: { type: "string", description: "Full markdown post, 700-900 words" },
+    meta_title: { type: "string", description: "SEO title, max 60 chars" },
     meta_description: { type: "string", description: "SEO description, max 158 chars" },
     keywords: { type: "array", items: { type: "string" }, description: "6-10 lowercase long-tail keywords" },
   },
