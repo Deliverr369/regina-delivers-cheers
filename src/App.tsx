@@ -86,6 +86,7 @@ const DashboardImporter = lazyWithReload(() => import("./pages/dashboard/Dashboa
 const DashboardSEO = lazyWithReload(() => import("./pages/dashboard/DashboardSEO"), "DashboardSEO");
 const DashboardPushTest = lazyWithReload(() => import("./pages/dashboard/DashboardPushTest"), "DashboardPushTest");
 const DashboardSmsLog = lazyWithReload(() => import("./pages/dashboard/DashboardSmsLog"), "DashboardSmsLog");
+const DashboardSearchConsole = lazyWithReload(() => import("./pages/dashboard/DashboardSearchConsole"), "DashboardSearchConsole");
 const DashboardBlog = lazyWithReload(() => import("./pages/dashboard/DashboardBlog"), "DashboardBlog");
 const DashboardSecurity = lazyWithReload(() => import("./pages/dashboard/DashboardSecurity"), "DashboardSecurity");
 
@@ -198,6 +199,7 @@ const App = () => (
                   <Route path="seo" element={<DashboardSEO />} />
                   <Route path="push-test" element={<DashboardPushTest />} />
                   <Route path="sms-log" element={<DashboardSmsLog />} />
+                  <Route path="search-console" element={<DashboardSearchConsole />} />
                   <Route path="blog" element={<DashboardBlog />} />
                   <Route path="security" element={<DashboardSecurity />} />
                 </Route>
