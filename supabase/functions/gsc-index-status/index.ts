@@ -167,20 +167,29 @@ Deno.serve(async (req) => {
     const toCheck = urls.slice(0, MAX_INSPECTIONS_PER_RUN);
     const rows: InspectionRow[] = [];
     let stoppedEarly = false;
-    for (const url of toCheck) {
-      try {
-        rows.push(await inspectUrl(headers, siteUrl, url));
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        if (msg === "ACCESS_DENIED" || msg === "RATE_LIMITED") {
-          log(`stopped early: ${msg === "ACCESS_DENIED" ? "access denied by Google" : "Google rate limit reached"}`);
-          stoppedEarly = true;
-          break;
-        }
-        log(`skipped ${url}: ${msg}`);
-      }
-      // Gentle pacing to stay clear of per-minute limits.
-      await new Promise((r) => setTimeout(r, 300));
+    // Inspect in concurrent batches — one-by-one exceeds the function time limit.
+    const BATCH = 12;
+    for (let i = 0; i < toCheck.length && !stoppedEarly; i += BATCH) {
+      const batch = toCheck.slice(i, i + BATCH);
+      const results = await Promise.all(
+        batch.map(async (url) => {
+          try {
+            return await inspectUrl(headers, siteUrl, url);
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (msg === "ACCESS_DENIED" || msg === "RATE_LIMITED") {
+              stoppedEarly = true;
+              log(`stopped early: ${msg === "ACCESS_DENIED" ? "access denied by Google" : "Google rate limit reached"}`);
+            } else {
+              log(`skipped ${url}: ${msg}`);
+            }
+            return null;
+          }
+        }),
+      );
+      for (const r of results) if (r) rows.push(r);
+      // Gentle pacing between batches to stay clear of per-minute limits.
+      await new Promise((r) => setTimeout(r, 250));
     }
 
     if (rows.length > 0) {
