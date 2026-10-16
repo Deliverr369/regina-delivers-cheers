@@ -10,7 +10,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
-const MODEL = "google/gemini-3-flash-preview";
+const MODEL = "openai/gpt-6-astra";
 const MAX_DRAFTS_PER_RUN = 2;
 
 // Topics are only linked to pages that actually exist on deliverr.ca.
@@ -80,6 +80,20 @@ Rules:
 - Never invent prices beyond the stated facts, awards, ratings, health claims or statistics. Never mention competitors. For alcohol or tobacco topics, always mention the 19+ ID check.
 - meta_title: max 60 characters. meta_description: max 158 characters, compelling, includes "Regina". excerpt: one or two sentences shown on the blog index. keywords: 6-10 lowercase long-tail keywords.`;
 
+const POST_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["title", "excerpt", "content", "meta_title", "meta_description", "keywords"],
+  properties: {
+    title: { type: "string", description: "Post title, under 70 characters" },
+    excerpt: { type: "string", description: "1-2 sentence summary for the blog index" },
+    content: { type: "string", description: "Full markdown post, 800-1100 words" },
+    meta_title: { type: "string", description: "SEO title, max 60 chars" },
+    meta_description: { type: "string", description: "SEO description, max 158 chars" },
+    keywords: { type: "array", items: { type: "string" }, description: "6-10 lowercase long-tail keywords" },
+  },
+} as const;
+
 interface DraftResult {
   title: string;
   excerpt: string;
@@ -89,8 +103,46 @@ interface DraftResult {
   keywords: string[];
 }
 
-const slugify = (s: string) =>
-  s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").slice(0, 80);
+/** Reads the streamed Responses SSE and assembles the final text output. */
+async function readResponsesSSE(resp: Response): Promise<string> {
+  const reader = resp.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let deltas = "";
+  let completed = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let idx: number;
+    while ((idx = buffer.indexOf("\n\n")) >= 0) {
+      const raw = buffer.slice(0, idx);
+      buffer = buffer.slice(idx + 2);
+      for (const line of raw.split("\n")) {
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          const evt = JSON.parse(payload);
+          if (evt.type === "response.output_text.delta" && typeof evt.delta === "string") {
+            deltas += evt.delta;
+          } else if (evt.type === "response.completed" && Array.isArray(evt.response?.output)) {
+            for (const item of evt.response.output) {
+              if (item?.type === "message" && Array.isArray(item.content)) {
+                for (const c of item.content) {
+                  if (c?.type === "output_text" && typeof c.text === "string") completed += c.text;
+                }
+              }
+            }
+          }
+        } catch {
+          // ignore malformed SSE lines
+        }
+      }
+    }
+  }
+  return completed || deltas;
+}
 
 async function generateDraft(topic: TopicDef, recentTitles: string[], apiKey: string): Promise<DraftResult> {
   const userPrompt = `Write today's blog post for Deliverr (Regina delivery service).
@@ -101,41 +153,31 @@ Angle: ${topic.brief}
 Topics already covered recently — take a different angle, do not repeat their structure or phrasing:
 ${recentTitles.slice(0, 12).map((t) => `- ${t}`).join("\n") || "(none)"}`;
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const resp = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      "Lovable-API-Key": apiKey,
+      "X-Lovable-AIG-SDK": "fetch",
     },
     body: JSON.stringify({
       model: MODEL,
-      messages: [
+      input: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "save_blog_post",
-            description: "Save the drafted blog post",
-            parameters: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                excerpt: { type: "string", description: "1-2 sentence summary for the blog index" },
-                content: { type: "string", description: "Full markdown post, 800-1100 words" },
-                meta_title: { type: "string", description: "SEO title, max 60 chars" },
-                meta_description: { type: "string", description: "SEO description, max 158 chars" },
-                keywords: { type: "array", items: { type: "string" }, description: "6-10 lowercase keywords" },
-              },
-              required: ["title", "excerpt", "content", "meta_title", "meta_description", "keywords"],
-              additionalProperties: false,
-            },
-          },
+      stream: true,
+      store: false,
+      reasoning: { effort: "medium", summary: "auto" },
+      include: ["reasoning.encrypted_content"],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "blog_post",
+          strict: true,
+          schema: POST_SCHEMA,
         },
-      ],
-      tool_choice: { type: "function", function: { name: "save_blog_post" } },
+      },
     }),
   });
 
@@ -144,11 +186,14 @@ ${recentTitles.slice(0, 12).map((t) => `- ${t}`).join("\n") || "(none)"}`;
     throw new Error(`AI gateway ${resp.status}: ${text.slice(0, 300)}`);
   }
 
-  const data = await resp.json();
-  const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-  if (!toolCall) throw new Error("No tool call in AI response");
-  return JSON.parse(toolCall.function.arguments) as DraftResult;
+  const raw = await readResponsesSSE(resp);
+  const parsed = JSON.parse(raw) as DraftResult;
+  if (!parsed?.title || !parsed?.content) throw new Error("AI returned an incomplete post");
+  return parsed;
 }
+
+const slugify = (s: string) =>
+  s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").slice(0, 80);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -205,22 +250,18 @@ Deno.serve(async (req) => {
       (p) => `${p.title} ${(p.content || "").slice(0, 3000)}`.toLowerCase(),
     );
 
-    const covered = TOPICS.filter((t) => haystack.some((h) => h.includes(t.keyword)));
     const open = TOPICS.filter((t) => !haystack.some((h) => h.includes(t.keyword)));
 
-    // Rotate through open topics so each night writes something new; if every
-    // topic has been used once, start a second pass with fresh angles.
-    const offset = posts.length % Math.max(open.length, 1);
-    const chosen = (open.length >= MAX_DRAFTS_PER_RUN ? open : TOPICS)
-      .slice(offset)
-      .concat(open.length >= MAX_DRAFTS_PER_RUN ? open : TOPICS)
-      .slice(0, MAX_DRAFTS_PER_RUN);
+    // Rotate through open topics so each night writes something new; once every
+    // topic has been used, the pool resets and angles get rewritten.
+    const pool = open.length >= MAX_DRAFTS_PER_RUN ? open : TOPICS;
+    const offset = posts.length % pool.length;
+    const chosen = pool.slice(offset).concat(pool).slice(0, MAX_DRAFTS_PER_RUN);
 
     const results: { title: string; slug: string; ok: boolean; error?: string }[] = [];
     for (const topic of chosen) {
       try {
         const draft = await generateDraft(topic, posts.map((p) => p.title), Deno.env.get("LOVABLE_API_KEY")!);
-        if (!draft.title?.trim() || !draft.content?.trim()) throw new Error("AI returned empty content");
 
         let slug = slugify(draft.title);
         const { data: slugTaken } = await supabase
@@ -255,12 +296,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    const saved = results.filter((r) => r.ok).length;
     return new Response(
       JSON.stringify({
         ok: true,
-        drafts_saved: saved,
-        topics_pool_open: open.length,
+        drafts_saved: results.filter((r) => r.ok).length,
+        topics_left: open.length,
         results,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
