@@ -31,6 +31,22 @@ interface Store {
   is_open: boolean | null;
 }
 
+interface FeaturedProduct {
+  id: string;
+  name: string;
+  size: string | null;
+  price: number;
+  image_url: string | null;
+  category: string;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  beer: "Beer", wine: "Wine", spirits: "Spirits", coolers: "Coolers",
+  ciders: "Ciders", seltzers: "Seltzers", smokes: "Smokes & Vapes",
+  mixers: "Mixers", snacks: "Snacks", grocery: "Grocery",
+};
+const labelFor = (c: string) => CATEGORY_LABELS[c] || c.charAt(0).toUpperCase() + c.slice(1).replace(/_/g, " ");
+
 const REGINA_NEIGHBORHOODS = [
   "Cathedral", "Harbour Landing", "Lakeview", "The Crescents", "Albert Park",
   "Hillsdale", "Whitmore Park", "Eastview", "Glencairn", "Walsh Acres",
@@ -42,6 +58,8 @@ const StorePage = () => {
   const { isOpen: isStoreOpen } = useStoreOpenNow();
   const [store, setStore] = useState<Store | null>(null);
   const [productCount, setProductCount] = useState(0);
+  const [featured, setFeatured] = useState<FeaturedProduct[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -55,12 +73,32 @@ const StorePage = () => {
         .maybeSingle();
       if (!data) { setNotFound(true); setLoading(false); return; }
       setStore(data as Store);
-      const { count } = await supabase
-        .from("products")
-        .select("id", { count: "exact", head: true })
-        .eq("store_id", data.id)
-        .eq("is_hidden", false);
+      const [{ count }, { data: prods }] = await Promise.all([
+        supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .eq("store_id", data.id)
+          .eq("is_hidden", false),
+        supabase
+          .from("products")
+          .select("id,name,size,price,image_url,category")
+          .eq("store_id", data.id)
+          .eq("is_hidden", false)
+          .order("display_order", { ascending: true })
+          .limit(1000),
+      ]);
       setProductCount(count || 0);
+      const list = (prods || []) as FeaturedProduct[];
+      const counts: Record<string, number> = {};
+      const seen = new Set<string>();
+      const picks: FeaturedProduct[] = [];
+      for (const p of list) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+        const key = p.name.toLowerCase();
+        if (!seen.has(key) && picks.length < 12) { seen.add(key); picks.push(p); }
+      }
+      setCategoryCounts(counts);
+      setFeatured(picks);
       setLoading(false);
     })();
   }, [slug]);
