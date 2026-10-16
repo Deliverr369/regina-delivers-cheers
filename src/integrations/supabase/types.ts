@@ -257,6 +257,48 @@ export type Database = {
         }
         Relationships: []
       }
+      gsc_url_status: {
+        Row: {
+          coverage_state: string | null
+          google_canonical: string | null
+          id: string
+          indexing_state: string | null
+          inspected_at: string
+          last_crawl_time: string | null
+          page_fetch_state: string | null
+          robots_txt_state: string | null
+          url: string
+          user_canonical: string | null
+          verdict: string | null
+        }
+        Insert: {
+          coverage_state?: string | null
+          google_canonical?: string | null
+          id?: string
+          indexing_state?: string | null
+          inspected_at?: string
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          robots_txt_state?: string | null
+          url: string
+          user_canonical?: string | null
+          verdict?: string | null
+        }
+        Update: {
+          coverage_state?: string | null
+          google_canonical?: string | null
+          id?: string
+          indexing_state?: string | null
+          inspected_at?: string
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          robots_txt_state?: string | null
+          url?: string
+          user_canonical?: string | null
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       image_match_jobs: {
         Row: {
           batch_size: number
