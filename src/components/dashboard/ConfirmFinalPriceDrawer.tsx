@@ -118,6 +118,19 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
     }
     setCapturing(true);
     try {
+      // Re-check: a previous tap (e.g. on a slow phone connection) may have
+      // already charged the card even if the screen showed an error.
+      const { data: fresh } = await supabase
+        .from("orders")
+        .select("payment_status")
+        .eq("id", order.id)
+        .maybeSingle();
+      if (fresh?.payment_status === "captured") {
+        toast({ title: "Already charged", description: "This order's payment was already captured — nothing more to do." });
+        onCaptured?.();
+        onOpenChange(false);
+        return;
+      }
       const oldTotal = Number(order.final_total ?? order.estimated_total ?? order.total);
       if (newTotal !== oldTotal) {
         await supabase.from("order_price_adjustments").insert([
