@@ -40,6 +40,7 @@ const contentMenu = [
   { title: "Blog Posts", url: "/dashboard/blog", icon: FileText },
   { title: "Push Test", url: "/dashboard/push-test", icon: Bell },
   { title: "Text Message Log", url: "/dashboard/sms-log", icon: MessageSquare },
+  { title: "Search Console", url: "/dashboard/search-console", icon: Globe },
   { title: "Security", url: "/dashboard/security", icon: ShieldCheck },
 ];
 
