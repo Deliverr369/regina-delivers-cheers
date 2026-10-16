@@ -33,6 +33,22 @@ const NEIGHBORHOODS: Record<string, Hood> = {
   "argyle-park": { name: "Argyle Park", blurb: "Same-day service throughout Argyle Park.", nearby: ["Walsh Acres", "Normanview", "North Central"], quadrant: "north-west Regina" },
   "wood-meadows": { name: "Wood Meadows", blurb: "Doorstep delivery across Wood Meadows.", nearby: ["Glencairn", "East End", "Eastview"], quadrant: "east Regina" },
   "greens-on-gardiner": { name: "Greens on Gardiner", blurb: "Quick delivery to Greens on Gardiner and The Towns.", nearby: ["East End", "Wood Meadows", "Glencairn"], quadrant: "south-east Regina" },
+  rosemont: { name: "Rosemont", blurb: "Delivery to Rosemont homes between Dewdney Avenue and 9th Avenue North.", nearby: ["Mount Royal", "Dieppe", "North Central"], quadrant: "north-west Regina" },
+  "mount-royal": { name: "Mount Royal", blurb: "Same-day delivery across Mount Royal near McCarthy Boulevard.", nearby: ["Rosemont", "Normanview", "Dieppe"], quadrant: "north-west Regina" },
+  dieppe: { name: "Dieppe", blurb: "Fast delivery to Dieppe and the Regina Avenue West area.", nearby: ["Rosemont", "Westhill", "Mount Royal"], quadrant: "west Regina" },
+  westhill: { name: "Westhill", blurb: "Doorstep delivery across Westhill and Westhill Park.", nearby: ["Dieppe", "Kensington Greens", "Rosemont"], quadrant: "west Regina" },
+  "kensington-greens": { name: "Kensington Greens", blurb: "Delivery to the newer Kensington Greens homes off Dewdney Avenue West.", nearby: ["Westhill", "Fairways West", "Dieppe"], quadrant: "west Regina" },
+  "fairways-west": { name: "Fairways West", blurb: "Quick delivery to Fairways West near the golf course.", nearby: ["Kensington Greens", "Westhill", "Dieppe"], quadrant: "west Regina" },
+  "regent-park": { name: "Regent Park", blurb: "Same-day delivery throughout Regent Park.", nearby: ["Coronation Park", "Rochdale Park", "Walsh Acres"], quadrant: "north Regina" },
+  "coronation-park": { name: "Coronation Park", blurb: "Delivery across Coronation Park, north of downtown.", nearby: ["Regent Park", "Uplands", "North Central"], quadrant: "north Regina" },
+  "rochdale-park": { name: "Rochdale Park", blurb: "Fast delivery to Rochdale Park off Rochdale Boulevard.", nearby: ["Walsh Acres", "Regent Park", "Argyle Park"], quadrant: "north-west Regina" },
+  "al-ritchie": { name: "Al Ritchie", blurb: "Delivery to Al Ritchie homes near the Exhibition grounds.", nearby: ["Boothill", "Heritage", "Eastview"], quadrant: "central Regina" },
+  heritage: { name: "Heritage", blurb: "Same-day delivery throughout the Heritage neighbourhood.", nearby: ["Al Ritchie", "Downtown", "Eastview"], quadrant: "central Regina" },
+  boothill: { name: "Boothill", blurb: "Quick delivery to Boothill, east of the Wascana area.", nearby: ["Al Ritchie", "Arcola East", "Lakeview"], quadrant: "south-central Regina" },
+  "arcola-east": { name: "Arcola East", blurb: "Delivery along the Arcola Avenue corridor and Arcola East homes.", nearby: ["University Park", "Boothill", "Windsor Park"], quadrant: "east Regina" },
+  "university-park": { name: "University Park", blurb: "Fast delivery to University Park in Regina's east end.", nearby: ["Arcola East", "Windsor Park", "Glencairn"], quadrant: "east Regina" },
+  "windsor-park": { name: "Windsor Park", blurb: "Same-day service across Windsor Park.", nearby: ["University Park", "Arcola East", "Wood Meadows"], quadrant: "east Regina" },
+  "parliament-place": { name: "Parliament Place", blurb: "Delivery to Parliament Place near Parliament Avenue and the Lewvan.", nearby: ["Hillsdale", "Whitmore Park", "Harbour Landing"], quadrant: "south Regina" },
 };
 
 const ReginaLanding = () => {
