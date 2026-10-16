@@ -91,12 +91,12 @@ const HeroSection = () => {
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white mb-5 leading-[1.1] drop-shadow-lg">
-            Beer, Wine & Spirits
+            Liquor Delivery in Regina
             <span className="block text-primary drop-shadow-md">Delivered Fast</span>
           </h1>
 
           <p className="text-lg md:text-xl text-white/90 mb-10 max-w-xl mx-auto leading-relaxed drop-shadow">
-            Order from Regina's top liquor stores and get it delivered to your door in under 60 minutes — at store prices.
+            Beer, wine, spirits and smokes from Regina's local liquor stores, delivered to your door — at store prices.
           </p>
 
           <form onSubmit={handleSubmit} className="max-w-lg mx-auto mb-12">

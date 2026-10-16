@@ -165,6 +165,9 @@ const App = () => (
                 <Route path="/vape-stores-regina" element={<StoreDirectoryLanding />} />
                 <Route path="/vape-stores-regina/:slug" element={<StoreCategoryDetail category="vape" />} />
                 <Route path="/spirits-stores-regina" element={<StoreDirectoryLanding />} />
+                <Route path="/liquor-stores-regina" element={<StoreDirectoryLanding />} />
+                <Route path="/liquor-stores-regina/:slug" element={<StoreCategoryDetail category="spirits" />} />
+                <Route path="/cigarette-delivery-regina" element={<CategoryLanding />} />
                 <Route path="/spirits-stores-regina/:slug" element={<StoreCategoryDetail category="spirits" />} />
                 <Route path="/offers/weekly-deals" element={<OffersWeeklyDeals />} />
 
