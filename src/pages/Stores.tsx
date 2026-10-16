@@ -527,7 +527,24 @@ const Stores = () => {
                       </span>
                     )}
 
-                    <div className="flex items-center justify-between gap-2 mt-auto text-[11px] text-muted-foreground sm:pt-3 sm:border-t sm:border-border/60">
+                    <div className="mt-auto space-y-0.5">
+                      <div className="flex items-center gap-1 text-muted-foreground text-[10px] sm:text-xs font-medium">
+                        <Truck className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                        <span className="truncate">
+                          {Number(store.delivery_fee) === 0
+                            ? "Free delivery"
+                            : `$${Number(store.delivery_fee).toFixed(2)} delivery · Free over $50`}
+                        </span>
+                      </div>
+                      {store.hours && (
+                        <div className="hidden sm:flex items-center gap-1 text-muted-foreground text-xs font-medium">
+                          <Clock className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{store.hours}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground sm:pt-3 sm:border-t sm:border-border/60">
                       <div className="flex items-center gap-1">
                         <Star className="fill-gold text-gold h-3 w-3 sm:h-[15px] sm:w-[15px]" />
                         <span className="font-semibold text-foreground text-[11px] sm:text-sm">{store.rating}</span>
