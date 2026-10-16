@@ -174,7 +174,14 @@ const App = () => (
 
                 {/* Legacy ranked URLs — redirect so Google rankings and old links keep working */}
                 <Route path="/city/regina/liquor" element={<Navigate to="/liquor-delivery-regina" replace />} />
-                <Route path="/city/regina/liquor/store/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/liquor/store/sobeys-liquor-rochdale-55" element={<Navigate to="/liquor-stores/sobeys-liquor" replace />} />
+                <Route path="/city/regina/liquor/store/sobeys-liquor-northgate-mall-671" element={<Navigate to="/liquor-stores/sobeys-liquor" replace />} />
+                <Route path="/city/regina/liquor/store/sobeys-liquor-southland-mall-63" element={<Navigate to="/liquor-stores/sobeys-liquor" replace />} />
+                <Route path="/city/regina/liquor/store/willow-park-664" element={<Navigate to="/liquor-stores/willow-park-wine-spirits" replace />} />
+                <Route path="/city/regina/liquor/store/list" element={<Navigate to="/liquor-stores-regina" replace />} />
+                <Route path="/city/regina/liquor/store/*" element={<Navigate to="/liquor-stores-regina" replace />} />
+                <Route path="/about-us" element={<Navigate to="/about" replace />} />
+                <Route path="/contact-us" element={<Navigate to="/help" replace />} />
                 <Route path="/city/regina/grocery" element={<Navigate to="/grocery-delivery-regina" replace />} />
                 <Route path="/city/regina/grocery/store/list" element={<Navigate to="/stores" replace />} />
                 <Route path="/city/regina/grocery/store/*" element={<Navigate to="/stores" replace />} />
