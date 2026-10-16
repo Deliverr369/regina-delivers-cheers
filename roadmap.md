@@ -26,4 +26,5 @@
 - [x] Create Regina cigarette delivery landing page
 - [x] Add delivery pages for uncovered Regina neighbourhoods
 - [x] Two blog posts targeting 'liquor delivery near me' (Regina)
-- [x] Daily auto blog posts — decision made 2026-10-16: NO auto-publish. Cron writes 2 drafts nightly (blog-drafts-daily, midnight Regina); owner approves in Dashboard Blog; approving publishes and re-submits the sitemap via submit-sitemap function
+- [x] Daily auto blog posts — decision made 2026-10-16: NO auto-publish. Cron writes 2 drafts nightly (blog-drafts-daily, midnight Regina); owner approves in Dashboard Blog; approving publishes and re-submits the sitemap via submit-sitemap function. Tested live — writer refuses-stub fixed with framing note + 500-word guard + one retry; two real drafts now awaiting review.
+- [ ] GSC page-indexing cleanup: Soft 404 (66) / Not found (33) mostly legacy /city/* URLs crawled 2026-10-12 before redirects went live — will fade on recrawl; user should click "Validate fix" in Search Console on those rows. Noindex (6) unidentified — check GSC URL list. Crawled/Discovered-not-indexed (53/45) = new pages queueing, normal for a young site.
