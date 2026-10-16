@@ -71,14 +71,21 @@ Deno.serve(async (req) => {
     // (live orders can be captured from the test-mode preview and vice versa),
     // so fall back to the other environment when the intent isn't found.
     const envOrder: StripeEnv[] = env === "live" ? ["live", "sandbox"] : ["sandbox", "live"];
-    let captured;
+    let captured: any;
     let lastErr: unknown = null;
     for (const tryEnv of envOrder) {
       try {
         const stripe = createStripeClient(tryEnv);
-        captured = await stripe.paymentIntents.capture(order.stripe_payment_intent_id, {
-          amount_to_capture: amountToCapture,
-        });
+        // Idempotent: if a previous attempt already charged the card (e.g. the
+        // phone lost connection before seeing the result), don't fail — sync it.
+        const existing = await stripe.paymentIntents.retrieve(order.stripe_payment_intent_id);
+        if (existing.status === "succeeded") {
+          captured = existing;
+        } else {
+          captured = await stripe.paymentIntents.capture(order.stripe_payment_intent_id, {
+            amount_to_capture: amountToCapture,
+          });
+        }
         break;
       } catch (err) {
         const e = err as any;
@@ -97,18 +104,21 @@ Deno.serve(async (req) => {
       }, 409);
     }
 
+    // Always record what Stripe actually charged, so records match the card statement.
+    const chargedAmount = Number(captured.amount_received ?? amountToCapture) / 100;
+
     await supabase
       .from("orders")
       .update({
         payment_status: "captured",
-        final_total: finalTotal,
+        final_total: chargedAmount,
         final_confirmed_at: new Date().toISOString(),
         final_confirmed_by: userData.user.id,
-        total: finalTotal,
+        total: chargedAmount,
       })
       .eq("id", orderId);
 
-    return json({ success: true, paymentIntent: captured.id, captured: amountToCapture / 100 });
+    return json({ success: true, paymentIntent: captured.id, captured: chargedAmount });
   } catch (e) {
     console.error("capture-payment error:", e);
     return json({ error: e instanceof Error ? e.message : String(e) }, 500);
