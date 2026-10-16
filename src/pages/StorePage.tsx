@@ -31,6 +31,22 @@ interface Store {
   is_open: boolean | null;
 }
 
+interface FeaturedProduct {
+  id: string;
+  name: string;
+  size: string | null;
+  price: number;
+  image_url: string | null;
+  category: string;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  beer: "Beer", wine: "Wine", spirits: "Spirits", coolers: "Coolers",
+  ciders: "Ciders", seltzers: "Seltzers", smokes: "Smokes & Vapes",
+  mixers: "Mixers", snacks: "Snacks", grocery: "Grocery",
+};
+const labelFor = (c: string) => CATEGORY_LABELS[c] || c.charAt(0).toUpperCase() + c.slice(1).replace(/_/g, " ");
+
 const REGINA_NEIGHBORHOODS = [
   "Cathedral", "Harbour Landing", "Lakeview", "The Crescents", "Albert Park",
   "Hillsdale", "Whitmore Park", "Eastview", "Glencairn", "Walsh Acres",
@@ -42,6 +58,8 @@ const StorePage = () => {
   const { isOpen: isStoreOpen } = useStoreOpenNow();
   const [store, setStore] = useState<Store | null>(null);
   const [productCount, setProductCount] = useState(0);
+  const [featured, setFeatured] = useState<FeaturedProduct[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -55,12 +73,32 @@ const StorePage = () => {
         .maybeSingle();
       if (!data) { setNotFound(true); setLoading(false); return; }
       setStore(data as Store);
-      const { count } = await supabase
-        .from("products")
-        .select("id", { count: "exact", head: true })
-        .eq("store_id", data.id)
-        .eq("is_hidden", false);
+      const [{ count }, { data: prods }] = await Promise.all([
+        supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .eq("store_id", data.id)
+          .eq("is_hidden", false),
+        supabase
+          .from("products")
+          .select("id,name,size,price,image_url,category")
+          .eq("store_id", data.id)
+          .eq("is_hidden", false)
+          .order("display_order", { ascending: true })
+          .limit(1000),
+      ]);
       setProductCount(count || 0);
+      const list = (prods || []) as FeaturedProduct[];
+      const counts: Record<string, number> = {};
+      const seen = new Set<string>();
+      const picks: FeaturedProduct[] = [];
+      for (const p of list) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+        const key = p.name.toLowerCase();
+        if (!seen.has(key) && picks.length < 12) { seen.add(key); picks.push(p); }
+      }
+      setCategoryCounts(counts);
+      setFeatured(picks);
       setLoading(false);
     })();
   }, [slug]);
@@ -75,14 +113,16 @@ const StorePage = () => {
     );
   }
 
+  // Never publish a non-Regina address (e.g. a stale saved address) on a Regina store page.
+  const address = /regina/i.test(store.address || "") ? store.address : "Regina, SK";
   const url = `https://deliverr.ca/liquor-stores/${store.slug}`;
   const title = `${store.name} Regina | Delivery, Hours & Address | Deliverr`;
-  const description = `Order ${store.name} delivery in Regina, SK. Hours: ${store.hours}. Address: ${store.address}. Same-day delivery in ${store.delivery_time || "30-45 min"}.`;
+  const description = `Order ${store.name} delivery in Regina, SK. Hours: ${store.hours}. Address: ${address}. Same-day delivery in ${store.delivery_time || "30-45 min"}.`;
 
   // ---- LocalBusiness + BreadcrumbList JSON-LD ------------------------------
   // Construction lives in ./storePageJsonLd so the structured-data shape can
   // be unit-tested (and snapshotted) without rendering the full React tree.
-  const localBusiness = buildLocalBusinessJsonLd(store);
+  const localBusiness = buildLocalBusinessJsonLd({ ...store, address });
   const breadcrumb = buildBreadcrumbJsonLd(store);
 
   // Neighborhoods with dedicated landing pages — used to deep-link FAQ answers
@@ -124,7 +164,7 @@ const StorePage = () => {
   // to neighborhood pages; the plain `a` string remains the canonical content
   // used in the FAQPage JSON-LD so structured data stays in sync.
   const neighborhoodAnswerText = `We deliver from ${store.name} to every Regina neighborhood — ${NEIGHBORHOOD_LINKS.map(n => n.label).slice(0, -1).join(", ")} and ${NEIGHBORHOOD_LINKS[NEIGHBORHOOD_LINKS.length - 1].label}. Visit any neighborhood page above for area-specific delivery details.`;
-  const locationAnswerText = `${store.name} is located at ${store.address}, Regina, SK. Deliverr drivers pick up here and deliver across Regina including Downtown, Cathedral, Harbour Landing and Lakeview.`;
+  const locationAnswerText = `${store.name} is located at ${address}. Deliverr drivers pick up here and deliver across Regina including Downtown, Cathedral, Harbour Landing and Lakeview.`;
   const speedAnswerText = `${store.name} orders typically arrive in ${store.delivery_time || "30 to 60 minutes"} after checkout, depending on store hours, traffic and which Regina neighborhood (Downtown, Cathedral, Harbour Landing, Lakeview, Eastview, North Central or South End) you're in.`;
 
   const { items: faqs, jsonLd: faqJsonLd } = validateFaqs(
@@ -154,7 +194,7 @@ const StorePage = () => {
         a: locationAnswerText,
         aNode: (
           <>
-            {store.name} is located at {store.address}, Regina, SK. Deliverr drivers pick up here and
+            {store.name} is located at {address}. Deliverr drivers pick up here and
             deliver across Regina including{" "}
             <Link to="/delivery/regina/downtown" className="text-primary underline-offset-2 hover:underline">Downtown</Link>,{" "}
             <Link to="/delivery/regina/cathedral" className="text-primary underline-offset-2 hover:underline">Cathedral</Link>,{" "}
@@ -267,7 +307,7 @@ const StorePage = () => {
                 <CardContent className="p-5">
                   <MapPin className="h-6 w-6 text-primary mb-2" />
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Address</p>
-                  <p className="font-semibold text-sm">{store.address}</p>
+                  <p className="font-semibold text-sm">{address}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -294,7 +334,7 @@ const StorePage = () => {
           <div className="container max-w-3xl mx-auto px-4">
             <h2 className="text-3xl font-bold font-heading mb-4">About {store.name} Regina</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              {store.name} at {store.address} is one of Regina's trusted retailers, available for same-day delivery through Deliverr.
+              {store.name} at {address} is one of Regina's trusted retailers, available for same-day delivery through Deliverr.
               Browse the full catalog, add items to your cart, and we'll have your order at your door in {store.delivery_time || "under an hour"}.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -303,6 +343,40 @@ const StorePage = () => {
             </p>
           </div>
         </section>
+
+        {/* Available products */}
+        {featured.length > 0 && (
+          <section className="py-12">
+            <div className="container max-w-5xl mx-auto px-4">
+              <h2 className="text-3xl font-bold font-heading mb-2">Products available from {store.name}</h2>
+              <p className="text-muted-foreground mb-4">
+                {productCount} products from {store.name} can be delivered in Regina today.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]).map(([c, n]) => (
+                  <Badge key={c} variant="secondary">{labelFor(c)} · {n}</Badge>
+                ))}
+              </div>
+              <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {featured.map((p) => (
+                  <li key={p.id}>
+                    <Link to={`/product/${p.id}`} className="block h-full border rounded-lg p-3 hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      {p.image_url && (
+                        <img src={p.image_url} alt={`${p.name}${p.size ? ` ${p.size}` : ""} from ${store.name} Regina`} loading="lazy" className="h-24 w-full object-contain mb-2 bg-card rounded" />
+                      )}
+                      <p className="text-sm font-semibold line-clamp-2">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.size || ""}</p>
+                      <p className="text-sm font-bold mt-1">${Number(p.price).toFixed(2)}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <div className="text-center mt-6">
+                <Button asChild variant="outline"><Link to={`/stores/${store.id}`}>See all {productCount} products</Link></Button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Delivery Coverage */}
         <section className="py-12">
