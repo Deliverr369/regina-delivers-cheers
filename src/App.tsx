@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LegacyRedirect from "@/components/seo/LegacyRedirect";
 import { Loader2 } from "lucide-react";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -179,15 +180,15 @@ const App = () => (
                 <Route path="/city/regina/liquor/store/sobeys-liquor-southland-mall-63" element={<Navigate to="/liquor-stores/sobeys-liquor" replace />} />
                 <Route path="/city/regina/liquor/store/willow-park-664" element={<Navigate to="/liquor-stores/willow-park-wine-spirits" replace />} />
                 <Route path="/city/regina/liquor/store/list" element={<Navigate to="/liquor-stores-regina" replace />} />
-                <Route path="/city/regina/liquor/store/*" element={<Navigate to="/liquor-stores-regina" replace />} />
+                <Route path="/city/regina/liquor/store/*" element={<LegacyRedirect />} />
                 <Route path="/about-us" element={<Navigate to="/about" replace />} />
                 <Route path="/contact-us" element={<Navigate to="/help" replace />} />
                 <Route path="/city/regina/grocery" element={<Navigate to="/grocery-delivery-regina" replace />} />
                 <Route path="/city/regina/grocery/store/list" element={<Navigate to="/stores" replace />} />
-                <Route path="/city/regina/grocery/store/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/regina/grocery/store/*" element={<LegacyRedirect />} />
                 <Route path="/city/regina/takeout" element={<Navigate to="/stores" replace />} />
-                <Route path="/city/*/liquor" element={<Navigate to="/liquor-delivery-regina" replace />} />
-                <Route path="/city/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/*" element={<LegacyRedirect />} />
+                <Route path="/brands/*" element={<LegacyRedirect />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
