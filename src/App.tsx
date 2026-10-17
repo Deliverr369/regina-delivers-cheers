@@ -186,8 +186,8 @@ const App = () => (
                 <Route path="/city/regina/grocery/store/list" element={<Navigate to="/stores" replace />} />
                 <Route path="/city/regina/grocery/store/*" element={<Navigate to="/stores" replace />} />
                 <Route path="/city/regina/takeout" element={<Navigate to="/stores" replace />} />
-                <Route path="/city/*/liquor" element={<Navigate to="/liquor-delivery-regina" replace />} />
-                <Route path="/city/*" element={<Navigate to="/stores" replace />} />
+                <Route path="/city/*" element={<LegacyRedirect />} />
+                <Route path="/brands/*" element={<LegacyRedirect />} />
 
                 {/* Admin Dashboard */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
