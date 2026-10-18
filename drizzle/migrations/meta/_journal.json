@@ -36,6 +36,13 @@
       "when": 1792121687236,
       "tag": "0004_create_gsc_url_status",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792344206008,
+      "tag": "0005_blg_articles",
+      "breakpoints": true
     }
   ]
 }
