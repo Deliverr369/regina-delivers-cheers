@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { Loader2, ArrowLeft, Calendar, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DOMPurify from "dompurify";
+import BlgArticleView, { type BlgArticle } from "@/components/blog/BlgArticleView";
 
 interface Post {
   id: string;
@@ -74,23 +75,25 @@ const renderMarkdown = (md: string) => {
 const BlogPost = () => {
   const { slug } = useParams();
   const [post, setPost] = useState<Post | null>(null);
+  const [blg, setBlg] = useState<BlgArticle | null>(null);
+  const [redirectSlug, setRedirectSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [related, setRelated] = useState<{ slug: string; title: string; excerpt: string | null }[]>([]);
 
   useEffect(() => {
     if (!slug) return;
-    supabase
-      .from("blog_posts")
-      .select("*")
-      .eq("slug", slug)
-      .eq("published", true)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) setNotFound(true);
-        else setPost(data as Post);
-        setLoading(false);
-      });
+    setLoading(true); setNotFound(false); setPost(null); setBlg(null); setRedirectSlug(null);
+    (async () => {
+      const { data: a } = await supabase.from("blg_articles").select("*").eq("slug", slug).maybeSingle();
+      if (a) { setBlg(a as BlgArticle); setLoading(false); return; }
+      const { data: p } = await supabase.from("blog_posts").select("*").eq("slug", slug).eq("published", true).maybeSingle();
+      if (p) { setPost(p as Post); setLoading(false); return; }
+      const { data: old } = await supabase.from("blg_articles").select("slug").contains("previous_slugs", [slug]).limit(1).maybeSingle();
+      if (old) setRedirectSlug(old.slug);
+      else setNotFound(true);
+      setLoading(false);
+    })();
   }, [slug]);
 
   useEffect(() => {
@@ -111,7 +114,20 @@ const BlogPost = () => {
       });
   }, [post]);
 
+  if (redirectSlug) return <Navigate to={`/blog/${redirectSlug}`} replace />;
   if (notFound) return <Navigate to="/blog" replace />;
+
+  if (blg) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container max-w-3xl mx-auto px-4 py-10">
+          <BlgArticleView article={blg} />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

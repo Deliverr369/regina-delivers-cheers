@@ -16,6 +16,7 @@ interface Post {
   cover_image: string | null;
   author: string | null;
   published_at: string | null;
+  lang?: string | null;
 }
 
 const Blog = () => {
@@ -23,15 +24,32 @@ const Blog = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("blog_posts")
-      .select("id, slug, title, excerpt, cover_image, author, published_at")
-      .eq("published", true)
-      .order("published_at", { ascending: false })
-      .then(({ data }) => {
-        setPosts(data || []);
-        setLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from("blog_posts")
+        .select("id, slug, title, excerpt, cover_image, author, published_at")
+        .eq("published", true),
+      supabase
+        .from("blg_articles")
+        .select("id, slug, title, meta_description, hero_image_url, language_code, article_created_at"),
+    ]).then(([own, blg]) => {
+      const a: Post[] = own.data || [];
+      const b: Post[] = (blg.data || []).map((r) => ({
+        id: `blg-${r.id}`,
+        slug: r.slug,
+        title: r.title,
+        excerpt: r.meta_description,
+        cover_image: r.hero_image_url,
+        author: null,
+        published_at: r.article_created_at,
+        lang: r.language_code,
+      }));
+      const all = [...b, ...a].sort(
+        (x, y) => new Date(y.published_at || 0).getTime() - new Date(x.published_at || 0).getTime()
+      );
+      setPosts(all);
+      setLoading(false);
+    });
   }, []);
 
   return (
@@ -64,7 +82,7 @@ const Blog = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
             {posts.map((p) => (
-              <Link key={p.id} to={`/blog/${p.slug}`}>
+              <Link key={p.id} to={`/blog/${p.slug}`} lang={p.lang || undefined}>
                 <Card className="h-full hover:border-primary transition-colors overflow-hidden">
                   {p.cover_image && (
                     <img src={p.cover_image} alt={p.title} className="w-full h-48 object-cover" loading="lazy" />
