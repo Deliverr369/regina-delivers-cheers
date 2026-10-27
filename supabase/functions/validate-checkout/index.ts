@@ -1,3 +1,4 @@
+import { computeFees, holdAmount, BUFFER_PCT } from "../_shared/pricing.ts";
 // supabase/functions/validate-checkout/index.ts
 // Server-side re-validation before order creation.
 // Validates: cart items belong to the chosen store, prices match the DB,
@@ -27,9 +28,6 @@ const getDeliveryFee = (storeName: string): number => {
   return 7;
 };
 
-const CONVENIENCE_PCT = 0.12;
-const TAX_PCT = 0.05; // tax on delivery fees only
-const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 const LEAD_TIME_MS = 60 * 60 * 1000;
 
 interface ItemIn {
@@ -348,10 +346,9 @@ Deno.serve(async (req) => {
     }
     subtotal = round2(subtotal);
     deliveryFee = round2(deliveryFee);
-    const convenienceFee = round2(subtotal * CONVENIENCE_PCT);
-    const tax = round2(deliveryFee * TAX_PCT);
+    const { convenienceFee, tax } = computeFees(subtotal, deliveryFee);
     const estimatedTotal = round2(subtotal + deliveryFee + convenienceFee + tax + tip);
-    const authorizedAmount = round2(estimatedTotal * (1 + BUFFER_PCT));
+    const authorizedAmount = holdAmount(estimatedTotal);
 
     return json(200, {
       ok: true,
