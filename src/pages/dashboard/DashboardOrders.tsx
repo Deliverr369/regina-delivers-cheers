@@ -444,7 +444,7 @@ const DashboardOrders = () => {
                           {order.delivery_address}{order.delivery_city ? `, ${order.delivery_city}` : ""}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Placed {new Date(order.created_at).toLocaleString()} · {order.payment_method || "card"}
+                          Placed {new Date(order.created_at).toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
