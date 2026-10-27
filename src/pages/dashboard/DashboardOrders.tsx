@@ -436,12 +436,15 @@ const DashboardOrders = () => {
                             <DollarSign className="h-3 w-3 mr-0.5 inline" />
                             {order.payment_status || "pending"}
                           </Badge>
+                          <Badge variant={order.payment_method === "cod" ? "default" : "secondary"} className="text-xs">
+                            {order.payment_method === "cod" ? "Pay at the door" : "Card"}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1.5 truncate">
                           {order.delivery_address}{order.delivery_city ? `, ${order.delivery_city}` : ""}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Placed {new Date(order.created_at).toLocaleString()} · {order.payment_method || "card"}
+                          Placed {new Date(order.created_at).toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
