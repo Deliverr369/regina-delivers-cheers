@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { stripeEnv } from "@/lib/stripeEnv";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { computeFees } from "@/lib/pricing";
 
 interface OrderRow {
   id: string;
@@ -81,14 +82,16 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
   // top of items + tax + fees (less any discount). It stays exactly as the
   // customer chose.
   const estimatedTotal = round2(order?.estimated_total || order?.total || 0);
-  const deliveryTax = round2(deliveryFee * 0.05);
   const estimatedSubtotal = round2(order?.estimated_subtotal ?? order?.subtotal ?? 0);
+  // Orders placed before the 15% item tax only carried 5% delivery tax.
+  const storedTax = round2((order as any)?.tax ?? 0);
+  const legacy = storedTax <= round2(deliveryFee * 0.05) + 0.01;
+  const est = computeFees(estimatedSubtotal, deliveryFee);
+  const estTax = legacy ? storedTax : est.tax;
+  const estConv = legacy ? convenienceFee : est.convenienceFee;
   const tip = Math.max(
     0,
-    round2(
-      estimatedTotal -
-        (estimatedSubtotal + deliveryTax + deliveryFee + convenienceFee - discount),
-    ),
+    round2(estimatedTotal - (estimatedSubtotal + estTax + deliveryFee + estConv - discount)),
   );
 
   const receiptAmount = (() => {
@@ -96,11 +99,14 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
     return isNaN(v) ? 0 : round2(v);
   })();
 
-  // Each line is added exactly once: receipt (items incl. their own tax),
-  // delivery, 5% tax on delivery only, service fee, tip, minus any discount.
-  const newTotal = round2(
-    receiptAmount + deliveryFee + deliveryTax + convenienceFee + tip - discount,
-  );
+  // Receipt is the pre-tax item total; tax and service fee are recalculated on it.
+  const fin = legacy
+    ? { tax: round2(deliveryFee * 0.05), convenienceFee, productTax: 0, deliveryTax: round2(deliveryFee * 0.05) }
+    : computeFees(receiptAmount, deliveryFee);
+  const finalConv = fin.convenienceFee;
+  const productTax = fin.productTax;
+  const deliveryTax = fin.deliveryTax;
+  const newTotal = round2(receiptAmount + deliveryFee + fin.tax + finalConv + tip - discount);
   const authorized = Number(order?.authorized_amount || 0);
   const exceedsAuth = authorized > 0 && newTotal > authorized;
   const variancePct = estimatedTotal > 0 ? ((newTotal - estimatedTotal) / estimatedTotal) * 100 : 0;
@@ -148,6 +154,8 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
         .update({
           final_subtotal: receiptAmount,
           final_total: newTotal,
+          tax: fin.tax,
+          convenience_fee: finalConv,
           total: newTotal,
           ...(isCod ? { payment_status: "captured" } : {}),
         })
@@ -245,23 +253,29 @@ export function ConfirmFinalPriceDrawer({ orderId, open, onOpenChange, onCapture
             {/* Totals */}
             <div className="rounded-lg border p-4 space-y-1.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Receipt total (incl. tax)</span>
+                <span className="text-muted-foreground">Receipt items (before tax)</span>
                 <span>${receiptAmount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Delivery</span>
                 <span>${deliveryFee.toFixed(2)}</span>
               </div>
+              {productTax > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax (15% items)</span>
+                  <span>${productTax.toFixed(2)}</span>
+                </div>
+              )}
               {deliveryTax > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax (delivery)</span>
                   <span>${deliveryTax.toFixed(2)}</span>
                 </div>
               )}
-              {convenienceFee > 0 && (
+              {finalConv > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Service fee</span>
-                  <span>${convenienceFee.toFixed(2)}</span>
+                  <span>${finalConv.toFixed(2)}</span>
                 </div>
               )}
               {tip > 0 && (

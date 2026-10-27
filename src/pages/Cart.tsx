@@ -145,7 +145,7 @@ const Cart = () => {
                       <span className="tabular-nums shrink-0">−${discount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span className="tabular-nums shrink-0">${convenienceFee.toFixed(2)}</span></div>
+                  <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Convenience Fee (11%)</span><span className="tabular-nums shrink-0">${convenienceFee.toFixed(2)}</span></div>
                   <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Tax (15% items, 5% delivery)</span><span className="tabular-nums shrink-0">${tax.toFixed(2)}</span></div>
                   <Separator />
                   <div className="flex justify-between gap-2 font-bold text-foreground text-base"><span>Total</span><span className="tabular-nums shrink-0">${total.toFixed(2)}</span></div>
