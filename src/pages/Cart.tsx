@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PriceDisclaimer from "@/components/PriceDisclaimer";
 import PromoCodeInput from "@/components/PromoCodeInput";
+import { computeFees } from "@/lib/pricing";
 
 const Cart = () => {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal, clearCart, getDiscountAmount, appliedPromo } = useCart();
@@ -27,8 +28,7 @@ const Cart = () => {
   const storeCount = uniqueStores.length;
   const discount = getDiscountAmount();
   const discountedSubtotal = Math.max(0, subtotal - discount);
-  const convenienceFee = discountedSubtotal * 0.12;
-  const tax = deliveryFee * 0.05;
+  const { convenienceFee, tax } = computeFees(discountedSubtotal, deliveryFee);
   const total = discountedSubtotal + deliveryFee + convenienceFee + tax;
 
   if (cartItems.length === 0) {
@@ -146,7 +146,7 @@ const Cart = () => {
                     </div>
                   )}
                   <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Convenience Fee (12%)</span><span className="tabular-nums shrink-0">${convenienceFee.toFixed(2)}</span></div>
-                  <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Tax (GST + PST)</span><span className="tabular-nums shrink-0">${tax.toFixed(2)}</span></div>
+                  <div className="flex justify-between gap-2 text-muted-foreground text-sm"><span>Tax (15% items, 5% delivery)</span><span className="tabular-nums shrink-0">${tax.toFixed(2)}</span></div>
                   <Separator />
                   <div className="flex justify-between gap-2 font-bold text-foreground text-base"><span>Total</span><span className="tabular-nums shrink-0">${total.toFixed(2)}</span></div>
                 </div>

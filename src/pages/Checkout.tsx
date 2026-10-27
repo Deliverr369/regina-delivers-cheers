@@ -24,6 +24,7 @@ import { recordAgeVerificationServerSide, hasVerifiedAge } from "@/lib/ageGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
+import { computeFees, holdAmount } from "@/lib/pricing";
   isSlotAvailable,
   isStoreOpenNow,
   groupHoursByStore,
@@ -37,7 +38,6 @@ import {
 
 const stripePromise = loadStripe(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string);
 
-const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 
 const getDeliveryFee = (storeName: string) => {
   const n = (storeName || "").toLowerCase();
@@ -131,8 +131,7 @@ const Checkout = () => {
     new Map(cartItems.map((i) => [i.storeId, i.storeName])).entries()
   );
   const deliveryFee = uniqueStores.reduce((sum, [, name]) => sum + getDeliveryFee(name), 0);
-  const convenienceFee = subtotal * 0.12;
-  const tax = deliveryFee * 0.05;
+  const { convenienceFee, tax } = computeFees(subtotal, deliveryFee);
 
   const [tipPreset, setTipPreset] = useState<number | "custom" | null>(3);
   const [customTip, setCustomTip] = useState<string>("");
@@ -147,7 +146,7 @@ const Checkout = () => {
   const baseTotal = subtotal + deliveryFee + convenienceFee + tax;
   const estimatedTotal = baseTotal + tip;
   const authorizedAmount = useMemo(
-    () => (authorizedBase > 0 ? Math.round((authorizedBase + tip) * (1 + BUFFER_PCT) * 100) / 100 : 0),
+    () => (authorizedBase > 0 ? holdAmount(authorizedBase + tip) : 0),
     [authorizedBase, tip],
   );
 
@@ -466,8 +465,7 @@ const Checkout = () => {
       const calcs: GroupCalc[] = Array.from(groups.values()).map((g) => {
         const sub = round2(g.items.reduce((s, i) => s + i.price * i.quantity, 0));
         const fee = round2(getDeliveryFee(g.storeName));
-        const conv = round2(sub * 0.12);
-        const tx = round2(fee * 0.05);
+        const { convenienceFee: conv, tax: tx } = computeFees(sub, fee);
         return {
           ...g,
           subtotal: sub,
@@ -918,8 +916,8 @@ const OrderSummaryCard = (props: CheckoutBodyProps) => {
               ))}
             </div>
           )}
-          <Row label="Service fee (12%)" value={`$${props.convenienceFee.toFixed(2)}`} muted />
-          <Row label="Tax" value={`$${props.tax.toFixed(2)}`} muted />
+          <Row label="Service fee (11%)" value={`$${props.convenienceFee.toFixed(2)}`} muted />
+          <Row label="Tax (15% on items, 5% on delivery)" value={`$${props.tax.toFixed(2)}`} muted />
           {props.tip > 0 && (
             <Row
               label={<span className="flex items-center gap-1"><Heart className="h-3 w-3 fill-primary text-primary" /> Driver tip</span>}
@@ -941,6 +939,12 @@ const OrderSummaryCard = (props: CheckoutBodyProps) => {
             {isCod ? <>Pay at the<br /><span className="text-foreground font-semibold">door</span></> : <>Card hold<br /><span className="text-foreground font-semibold">${props.authorizedAmount.toFixed(2)}</span></>}
           </div>
         </div>
+
+        {!isCod && props.authorizedAmount > 0 && (
+          <p className="mb-4 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground leading-relaxed">
+            We place a temporary hold of <span className="font-semibold text-foreground">${props.authorizedAmount.toFixed(2)}</span> (estimated total + 25%) in case store prices differ. You're only charged the final receipt amount, and the rest of the hold is released.
+          </p>
+        )}
 
         {/* Pricing adjustment notice */}
         <div className="mb-4 rounded-xl bg-muted/60 border border-border/60 p-2.5 text-[11px] text-muted-foreground leading-relaxed">
