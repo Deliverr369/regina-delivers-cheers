@@ -1,3 +1,4 @@
+import { computeFees, holdAmount, BUFFER_PCT } from "../_shared/pricing.ts";
 // supabase/functions/create-payment-intent/index.ts
 //
 // Hardened: re-validates the cart, store, address, and delivery time
@@ -29,8 +30,6 @@ const getDeliveryFee = (storeName: string): number => {
   return 7;
 };
 
-const CONVENIENCE_PCT = 0.12;
-const TAX_PCT = 0.05; // tax on delivery fees only
 // Stripe errors from the esm.sh build sometimes carry the code under `raw`.
 function isMissingResource(e: any): boolean {
   return e?.code === "resource_missing" || e?.raw?.code === "resource_missing" ||
@@ -38,7 +37,6 @@ function isMissingResource(e: any): boolean {
     /No such (customer|payment_intent|payment_method)/i.test(String(e?.message || ""));
 }
 
-const BUFFER_PCT = 0.2; // +20% pre-authorization buffer
 const LEAD_TIME_MS = 60 * 60 * 1000;
 
 const timeToMin = (t: string) => {
@@ -256,11 +254,10 @@ Deno.serve(async (req) => {
     }
     subtotal = round2(subtotal);
     deliveryFee = round2(deliveryFee);
-    const convenienceFee = round2(subtotal * CONVENIENCE_PCT);
-    const tax = round2(deliveryFee * TAX_PCT);
+    const { convenienceFee, tax } = computeFees(subtotal, deliveryFee);
     const estimatedTotal = round2(subtotal + deliveryFee + convenienceFee + tax + tip);
     if (estimatedTotal <= 0) return json(400, { error: "Order total must be > $0" });
-    const authorizedAmountCents = Math.round(estimatedTotal * (1 + BUFFER_PCT) * 100);
+    const authorizedAmountCents = Math.round(holdAmount(estimatedTotal) * 100);
 
     // --- Stripe customer + intent ---
     const env: StripeEnv = body.environment === "live" ? "live" : "sandbox";

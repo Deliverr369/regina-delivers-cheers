@@ -36,7 +36,7 @@ const sections: Section[] = [
     items: [
       { q: "What payment methods do you accept?", a: "We accept Visa, Mastercard and American Express credit and debit cards, or you can choose Pay at the door." },
       { q: "Why do I see a hold on my card?", a: "When you place an order we authorize an estimated amount on your card. Once your order is finalized we capture the actual total — the temporary hold is released by your bank." },
-      { q: "Why is the card authorization higher than my estimated total?", a: "Your store confirms final pricing. We authorize up to 20% above the estimate to allow for small in-store price changes, but only the actual finalized amount is charged." },
+      { q: "Why is the card authorization higher than my estimated total?", a: "Your store confirms final pricing. We place a hold of up to 25% above the estimate to allow for small in-store price changes, but only the actual finalized amount is charged." },
       { q: "I think I have an unauthorized charge", a: "Please contact us right away at support@deliverr.ca or call 306-539-4569 and our team will investigate immediately." },
       { q: "My refund or credit looks incorrect", a: "Reach out via email, live chat or phone and we'll review your order and make it right." },
     ],
