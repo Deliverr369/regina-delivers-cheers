@@ -23,8 +23,8 @@ import { stripeEnv } from "@/lib/stripeEnv";
 import { recordAgeVerificationServerSide, hasVerifiedAge } from "@/lib/ageGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import {
 import { computeFees, holdAmount } from "@/lib/pricing";
+import {
   isSlotAvailable,
   isStoreOpenNow,
   groupHoursByStore,
