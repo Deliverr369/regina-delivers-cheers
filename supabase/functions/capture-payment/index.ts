@@ -81,6 +81,15 @@ Deno.serve(async (req) => {
         const existing = await stripe.paymentIntents.retrieve(order.stripe_payment_intent_id);
         if (existing.status === "succeeded") {
           captured = existing;
+        } else if (amountToCapture > Number(existing.amount_capturable ?? 0)) {
+          // The card hold at Stripe is the source of truth; our stored amount can drift.
+          const hold = Number(existing.amount_capturable ?? 0) / 100;
+          return json({
+            error: `Final total $${finalTotal.toFixed(2)} is more than the card hold of $${hold.toFixed(2)}. Lower the final amount to $${hold.toFixed(2)} or less.`,
+            requiresReauth: true,
+            authorized: hold,
+            finalTotal,
+          }, 409);
         } else {
           captured = await stripe.paymentIntents.capture(order.stripe_payment_intent_id, {
             amount_to_capture: amountToCapture,
